@@ -1,12 +1,31 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
+import { getCurrentUser, User } from "@/services/userService";
 
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        setLoading(true);
+        const user = await getCurrentUser();
+        setCurrentUser(user);
+      } catch (error) {
+        console.error("Failed to fetch current user:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCurrentUser();
+  }, []);
 
 function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
   e.stopPropagation();
@@ -16,22 +35,42 @@ function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
   function closeDropdown() {
     setIsOpen(false);
   }
+
+  // Get initials from user's name or username
+  const getInitials = (name: string | undefined, username: string | undefined): string => {
+    if (name) {
+      const parts = name.split(" ");
+      return parts.map(p => p[0]?.toUpperCase()).join("").slice(0, 2);
+    }
+    return username?.slice(0, 2).toUpperCase() || "U";
+  };
+
   return (
     <div className="relative">
       <button
         onClick={toggleDropdown} 
         className="flex items-center text-gray-700 dark:text-gray-400 dropdown-toggle"
       >
-        <span className="mr-3 overflow-hidden rounded-full h-11 w-11">
-          <Image
-            width={44}
-            height={44}
-            src="/images/user/owner.jpg"
-            alt="User"
-          />
+        <span className="mr-3 overflow-hidden rounded-full h-11 w-11 bg-brand-500 flex items-center justify-center">
+          {loading ? (
+            <span className="text-white text-sm font-semibold">U</span>
+          ) : currentUser?.full_name || currentUser?.username ? (
+            <span className="text-white text-sm font-semibold">
+              {getInitials(currentUser?.full_name, currentUser?.username)}
+            </span>
+          ) : (
+            <Image
+              width={44}
+              height={44}
+              src="/images/user/owner.jpg"
+              alt="User"
+            />
+          )}
         </span>
 
-        <span className="block mr-1 font-medium text-theme-sm">Musharof</span>
+        <span className="block mr-1 font-medium text-theme-sm">
+          {loading ? "Loading..." : currentUser?.username || "User"}
+        </span>
 
         <svg
           className={`stroke-gray-500 dark:stroke-gray-400 transition-transform duration-200 ${
@@ -60,10 +99,10 @@ function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
       >
         <div>
           <span className="block font-medium text-gray-700 text-theme-sm dark:text-gray-400">
-            Musharof Chowdhury
+            {loading ? "Loading..." : currentUser?.full_name || currentUser?.username || "User"}
           </span>
           <span className="mt-0.5 block text-theme-xs text-gray-500 dark:text-gray-400">
-            randomuser@pimjo.com
+            {loading ? "Loading..." : currentUser?.email || "user@example.com"}
           </span>
         </div>
 
