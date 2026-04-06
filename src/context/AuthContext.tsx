@@ -44,9 +44,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         key.toLowerCase().includes('token') && key.toLowerCase().includes('access')
       );
       
-      // Keep only 'accessToken', remove all others
+      // Keep only 'access_token', remove all others
       accessTokenKeys.forEach(key => {
-        if (key !== 'accessToken') {
+        if (key !== 'access_token') {
           console.log(`[AuthContext] Removing duplicate token key: ${key}`);
           localStorage.removeItem(key);
         }
@@ -70,14 +70,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setTokenExpiresAt(newExpiresAt);
         
         // Clean up old tokens first
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
         localStorage.removeItem("user");
         localStorage.removeItem("tokenExpiresAt");
         
         // Set new tokens
-        localStorage.setItem("accessToken", response.access_token);
-        localStorage.setItem("refreshToken", response.refresh_token);
+        localStorage.setItem("access_token", response.access_token);
+        localStorage.setItem("refresh_token", response.refresh_token);
         localStorage.setItem("user", JSON.stringify(response.user));
         localStorage.setItem("tokenExpiresAt", newExpiresAt.toString());
         
@@ -100,8 +100,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     cleanupDuplicateTokens();
     
-    const storedAccessToken = localStorage.getItem("accessToken");
-    const storedRefreshToken = localStorage.getItem("refreshToken");
+    const storedAccessToken = localStorage.getItem("access_token");
+    const storedRefreshToken = localStorage.getItem("refresh_token");
     const storedUser = localStorage.getItem("user");
     const storedExpiresAt = localStorage.getItem("tokenExpiresAt");
 
@@ -123,8 +123,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setupRefreshCallback(storedRefreshToken);
       } catch (error) {
         console.error("Failed to parse stored auth data:", error);
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
         localStorage.removeItem("user");
         localStorage.removeItem("tokenExpiresAt");
       }
@@ -167,14 +167,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setTokenExpiresAt(expiresAt);
 
     // Clear old tokens before setting new ones
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
     localStorage.removeItem("user");
     localStorage.removeItem("tokenExpiresAt");
 
     // Set new tokens
-    localStorage.setItem("accessToken", newAccessToken);
-    localStorage.setItem("refreshToken", newRefreshToken);
+    localStorage.setItem("access_token", newAccessToken);
+    localStorage.setItem("refresh_token", newRefreshToken);
     localStorage.setItem("user", JSON.stringify(newUser));
     localStorage.setItem("tokenExpiresAt", expiresAt.toString());
 
@@ -209,14 +209,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setTokenExpiresAt(newExpiresAt);
 
       // Clean up old tokens first
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
       localStorage.removeItem("user");
       localStorage.removeItem("tokenExpiresAt");
 
       // Set new tokens
-      localStorage.setItem("accessToken", response.access_token);
-      localStorage.setItem("refreshToken", response.refresh_token);
+      localStorage.setItem("access_token", response.access_token);
+      localStorage.setItem("refresh_token", response.refresh_token);
       localStorage.setItem("user", JSON.stringify(response.user));
       localStorage.setItem("tokenExpiresAt", newExpiresAt.toString());
 
@@ -258,8 +258,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Clear all token-related keys from localStorage
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
       localStorage.removeItem("user");
       localStorage.removeItem("tokenExpiresAt");
       

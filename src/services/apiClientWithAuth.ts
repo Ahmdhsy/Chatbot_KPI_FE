@@ -21,7 +21,7 @@ export const setRefreshTokenCallback = (
 // Request interceptor to add auth token
 apiClientWithAuth.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("accessToken");
+    const token = localStorage.getItem("access_token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
       console.log("[API Request] Authorization header set with Bearer token");
@@ -72,7 +72,7 @@ apiClientWithAuth.interceptors.response.use(
           if (refreshed) {
             console.log("[API Interceptor] Token refreshed successfully, retrying original request");
             // Retry the original request with new token
-            const token = localStorage.getItem("accessToken");
+            const token = localStorage.getItem("access_token");
             if (token) {
               originalRequest.headers.Authorization = `Bearer ${token}`;
               return apiClientWithAuth(originalRequest);
