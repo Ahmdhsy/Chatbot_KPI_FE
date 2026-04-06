@@ -24,12 +24,16 @@ apiClientWithAuth.interceptors.request.use(
     const token = localStorage.getItem("accessToken");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log("[API Request] Authorization header set with Bearer token");
+    } else {
+      console.warn("[API Request] No access token found in localStorage");
     }
     console.log("[API Request]", {
       url: config.url,
       method: config.method,
       params: config.params,
       hasAuth: !!token,
+      authHeader: config.headers.Authorization ? "Bearer <token>" : "Not set",
     });
     return config;
   },
@@ -59,22 +63,30 @@ apiClientWithAuth.interceptors.response.use(
     // If error is 401 and we haven't already tried to refresh
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
+      console.log("[API Interceptor] Attempting token refresh for 401 error");
 
       try {
         // Call refresh token callback if available
         if (refreshTokenCallback) {
           const refreshed = await refreshTokenCallback();
           if (refreshed) {
+            console.log("[API Interceptor] Token refreshed successfully, retrying original request");
             // Retry the original request with new token
             const token = localStorage.getItem("accessToken");
             if (token) {
               originalRequest.headers.Authorization = `Bearer ${token}`;
               return apiClientWithAuth(originalRequest);
             }
+          } else {
+            console.log("[API Interceptor] Token refresh failed, user will be logged out");
+            return Promise.reject(error);
           }
+        } else {
+          console.warn("[API Interceptor] No refresh callback available");
+          return Promise.reject(error);
         }
       } catch (refreshError) {
-        console.error("Token refresh failed:", refreshError);
+        console.error("[API Interceptor] Token refresh error:", refreshError);
         return Promise.reject(refreshError);
       }
     }
