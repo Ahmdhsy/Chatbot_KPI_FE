@@ -146,7 +146,7 @@ export function ToastContainer() {
   const { toasts, removeToast } = useToast();
 
   return (
-    <div className="fixed top-6 right-6 z-[9999] space-y-3 pointer-events-auto max-w-md max-h-screen overflow-y-auto">
+    <div className="fixed top-6 right-6 z-[999999] space-y-3 pointer-events-auto max-w-md max-h-screen overflow-y-auto">
       {toasts.map((toast) => (
         <Toast
           key={toast.id}

@@ -9,6 +9,7 @@ import {
   HorizontaLDots,
   ChevronDownIcon,
   UserCircleIcon,
+  PlugInIcon,
 } from "../icons/index";
 
 type NavItem = {
@@ -28,6 +29,11 @@ const navItems: NavItem[] = [
     icon: <UserCircleIcon />,
     name: "User Management",
     path: "/users",
+  },
+  {
+    icon: <PlugInIcon />,
+    name: "Ingestion",
+    path: "/ingestion",
   },
 ];
 

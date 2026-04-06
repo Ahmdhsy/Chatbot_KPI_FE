@@ -86,7 +86,13 @@ export const authService = {
     try {
       const response = await apiClient.post<RefreshTokenResponse>(
         "/api/v1/users/refresh",
-        { refresh_token: refreshToken }
+        { refresh_token: refreshToken },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${refreshToken}`,
+          },
+        }
       );
       return response.data;
     } catch (error) {
@@ -106,7 +112,13 @@ export const authService = {
     try {
       const response = await apiClient.post<LogoutResponse>(
         "/api/v1/users/logout",
-        { refresh_token: refreshToken }
+        { refresh_token: refreshToken },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${refreshToken}`,
+          },
+        }
       );
       return response.data;
     } catch (error) {

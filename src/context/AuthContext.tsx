@@ -36,14 +36,76 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [refreshTimeoutId, setRefreshTimeoutId] = useState<NodeJS.Timeout | null>(null);
 
+  // Helper function to clean up duplicate tokens in localStorage
+  const cleanupDuplicateTokens = () => {
+    try {
+      const allKeys = Object.keys(localStorage);
+      const accessTokenKeys = allKeys.filter(key => 
+        key.toLowerCase().includes('token') && key.toLowerCase().includes('access')
+      );
+      
+      // Keep only 'accessToken', remove all others
+      accessTokenKeys.forEach(key => {
+        if (key !== 'accessToken') {
+          console.log(`[AuthContext] Removing duplicate token key: ${key}`);
+          localStorage.removeItem(key);
+        }
+      });
+    } catch (error) {
+      console.warn("[AuthContext] Failed to cleanup duplicate tokens:", error);
+    }
+  };
+
+  // Helper function to setup refresh callback
+  const setupRefreshCallback = (refreshTokenValue: string) => {
+    setRefreshTokenCallback(async () => {
+      try {
+        console.log("[AuthContext] Token refresh triggered by interceptor");
+        const response = await authService.refresh(refreshTokenValue);
+        const newExpiresAt = Date.now() + response.expires_in * 1000;
+        
+        setAccessToken(response.access_token);
+        setRefreshToken(response.refresh_token);
+        setUser(response.user);
+        setTokenExpiresAt(newExpiresAt);
+        
+        // Clean up old tokens first
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("user");
+        localStorage.removeItem("tokenExpiresAt");
+        
+        // Set new tokens
+        localStorage.setItem("accessToken", response.access_token);
+        localStorage.setItem("refreshToken", response.refresh_token);
+        localStorage.setItem("user", JSON.stringify(response.user));
+        localStorage.setItem("tokenExpiresAt", newExpiresAt.toString());
+        
+        scheduleTokenRefresh(newExpiresAt);
+        
+        // Recursively setup callback with new refresh token
+        setupRefreshCallback(response.refresh_token);
+        
+        console.log("[AuthContext] Token refresh successful by interceptor");
+        return true;
+      } catch (error) {
+        console.error("[AuthContext] Token refresh failed:", error);
+        // Don't logout here - let the caller handle it
+        return false;
+      }
+    });
+  };
+
   // Load auth data from localStorage on mount
   useEffect(() => {
+    cleanupDuplicateTokens();
+    
     const storedAccessToken = localStorage.getItem("accessToken");
     const storedRefreshToken = localStorage.getItem("refreshToken");
     const storedUser = localStorage.getItem("user");
     const storedExpiresAt = localStorage.getItem("tokenExpiresAt");
 
-    if (storedAccessToken && storedUser) {
+    if (storedAccessToken && storedUser && storedRefreshToken) {
       try {
         const parsedUser = JSON.parse(storedUser);
         setAccessToken(storedAccessToken);
@@ -56,6 +118,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setTokenExpiresAt(expiresAt);
           scheduleTokenRefresh(expiresAt);
         }
+
+        // Setup refresh callback for rehydrated session
+        setupRefreshCallback(storedRefreshToken);
       } catch (error) {
         console.error("Failed to parse stored auth data:", error);
         localStorage.removeItem("accessToken");
@@ -91,6 +156,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     expiresIn: number,
     newUser: User
   ) => {
+    // Clean up any duplicate tokens first
+    cleanupDuplicateTokens();
+    
     const expiresAt = Date.now() + expiresIn * 1000;
     setAccessToken(newAccessToken);
     setRefreshToken(newRefreshToken);
@@ -98,44 +166,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsAuthenticated(true);
     setTokenExpiresAt(expiresAt);
 
+    // Clear old tokens before setting new ones
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("user");
+    localStorage.removeItem("tokenExpiresAt");
+
+    // Set new tokens
     localStorage.setItem("accessToken", newAccessToken);
     localStorage.setItem("refreshToken", newRefreshToken);
     localStorage.setItem("user", JSON.stringify(newUser));
     localStorage.setItem("tokenExpiresAt", expiresAt.toString());
 
-    scheduleTokenRefresh(expiresAt);
-    
-    // Set callback for api client token refresh
-    setRefreshTokenCallback(async () => {
-      try {
-        if (!newRefreshToken) return false;
-        const response = await authService.refresh(newRefreshToken);
-        const newExpiresAt = Date.now() + response.expires_in * 1000;
-        setAccessToken(response.access_token);
-        setRefreshToken(response.refresh_token);
-        setUser(response.user);
-        setTokenExpiresAt(newExpiresAt);
-        localStorage.setItem("accessToken", response.access_token);
-        localStorage.setItem("refreshToken", response.refresh_token);
-        localStorage.setItem("user", JSON.stringify(response.user));
-        localStorage.setItem("tokenExpiresAt", newExpiresAt.toString());
-        scheduleTokenRefresh(newExpiresAt);
-        return true;
-      } catch (error) {
-        console.error("Failed to refresh token:", error);
-        return false;
-      }
+    console.log("[AuthContext] Login successful - tokens stored:", {
+      hasAccessToken: !!newAccessToken,
+      hasRefreshToken: !!newRefreshToken,
+      expiresAt: new Date(expiresAt).toISOString(),
     });
+
+    scheduleTokenRefresh(expiresAt);
+    setupRefreshCallback(newRefreshToken);
   };
 
   const refreshAccessToken = async (): Promise<boolean> => {
-    if (!refreshToken) {
-      console.warn("No refresh token available");
+    const currentRefreshToken = localStorage.getItem("refreshToken");
+    
+    if (!currentRefreshToken) {
+      console.warn("[AuthContext] No refresh token available");
+      await logout();
       return false;
     }
 
     try {
-      const response = await authService.refresh(refreshToken);
+      console.log("[AuthContext] Refreshing access token...");
+      const response = await authService.refresh(currentRefreshToken);
 
       const newExpiresAt = Date.now() + response.expires_in * 1000;
 
@@ -144,15 +208,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(response.user);
       setTokenExpiresAt(newExpiresAt);
 
+      // Clean up old tokens first
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("user");
+      localStorage.removeItem("tokenExpiresAt");
+
+      // Set new tokens
       localStorage.setItem("accessToken", response.access_token);
       localStorage.setItem("refreshToken", response.refresh_token);
       localStorage.setItem("user", JSON.stringify(response.user));
       localStorage.setItem("tokenExpiresAt", newExpiresAt.toString());
 
+      console.log("[AuthContext] Access token refreshed successfully", {
+        expiresAt: new Date(newExpiresAt).toISOString(),
+      });
+
       scheduleTokenRefresh(newExpiresAt);
+      
+      // Update callback with new refresh token for next refresh
+      setupRefreshCallback(response.refresh_token);
+      
       return true;
     } catch (error) {
-      console.error("Failed to refresh token:", error);
+      console.error("[AuthContext] Failed to refresh token:", error);
       // Refresh failed, logout user
       await logout();
       return false;
@@ -178,10 +257,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setRefreshTimeoutId(null);
       }
 
+      // Clear all token-related keys from localStorage
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
       localStorage.removeItem("tokenExpiresAt");
+      
+      // Clean up any duplicate token keys
+      cleanupDuplicateTokens();
+      
+      console.log("[AuthContext] Logout complete - all tokens cleared");
     }
   };
 
