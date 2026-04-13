@@ -9,11 +9,13 @@ import { EyeIcon, EyeCloseIcon } from "@/icons";
 interface CreateUserModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
 export default function CreateUserModal({
   isOpen,
   onClose,
+  onSuccess,
 }: CreateUserModalProps) {
   const { addUser, loading } = useUser();
   const { addToast } = useToast();
@@ -109,6 +111,7 @@ export default function CreateUserModal({
       await addUser(formData);
       addToast("success", "User created successfully", "Success");
       onClose();
+      onSuccess?.();
       setFormData({
         username: "",
         email: "",
