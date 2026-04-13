@@ -303,6 +303,7 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
                 setAdding(false)
                 setNewName("")
                 setNewUrl("")
+                setNewIsScheduled(true)
               }}
             >
               Cancel
