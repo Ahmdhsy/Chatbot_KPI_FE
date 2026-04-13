@@ -1,9 +1,11 @@
 import PageBreadCrumb from "@/components/common/PageBreadCrumb"
 import SchedulerConfigCard from "@/components/ingestion/SchedulerConfigCard"
+import TrackerSourcesSection from "@/components/ingestion/TrackerSourcesSection"
 import KpiMasterIngestionCard from "@/components/ingestion/KpiMasterIngestionCard"
 import IngestionLogsTable, { PAGE_SIZE } from "@/components/ingestion/IngestionLogsTable"
 import { serverFetch } from "@/lib/server-api"
 import { SchedulerConfig } from "@/hooks/useScheduler"
+import { TrackerSource } from "@/hooks/useTrackerSources"
 import { LogEntry } from "@/hooks/useIngestion"
 
 interface LogsResponse {
@@ -13,14 +15,20 @@ interface LogsResponse {
 
 export default async function IngestionPage() {
   let config: SchedulerConfig | null = null
+  let initialSources: TrackerSource[] = []
   let initialLogs: LogEntry[] = []
   let initialTotal = 0
 
   try {
     config = await serverFetch<SchedulerConfig>("/api/v1/scheduler")
   } catch {
-    // 404 means no config yet — that's fine
     config = null
+  }
+
+  try {
+    initialSources = await serverFetch<TrackerSource[]>("/api/v1/tracker-sources")
+  } catch {
+    initialSources = []
   }
 
   try {
@@ -42,7 +50,10 @@ export default async function IngestionPage() {
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
             KPI Tracker
           </h2>
-          <SchedulerConfigCard initialConfig={config} />
+          <div className="flex flex-col gap-4">
+            <SchedulerConfigCard initialConfig={config} />
+            <TrackerSourcesSection initialSources={initialSources} />
+          </div>
         </section>
 
         {/* ── KPI Master ──────────────────────────────────────── */}
