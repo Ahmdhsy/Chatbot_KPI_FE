@@ -1,5 +1,6 @@
 import PageBreadCrumb from "@/components/common/PageBreadCrumb"
 import SchedulerConfigCard from "@/components/ingestion/SchedulerConfigCard"
+import KpiTrackerIngestionCard from "@/components/ingestion/KpiTrackerIngestionCard"
 import KpiMasterIngestionCard from "@/components/ingestion/KpiMasterIngestionCard"
 import IngestionLogsTable, { PAGE_SIZE } from "@/components/ingestion/IngestionLogsTable"
 import { serverFetch } from "@/lib/server-api"
@@ -37,6 +38,7 @@ export default async function IngestionPage() {
       <PageBreadCrumb pageTitle="Ingestion" />
       <div className="flex flex-col gap-6">
         <SchedulerConfigCard initialConfig={config} />
+        <KpiTrackerIngestionCard />
         <KpiMasterIngestionCard />
         <IngestionLogsTable initialLogs={initialLogs} initialTotal={initialTotal} />
       </div>
