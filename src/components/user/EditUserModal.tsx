@@ -9,12 +9,14 @@ interface EditUserModalProps {
   isOpen: boolean;
   user: User;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
 export default function EditUserModal({
   isOpen,
   user,
   onClose,
+  onSuccess,
 }: EditUserModalProps) {
   const { editUser, loading } = useUser();
   const { addToast } = useToast();
@@ -87,6 +89,7 @@ export default function EditUserModal({
       await editUser(user.id, formData);
       addToast("success", "User updated successfully", "Success");
       onClose();
+      onSuccess?.();
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Failed to update user";
