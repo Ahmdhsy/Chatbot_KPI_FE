@@ -9,12 +9,14 @@ interface DeleteUserModalProps {
   isOpen: boolean;
   user: User;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
 export default function DeleteUserModal({
   isOpen,
   user,
   onClose,
+  onSuccess,
 }: DeleteUserModalProps) {
   const { removeUser, loading } = useUser();
   const { addToast } = useToast();
@@ -24,6 +26,7 @@ export default function DeleteUserModal({
       await removeUser(user.id);
       addToast("success", "User deleted successfully", "Success");
       onClose();
+      onSuccess?.();
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Failed to delete user";

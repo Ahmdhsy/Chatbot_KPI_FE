@@ -1,77 +1,73 @@
-"use client";
-import React, { useCallback, useEffect, useState } from "react";
-import PageBreadCrumb from "@/components/common/PageBreadCrumb";
-import SchedulerConfigCard from "@/components/ingestion/SchedulerConfigCard";
-import KpiMasterIngestionCard from "@/components/ingestion/KpiMasterIngestionCard";
-import IngestionLogsTable from "@/components/ingestion/IngestionLogsTable";
-import { useIngestion } from "@/hooks/useIngestion";
-import { useScheduler } from "@/hooks/useScheduler";
+import PageBreadCrumb from "@/components/common/PageBreadCrumb"
+import SchedulerConfigCard from "@/components/ingestion/SchedulerConfigCard"
+import TrackerSourcesSection from "@/components/ingestion/TrackerSourcesSection"
+import KpiMasterIngestionCard from "@/components/ingestion/KpiMasterIngestionCard"
+import IngestionLogsTable, { PAGE_SIZE } from "@/components/ingestion/IngestionLogsTable"
+import { serverFetch } from "@/lib/server-api"
+import { SchedulerConfig } from "@/hooks/useScheduler"
+import { TrackerSource } from "@/hooks/useTrackerSources"
+import { LogEntry } from "@/hooks/useIngestion"
 
-export default function IngestionPage() {
-  const {
-    loading: ingestLoading,
-    result: ingestResult,
-    error: ingestError,
-    ingestKpiMaster,
-    fetchLogs,
-  } = useIngestion();
+interface LogsResponse {
+  total: number
+  logs: LogEntry[]
+}
 
-  const {
-    config,
-    loading: schedLoading,
-    error: schedError,
-    triggerMsg,
-    fetchConfig,
-    saveConfig,
-    triggerNow,
-  } = useScheduler();
+export default async function IngestionPage() {
+  let config: SchedulerConfig | null = null
+  let initialSources: TrackerSource[] = []
+  let initialLogs: LogEntry[] = []
+  let initialTotal = 0
 
-  const [logsRefreshKey, setLogsRefreshKey] = useState(0);
+  try {
+    config = await serverFetch<SchedulerConfig>("/api/v1/scheduler")
+  } catch {
+    config = null
+  }
 
-  useEffect(() => {
-    fetchConfig();
-  }, [fetchConfig]);
+  try {
+    initialSources = await serverFetch<TrackerSource[]>("/api/v1/tracker-sources")
+  } catch {
+    initialSources = []
+  }
 
-  const handleIngestMaster = useCallback(
-    async (url: string, tahun: number) => {
-      await ingestKpiMaster(url, tahun);
-      setLogsRefreshKey((k) => k + 1);
-    },
-    [ingestKpiMaster]
-  );
-
-  const handleTriggerNow = useCallback(async () => {
-    await triggerNow();
-    setLogsRefreshKey((k) => k + 1);
-  }, [triggerNow]);
-
-  const schedulerKey = config
-    ? `${config.id}-${config.sheet_url}-${config.interval_value}-${config.interval_unit}-${config.is_enabled}`
-    : "new";
+  try {
+    const logsData = await serverFetch<LogsResponse>(`/api/v1/ingest/logs?limit=${PAGE_SIZE}`)
+    initialLogs = logsData.logs
+    initialTotal = logsData.total
+  } catch {
+    initialLogs = []
+    initialTotal = 0
+  }
 
   return (
     <div>
       <PageBreadCrumb pageTitle="Ingestion" />
-      <div className="flex flex-col gap-6">
-        <SchedulerConfigCard
-          key={schedulerKey}
-          config={config}
-          loading={schedLoading}
-          error={schedError}
-          triggerMsg={triggerMsg}
-          onSave={saveConfig}
-          onTrigger={handleTriggerNow}
-        />
+      <div className="flex flex-col gap-8">
 
-        <KpiMasterIngestionCard
-          onIngest={handleIngestMaster}
-          loading={ingestLoading}
-          result={ingestResult}
-          error={ingestError}
-        />
+        {/* ── KPI Tracker ─────────────────────────────────────── */}
+        <section>
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+            KPI Tracker
+          </h2>
+          <div className="flex flex-col gap-4">
+            <SchedulerConfigCard initialConfig={config} />
+            <TrackerSourcesSection initialSources={initialSources} />
+          </div>
+        </section>
 
-        <IngestionLogsTable fetchLogs={fetchLogs} refreshKey={logsRefreshKey} />
+        {/* ── KPI Master ──────────────────────────────────────── */}
+        <section>
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+            KPI Master
+          </h2>
+          <KpiMasterIngestionCard />
+        </section>
+
+        {/* ── Logs ────────────────────────────────────────────── */}
+        <IngestionLogsTable initialLogs={initialLogs} initialTotal={initialTotal} />
+
       </div>
     </div>
-  );
+  )
 }
