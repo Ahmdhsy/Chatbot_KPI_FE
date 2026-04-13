@@ -1,20 +1,30 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from "next/server"
 
-export function middleware(request: NextRequest) {
-  // Middleware is optional since we're using client-side ProtectedRoute
-  // This can be extended in the future for additional server-side checks
-  return NextResponse.next();
+const PROTECTED_PATHS = ["/", "/users", "/ingestion"]
+const AUTH_PATHS = ["/signin", "/signup"]
+
+export function middleware(req: NextRequest) {
+  const token = req.cookies.get("access_token")?.value
+  const { pathname } = req.nextUrl
+
+  const isProtected = PROTECTED_PATHS.some(
+    (p) => pathname === p || pathname.startsWith(p + "/"),
+  )
+  const isAuthPath = AUTH_PATHS.some((p) => pathname.startsWith(p))
+
+  if (isProtected && !token) {
+    return NextResponse.redirect(new URL("/signin", req.url))
+  }
+
+  if (isAuthPath && token) {
+    return NextResponse.redirect(new URL("/", req.url))
+  }
+
+  return NextResponse.next()
 }
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     */
-    '/((?!_next/static|_next/image|favicon.ico|public).*)',
+    "/((?!api|_next/static|_next/image|favicon.ico|.*\\.png|.*\\.svg).*)",
   ],
-};
+}
