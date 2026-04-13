@@ -243,6 +243,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (refreshToken) {
         await authService.logout(refreshToken);
       }
+      // Clear httpOnly cookie
+      await fetch("/api/auth/logout", { method: "POST" })
     } catch (error) {
       console.error("Logout API call failed:", error);
     } finally {
