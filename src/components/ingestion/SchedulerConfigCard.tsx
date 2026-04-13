@@ -35,7 +35,9 @@ function formatDatetime(iso: string | null): string {
 export default function SchedulerConfigCard({ initialConfig }: Props) {
   const router = useRouter()
   const [intervalVal, setIntervalVal] = useState(String(initialConfig?.interval_value ?? 12))
-  const [intervalUnit, setIntervalUnit] = useState(initialConfig?.interval_unit ?? "hours")
+  const [intervalUnit, setIntervalUnit] = useState<"hours" | "days" | "weeks" | "months">(
+    initialConfig?.interval_unit ?? "hours"
+  )
   const [enabled, setEnabled] = useState(initialConfig?.is_enabled ?? true)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -48,13 +50,19 @@ export default function SchedulerConfigCard({ initialConfig }: Props) {
     setLoading(true)
     setError(null)
     setTriggerMsg(null)
+    const parsed = parseInt(intervalVal, 10)
+    if (isNaN(parsed) || parsed < 1) {
+      setError("Interval must be a positive number")
+      setLoading(false)
+      return
+    }
     try {
       const method = initialConfig ? "PATCH" : "POST"
       const res = await fetch(`${API_BASE}/api/v1/scheduler`, {
         method,
         headers: { "Content-Type": "application/json", ...getAuthHeader() },
         body: JSON.stringify({
-          interval_value: parseInt(intervalVal, 10) || 12,
+          interval_value: parsed,
           interval_unit: intervalUnit,
           is_enabled: enabled,
         }),
@@ -79,7 +87,7 @@ export default function SchedulerConfigCard({ initialConfig }: Props) {
       })
       if (!res.ok) throw new Error((await res.json()).detail ?? "Trigger failed")
       const data = await res.json()
-      setTriggerMsg(data.message)
+      setTriggerMsg(data.message ?? "Triggered successfully")
       router.refresh()
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Unknown error")
@@ -110,7 +118,12 @@ export default function SchedulerConfigCard({ initialConfig }: Props) {
         </div>
         <div className="flex-1">
           <Label htmlFor="sched-unit">Unit</Label>
-          <Select options={UNIT_OPTIONS} defaultValue={intervalUnit} onChange={setIntervalUnit} />
+          <Select
+            key={initialConfig?.interval_unit ?? "hours"}
+            options={UNIT_OPTIONS}
+            defaultValue={intervalUnit}
+            onChange={(v) => setIntervalUnit(v as "hours" | "days" | "weeks" | "months")}
+          />
         </div>
       </div>
 
