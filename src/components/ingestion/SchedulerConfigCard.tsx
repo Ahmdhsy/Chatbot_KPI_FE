@@ -35,8 +35,11 @@ function formatDatetime(iso: string | null): string {
 
 export default function SchedulerConfigCard({ initialConfig }: Props) {
   const router = useRouter()
-  const [urls, setUrls] = useState<string[]>(
-    initialConfig?.sheet_urls?.length ? initialConfig.sheet_urls : [""]
+  const nextId = React.useRef(0)
+  const [urls, setUrls] = useState<{ id: number; value: string }[]>(
+    initialConfig?.sheet_urls?.length
+      ? initialConfig.sheet_urls.map((v) => ({ id: nextId.current++, value: v }))
+      : [{ id: nextId.current++, value: "" }]
   )
   const [intervalVal, setIntervalVal] = useState(String(initialConfig?.interval_value ?? 12))
   const [intervalUnit, setIntervalUnit] = useState(initialConfig?.interval_unit ?? "hours")
@@ -45,21 +48,21 @@ export default function SchedulerConfigCard({ initialConfig }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [triggerMsg, setTriggerMsg] = useState<string | null>(null)
 
-  const validUrls = urls.filter((u) => u.trim() !== "")
+  const validUrls = urls.filter((u) => u.value.trim() !== "").map((u) => u.value)
   const statusLabel = !initialConfig ? "Not Configured" : initialConfig.is_enabled ? "Active" : "Paused"
   const statusColor = !initialConfig ? "light" : initialConfig.is_enabled ? "success" : "warning"
 
   const handleUrlChange = (index: number, value: string) => {
-    setUrls((prev) => prev.map((u, i) => (i === index ? value : u)))
+    setUrls((prev) => prev.map((u, i) => (i === index ? { ...u, value } : u)))
   }
 
   const handleAddUrl = () => {
-    if (urls.length < MAX_URLS) setUrls((prev) => [...prev, ""])
+    if (urls.length < MAX_URLS) setUrls((prev) => [...prev, { id: nextId.current++, value: "" }])
   }
 
   const handleRemoveUrl = (index: number) => {
     if (urls.length === 1) {
-      setUrls([""])
+      setUrls([{ id: nextId.current++, value: "" }])
     } else {
       setUrls((prev) => prev.filter((_, i) => i !== index))
     }
@@ -69,6 +72,7 @@ export default function SchedulerConfigCard({ initialConfig }: Props) {
     if (validUrls.length === 0) return
     setLoading(true)
     setError(null)
+    setTriggerMsg(null)
     try {
       const method = initialConfig ? "PATCH" : "POST"
       const res = await fetch(`${API_BASE}/api/v1/scheduler`, {
@@ -120,14 +124,14 @@ export default function SchedulerConfigCard({ initialConfig }: Props) {
       </div>
 
       <div className="mb-4 flex flex-col gap-2">
-        {urls.map((url, index) => (
-          <div key={index} className="flex items-end gap-2">
+        {urls.map((u, index) => (
+          <div key={u.id} className="flex items-end gap-2">
             <div className="flex-1">
               {index === 0 && <Label htmlFor="sched-url-0">Sheet URL(s)</Label>}
               <Input
                 id={`sched-url-${index}`}
                 placeholder="https://docs.google.com/spreadsheets/d/..."
-                value={url}
+                value={u.value}
                 onChange={(e) => handleUrlChange(index, e.target.value)}
               />
             </div>
