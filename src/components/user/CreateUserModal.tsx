@@ -119,20 +119,21 @@ export default function CreateUserModal({
         password: "",
         role: "user",
       });
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as { response?: { status?: number; data?: { detail?: unknown } } }
       let errorMessage = "Failed to create user";
       let passwordError: string | null = null;
 
       // Handle 422 validation errors from FastAPI
-      if (error?.response?.status === 422 && error?.response?.data?.detail) {
-        const details = error.response.data.detail;
-        
+      if (axiosError?.response?.status === 422 && axiosError?.response?.data?.detail) {
+        const details = axiosError.response.data.detail;
+
         if (Array.isArray(details)) {
           // FastAPI returns array of validation errors
           for (const err of details) {
             const fieldPath = Array.isArray(err.loc) ? err.loc.join('.') : String(err.loc);
             const errorMsg = err.msg || "Validation error";
-            
+
             // Check if it's a password-related error
             if (fieldPath.toLowerCase().includes('password')) {
               passwordError = errorMsg;
@@ -146,7 +147,7 @@ export default function CreateUserModal({
         }
       } else {
         // Other error types
-        errorMessage = error instanceof Error ? error.message : String(error?.response?.data?.detail || "Failed to create user");
+        errorMessage = error instanceof Error ? error.message : String(axiosError?.response?.data?.detail || "Failed to create user");
       }
 
       // If we found a password error, show it inline with shake

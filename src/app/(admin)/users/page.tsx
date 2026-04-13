@@ -12,6 +12,8 @@ export default async function UsersPage() {
       users = data.filter((item): item is User => item && typeof item === "object" && "id" in item)
     } else if (data && typeof data === "object" && "users" in data && Array.isArray((data as { users: unknown[] }).users)) {
       users = ((data as { users: User[] }).users).filter((item): item is User => item && typeof item === "object" && "id" in item)
+    } else if (data && typeof data === "object" && "data" in data && Array.isArray((data as { data: unknown[] }).data)) {
+      users = ((data as { data: User[] }).data).filter((item): item is User => item && typeof item === "object" && "id" in item)
     } else if (data && typeof data === "object") {
       users = Object.values(data as Record<string, unknown>).filter(
         (item): item is User => !!item && typeof item === "object" && "id" in item,
