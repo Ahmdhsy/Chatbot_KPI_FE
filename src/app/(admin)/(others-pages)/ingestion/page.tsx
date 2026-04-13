@@ -36,11 +36,30 @@ export default async function IngestionPage() {
   return (
     <div>
       <PageBreadCrumb pageTitle="Ingestion" />
-      <div className="flex flex-col gap-6">
-        <SchedulerConfigCard initialConfig={config} />
-        <KpiTrackerIngestionCard />
-        <KpiMasterIngestionCard />
+      <div className="flex flex-col gap-8">
+
+        {/* ── KPI Tracker ─────────────────────────────────────── */}
+        <section>
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+            KPI Tracker
+          </h2>
+          <div className="flex flex-col gap-4">
+            <SchedulerConfigCard initialConfig={config} />
+            <KpiTrackerIngestionCard />
+          </div>
+        </section>
+
+        {/* ── KPI Master ──────────────────────────────────────── */}
+        <section>
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+            KPI Master
+          </h2>
+          <KpiMasterIngestionCard />
+        </section>
+
+        {/* ── Logs ────────────────────────────────────────────── */}
         <IngestionLogsTable initialLogs={initialLogs} initialTotal={initialTotal} />
+
       </div>
     </div>
   )
