@@ -1,67 +1,80 @@
-"use client";
-import React, { useEffect, useState } from "react";
-import Badge from "@/components/ui/badge/Badge";
+"use client"
+import React, { useEffect, useState } from "react"
+import Badge from "@/components/ui/badge/Badge"
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import Pagination from "@/components/tables/Pagination";
-import { LogEntry } from "@/hooks/useIngestion";
+  Table, TableBody, TableCell, TableHeader, TableRow,
+} from "@/components/ui/table"
+import Pagination from "@/components/tables/Pagination"
+import { LogEntry } from "@/hooks/useIngestion"
 
-type FilterType = "all" | "kpi_tracker" | "kpi_master";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"
+const PAGE_SIZE = 10
 
-interface Props {
-  fetchLogs: (
-    sourceType?: "kpi_tracker" | "kpi_master",
-    limit?: number,
-  ) => Promise<{ total: number; logs: LogEntry[] }>;
-  refreshKey: number;
+type FilterType = "all" | "kpi_tracker" | "kpi_master"
+
+function getAuthHeader(): Record<string, string> {
+  const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null
+  return token ? { Authorization: `Bearer ${token}` } : {}
 }
 
-const PAGE_SIZE = 10;
+interface Props {
+  initialLogs: LogEntry[]
+  initialTotal: number
+}
 
-export default function IngestionLogsTable({ fetchLogs, refreshKey }: Props) {
-  const [filter, setFilter] = useState<FilterType>("all");
-  const [logs, setLogs] = useState<LogEntry[]>([]);
-  const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(false);
+const TABS: { label: string; value: FilterType }[] = [
+  { label: "All", value: "all" },
+  { label: "KPI Tracker", value: "kpi_tracker" },
+  { label: "KPI Master", value: "kpi_master" },
+]
 
+export default function IngestionLogsTable({ initialLogs, initialTotal }: Props) {
+  const [filter, setFilter] = useState<FilterType>("all")
+  const [logs, setLogs] = useState<LogEntry[]>(initialLogs)
+  const [total, setTotal] = useState(initialTotal)
+  const [page, setPage] = useState(1)
+  const [loading, setLoading] = useState(false)
+  const [isInitial, setIsInitial] = useState(true)
+
+  // Keep initial SSR data on first render; fetch client-side on filter/page change
   useEffect(() => {
-    setPage(1);
-  }, [filter, refreshKey]);
-
-  useEffect(() => {
-    setLoading(true);
-    const sourceType = filter === "all" ? undefined : filter;
-    fetchLogs(sourceType, PAGE_SIZE * page)
-      .then((data) => {
-        setLogs(data.logs.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE));
-        setTotal(data.total);
+    if (isInitial && filter === "all" && page === 1) {
+      setIsInitial(false)
+      return
+    }
+    setIsInitial(false)
+    setLoading(true)
+    const sourceType = filter === "all" ? "" : `&source_type=${filter}`
+    fetch(
+      `${API_BASE}/api/v1/ingest/logs?limit=${PAGE_SIZE * page}${sourceType}`,
+      { headers: { ...getAuthHeader() } },
+    )
+      .then((r) => r.json())
+      .then((data: { total: number; logs: LogEntry[] }) => {
+        setLogs(data.logs.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE))
+        setTotal(data.total)
       })
       .catch(() => setLogs([]))
-      .finally(() => setLoading(false));
-  }, [filter, page, refreshKey, fetchLogs]);
+      .finally(() => setLoading(false))
+  }, [filter, page])
 
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  // When SSR data changes (router.refresh), reset to SSR data
+  useEffect(() => {
+    if (filter === "all" && page === 1) {
+      setLogs(initialLogs)
+      setTotal(initialTotal)
+    }
+  }, [initialLogs, initialTotal])
+
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
   const statusColor = (status: string) => {
-    if (status === "success") return "success";
-    if (status === "partial") return "warning";
-    return "error";
-  };
+    if (status === "success") return "success"
+    if (status === "partial") return "warning"
+    return "error"
+  }
 
-  const typeColor = (type: string) =>
-    type === "kpi_master" ? "info" : "primary";
-
-  const TABS: { label: string; value: FilterType }[] = [
-    { label: "All", value: "all" },
-    { label: "KPI Tracker", value: "kpi_tracker" },
-    { label: "KPI Master", value: "kpi_master" },
-  ];
+  const typeColor = (type: string) => (type === "kpi_master" ? "info" : "primary")
 
   return (
     <div className="rounded-2xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
@@ -73,7 +86,7 @@ export default function IngestionLogsTable({ fetchLogs, refreshKey }: Props) {
           {TABS.map((tab) => (
             <button
               key={tab.value}
-              onClick={() => setFilter(tab.value)}
+              onClick={() => { setFilter(tab.value); setPage(1) }}
               className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
                 filter === tab.value
                   ? "bg-brand-500 text-white"
@@ -99,7 +112,7 @@ export default function IngestionLogsTable({ fetchLogs, refreshKey }: Props) {
                   >
                     {h}
                   </TableCell>
-                )
+                ),
               )}
             </TableRow>
           </TableHeader>
@@ -155,12 +168,8 @@ export default function IngestionLogsTable({ fetchLogs, refreshKey }: Props) {
       </div>
 
       <div className="flex justify-end border-t border-gray-100 px-6 py-3 dark:border-white/[0.05]">
-        <Pagination
-          currentPage={page}
-          totalPages={totalPages}
-          onPageChange={setPage}
-        />
+        <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
       </div>
     </div>
-  );
+  )
 }
