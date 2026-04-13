@@ -10,6 +10,7 @@ import Switch from "@/components/form/switch/Switch"
 import { SchedulerConfig } from "@/hooks/useScheduler"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"
+const MAX_URLS = 20
 
 function getAuthHeader(): Record<string, string> {
   const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null
@@ -34,7 +35,9 @@ function formatDatetime(iso: string | null): string {
 
 export default function SchedulerConfigCard({ initialConfig }: Props) {
   const router = useRouter()
-  const [url, setUrl] = useState(initialConfig?.sheet_url ?? "")
+  const [urls, setUrls] = useState<string[]>(
+    initialConfig?.sheet_urls?.length ? initialConfig.sheet_urls : [""]
+  )
   const [intervalVal, setIntervalVal] = useState(String(initialConfig?.interval_value ?? 12))
   const [intervalUnit, setIntervalUnit] = useState(initialConfig?.interval_unit ?? "hours")
   const [enabled, setEnabled] = useState(initialConfig?.is_enabled ?? true)
@@ -42,10 +45,28 @@ export default function SchedulerConfigCard({ initialConfig }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [triggerMsg, setTriggerMsg] = useState<string | null>(null)
 
+  const validUrls = urls.filter((u) => u.trim() !== "")
   const statusLabel = !initialConfig ? "Not Configured" : initialConfig.is_enabled ? "Active" : "Paused"
   const statusColor = !initialConfig ? "light" : initialConfig.is_enabled ? "success" : "warning"
 
+  const handleUrlChange = (index: number, value: string) => {
+    setUrls((prev) => prev.map((u, i) => (i === index ? value : u)))
+  }
+
+  const handleAddUrl = () => {
+    if (urls.length < MAX_URLS) setUrls((prev) => [...prev, ""])
+  }
+
+  const handleRemoveUrl = (index: number) => {
+    if (urls.length === 1) {
+      setUrls([""])
+    } else {
+      setUrls((prev) => prev.filter((_, i) => i !== index))
+    }
+  }
+
   const handleSave = async () => {
+    if (validUrls.length === 0) return
     setLoading(true)
     setError(null)
     try {
@@ -54,7 +75,7 @@ export default function SchedulerConfigCard({ initialConfig }: Props) {
         method,
         headers: { "Content-Type": "application/json", ...getAuthHeader() },
         body: JSON.stringify({
-          sheet_url: url,
+          sheet_urls: validUrls,
           interval_value: parseInt(intervalVal, 10) || 12,
           interval_unit: intervalUnit,
           is_enabled: enabled,
@@ -93,19 +114,48 @@ export default function SchedulerConfigCard({ initialConfig }: Props) {
     <div className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-white/5 dark:bg-white/3">
       <div className="mb-4 flex items-center justify-between">
         <h3 className="text-base font-semibold text-gray-800 dark:text-white/90">
-          Scheduler Configuration
+          Auto Scheduler
         </h3>
         <Badge size="sm" color={statusColor}>{statusLabel}</Badge>
       </div>
 
-      <div className="mb-4">
-        <Label htmlFor="sched-url">Sheet URL</Label>
-        <Input
-          id="sched-url"
-          placeholder="https://docs.google.com/spreadsheets/d/..."
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-        />
+      <div className="mb-4 flex flex-col gap-2">
+        {urls.map((url, index) => (
+          <div key={index} className="flex items-end gap-2">
+            <div className="flex-1">
+              {index === 0 && <Label htmlFor="sched-url-0">Sheet URL(s)</Label>}
+              <Input
+                id={`sched-url-${index}`}
+                placeholder="https://docs.google.com/spreadsheets/d/..."
+                value={url}
+                onChange={(e) => handleUrlChange(index, e.target.value)}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => handleRemoveUrl(index)}
+              className="mb-0.5 flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:border-error-300 hover:text-error-500 dark:border-white/10 dark:hover:border-error-400"
+              aria-label="Remove URL"
+            >
+              ×
+            </button>
+          </div>
+        ))}
+      </div>
+
+      <div className="mb-4 flex gap-3">
+        {urls.length < MAX_URLS && (
+          <button
+            type="button"
+            onClick={handleAddUrl}
+            className="text-sm font-medium text-brand-500 hover:text-brand-600 dark:text-brand-400"
+          >
+            + Add URL
+          </button>
+        )}
+        <span className="text-sm text-gray-400 dark:text-gray-500">
+          {validUrls.length} / {MAX_URLS} URLs
+        </span>
       </div>
 
       <div className="mb-4 flex gap-3">
@@ -155,7 +205,7 @@ export default function SchedulerConfigCard({ initialConfig }: Props) {
       {triggerMsg && <p className="mb-3 text-sm text-success-500">{triggerMsg}</p>}
 
       <div className="flex gap-3">
-        <Button onClick={handleSave} disabled={loading || !url}>
+        <Button onClick={handleSave} disabled={loading || validUrls.length === 0}>
           {loading ? "Saving…" : "Save Scheduler"}
         </Button>
         {initialConfig && (
