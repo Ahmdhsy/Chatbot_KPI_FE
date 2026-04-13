@@ -17,13 +17,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(data, { status: fastapiRes.status })
   }
 
+  if (!data.access_token) {
+    return NextResponse.json({ detail: "Unexpected response from auth service" }, { status: 502 })
+  }
+
   const res = NextResponse.json(data)
   res.cookies.set("access_token", data.access_token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: data.expires_in,
+    maxAge: data.expires_in ?? 3600,
   })
 
   return res
