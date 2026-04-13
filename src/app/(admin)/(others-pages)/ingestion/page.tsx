@@ -1,77 +1,45 @@
-"use client";
-import React, { useCallback, useEffect, useState } from "react";
-import PageBreadCrumb from "@/components/common/PageBreadCrumb";
-import SchedulerConfigCard from "@/components/ingestion/SchedulerConfigCard";
-import KpiMasterIngestionCard from "@/components/ingestion/KpiMasterIngestionCard";
-import IngestionLogsTable from "@/components/ingestion/IngestionLogsTable";
-import { useIngestion } from "@/hooks/useIngestion";
-import { useScheduler } from "@/hooks/useScheduler";
+import PageBreadCrumb from "@/components/common/PageBreadCrumb"
+import SchedulerConfigCard from "@/components/ingestion/SchedulerConfigCard"
+import KpiMasterIngestionCard from "@/components/ingestion/KpiMasterIngestionCard"
+import IngestionLogsTable from "@/components/ingestion/IngestionLogsTable"
+import { serverFetch } from "@/lib/server-api"
+import { SchedulerConfig } from "@/hooks/useScheduler"
+import { LogEntry } from "@/hooks/useIngestion"
 
-export default function IngestionPage() {
-  const {
-    loading: ingestLoading,
-    result: ingestResult,
-    error: ingestError,
-    ingestKpiMaster,
-    fetchLogs,
-  } = useIngestion();
+interface LogsResponse {
+  total: number
+  logs: LogEntry[]
+}
 
-  const {
-    config,
-    loading: schedLoading,
-    error: schedError,
-    triggerMsg,
-    fetchConfig,
-    saveConfig,
-    triggerNow,
-  } = useScheduler();
+export default async function IngestionPage() {
+  let config: SchedulerConfig | null = null
+  let initialLogs: LogEntry[] = []
+  let initialTotal = 0
 
-  const [logsRefreshKey, setLogsRefreshKey] = useState(0);
+  try {
+    config = await serverFetch<SchedulerConfig>("/api/v1/scheduler")
+  } catch {
+    // 404 means no config yet — that's fine
+    config = null
+  }
 
-  useEffect(() => {
-    fetchConfig();
-  }, [fetchConfig]);
-
-  const handleIngestMaster = useCallback(
-    async (url: string, tahun: number) => {
-      await ingestKpiMaster(url, tahun);
-      setLogsRefreshKey((k) => k + 1);
-    },
-    [ingestKpiMaster]
-  );
-
-  const handleTriggerNow = useCallback(async () => {
-    await triggerNow();
-    setLogsRefreshKey((k) => k + 1);
-  }, [triggerNow]);
-
-  const schedulerKey = config
-    ? `${config.id}-${config.sheet_url}-${config.interval_value}-${config.interval_unit}-${config.is_enabled}`
-    : "new";
+  try {
+    const logsData = await serverFetch<LogsResponse>("/api/v1/ingest/logs?limit=10")
+    initialLogs = logsData.logs
+    initialTotal = logsData.total
+  } catch {
+    initialLogs = []
+    initialTotal = 0
+  }
 
   return (
     <div>
       <PageBreadCrumb pageTitle="Ingestion" />
       <div className="flex flex-col gap-6">
-        <SchedulerConfigCard
-          key={schedulerKey}
-          config={config}
-          loading={schedLoading}
-          error={schedError}
-          triggerMsg={triggerMsg}
-          onSave={saveConfig}
-          onTrigger={handleTriggerNow}
-        />
-
-        <KpiMasterIngestionCard
-          onIngest={handleIngestMaster}
-          loading={ingestLoading}
-          result={ingestResult}
-          error={ingestError}
-        />
-
-        <IngestionLogsTable fetchLogs={fetchLogs} refreshKey={logsRefreshKey} />
+        <SchedulerConfigCard initialConfig={config} />
+        <KpiMasterIngestionCard />
+        <IngestionLogsTable initialLogs={initialLogs} initialTotal={initialTotal} />
       </div>
     </div>
-  );
+  )
 }
