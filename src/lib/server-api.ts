@@ -1,3 +1,5 @@
+import "server-only"
+
 import { cookies } from "next/headers"
 
 const FASTAPI_URL = process.env.FASTAPI_INTERNAL_URL ?? "http://localhost:8000"
