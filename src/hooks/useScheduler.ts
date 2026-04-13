@@ -1,6 +1,5 @@
 export interface SchedulerConfig {
   id: string;
-  sheet_urls: string[];
   interval_value: number;
   interval_unit: string;
   is_enabled: boolean;

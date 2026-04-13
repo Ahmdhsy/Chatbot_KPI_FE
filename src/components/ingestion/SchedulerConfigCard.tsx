@@ -1,5 +1,5 @@
 "use client"
-import React, { useState } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Badge from "@/components/ui/badge/Badge"
 import Button from "@/components/ui/button/Button"
@@ -10,7 +10,6 @@ import Switch from "@/components/form/switch/Switch"
 import { SchedulerConfig } from "@/hooks/useScheduler"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"
-const MAX_URLS = 20
 
 function getAuthHeader(): Record<string, string> {
   const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null
@@ -35,12 +34,6 @@ function formatDatetime(iso: string | null): string {
 
 export default function SchedulerConfigCard({ initialConfig }: Props) {
   const router = useRouter()
-  const nextId = React.useRef(0)
-  const [urls, setUrls] = useState<{ id: number; value: string }[]>(
-    initialConfig?.sheet_urls?.length
-      ? initialConfig.sheet_urls.map((v) => ({ id: nextId.current++, value: v }))
-      : [{ id: nextId.current++, value: "" }]
-  )
   const [intervalVal, setIntervalVal] = useState(String(initialConfig?.interval_value ?? 12))
   const [intervalUnit, setIntervalUnit] = useState(initialConfig?.interval_unit ?? "hours")
   const [enabled, setEnabled] = useState(initialConfig?.is_enabled ?? true)
@@ -48,28 +41,10 @@ export default function SchedulerConfigCard({ initialConfig }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [triggerMsg, setTriggerMsg] = useState<string | null>(null)
 
-  const validUrls = urls.filter((u) => u.value.trim() !== "").map((u) => u.value)
   const statusLabel = !initialConfig ? "Not Configured" : initialConfig.is_enabled ? "Active" : "Paused"
   const statusColor = !initialConfig ? "light" : initialConfig.is_enabled ? "success" : "warning"
 
-  const handleUrlChange = (index: number, value: string) => {
-    setUrls((prev) => prev.map((u, i) => (i === index ? { ...u, value } : u)))
-  }
-
-  const handleAddUrl = () => {
-    if (urls.length < MAX_URLS) setUrls((prev) => [...prev, { id: nextId.current++, value: "" }])
-  }
-
-  const handleRemoveUrl = (index: number) => {
-    if (urls.length === 1) {
-      setUrls([{ id: nextId.current++, value: "" }])
-    } else {
-      setUrls((prev) => prev.filter((_, i) => i !== index))
-    }
-  }
-
   const handleSave = async () => {
-    if (validUrls.length === 0) return
     setLoading(true)
     setError(null)
     setTriggerMsg(null)
@@ -79,7 +54,6 @@ export default function SchedulerConfigCard({ initialConfig }: Props) {
         method,
         headers: { "Content-Type": "application/json", ...getAuthHeader() },
         body: JSON.stringify({
-          sheet_urls: validUrls,
           interval_value: parseInt(intervalVal, 10) || 12,
           interval_unit: intervalUnit,
           is_enabled: enabled,
@@ -123,45 +97,6 @@ export default function SchedulerConfigCard({ initialConfig }: Props) {
         <Badge size="sm" color={statusColor}>{statusLabel}</Badge>
       </div>
 
-      <div className="mb-4 flex flex-col gap-2">
-        {urls.map((u, index) => (
-          <div key={u.id} className="flex items-end gap-2">
-            <div className="flex-1">
-              {index === 0 && <Label htmlFor="sched-url-0">Sheet URL(s)</Label>}
-              <Input
-                id={`sched-url-${index}`}
-                placeholder="https://docs.google.com/spreadsheets/d/..."
-                value={u.value}
-                onChange={(e) => handleUrlChange(index, e.target.value)}
-              />
-            </div>
-            <button
-              type="button"
-              onClick={() => handleRemoveUrl(index)}
-              className="mb-0.5 flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:border-error-300 hover:text-error-500 dark:border-white/10 dark:hover:border-error-400"
-              aria-label="Remove URL"
-            >
-              ×
-            </button>
-          </div>
-        ))}
-      </div>
-
-      <div className="mb-4 flex gap-3">
-        {urls.length < MAX_URLS && (
-          <button
-            type="button"
-            onClick={handleAddUrl}
-            className="text-sm font-medium text-brand-500 hover:text-brand-600 dark:text-brand-400"
-          >
-            + Add URL
-          </button>
-        )}
-        <span className="text-sm text-gray-400 dark:text-gray-500">
-          {validUrls.length} / {MAX_URLS} URLs
-        </span>
-      </div>
-
       <div className="mb-4 flex gap-3">
         <div className="w-28">
           <Label htmlFor="sched-interval-val">Interval</Label>
@@ -191,13 +126,13 @@ export default function SchedulerConfigCard({ initialConfig }: Props) {
       {initialConfig && (
         <div className="mb-5 grid grid-cols-2 gap-3 rounded-lg bg-gray-50 p-3 text-sm dark:bg-white/3">
           <div>
-            <span className="block text-gray-500 dark:text-gray-400 text-theme-xs">Last Run</span>
+            <span className="block text-theme-xs text-gray-500 dark:text-gray-400">Last Run</span>
             <span className="font-medium text-gray-700 dark:text-white/80">
               {formatDatetime(initialConfig.last_run_at)}
             </span>
           </div>
           <div>
-            <span className="block text-gray-500 dark:text-gray-400 text-theme-xs">Next Run</span>
+            <span className="block text-theme-xs text-gray-500 dark:text-gray-400">Next Run</span>
             <span className="font-medium text-gray-700 dark:text-white/80">
               {formatDatetime(initialConfig.next_run_at)}
             </span>
@@ -209,7 +144,7 @@ export default function SchedulerConfigCard({ initialConfig }: Props) {
       {triggerMsg && <p className="mb-3 text-sm text-success-500">{triggerMsg}</p>}
 
       <div className="flex gap-3">
-        <Button onClick={handleSave} disabled={loading || validUrls.length === 0}>
+        <Button onClick={handleSave} disabled={loading}>
           {loading ? "Saving…" : "Save Scheduler"}
         </Button>
         {initialConfig && (
