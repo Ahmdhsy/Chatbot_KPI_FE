@@ -10,7 +10,7 @@ function getAuthHeader(): Record<string, string> {
 
 export interface SchedulerConfig {
   id: string;
-  sheet_url: string;
+  sheet_urls: string[];
   interval_value: number;
   interval_unit: string;
   is_enabled: boolean;
@@ -25,7 +25,7 @@ export function useScheduler() {
   const [triggerMsg, setTriggerMsg] = useState<string | null>(null);
 
   const saveConfig = useCallback(async (payload: {
-    sheet_url: string;
+    sheet_urls: string[];
     interval_value: number;
     interval_unit: string;
     is_enabled: boolean;
