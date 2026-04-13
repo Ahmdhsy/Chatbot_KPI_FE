@@ -1,7 +1,7 @@
 import PageBreadCrumb from "@/components/common/PageBreadCrumb"
 import SchedulerConfigCard from "@/components/ingestion/SchedulerConfigCard"
 import KpiMasterIngestionCard from "@/components/ingestion/KpiMasterIngestionCard"
-import IngestionLogsTable from "@/components/ingestion/IngestionLogsTable"
+import IngestionLogsTable, { PAGE_SIZE } from "@/components/ingestion/IngestionLogsTable"
 import { serverFetch } from "@/lib/server-api"
 import { SchedulerConfig } from "@/hooks/useScheduler"
 import { LogEntry } from "@/hooks/useIngestion"
@@ -24,7 +24,7 @@ export default async function IngestionPage() {
   }
 
   try {
-    const logsData = await serverFetch<LogsResponse>("/api/v1/ingest/logs?limit=10")
+    const logsData = await serverFetch<LogsResponse>(`/api/v1/ingest/logs?limit=${PAGE_SIZE}`)
     initialLogs = logsData.logs
     initialTotal = logsData.total
   } catch {
