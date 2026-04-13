@@ -1,5 +1,5 @@
 "use client"
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState, useRef } from "react"
 import Badge from "@/components/ui/badge/Badge"
 import {
   Table, TableBody, TableCell, TableHeader, TableRow,
@@ -8,7 +8,7 @@ import Pagination from "@/components/tables/Pagination"
 import { LogEntry } from "@/hooks/useIngestion"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"
-const PAGE_SIZE = 10
+export const PAGE_SIZE = 10
 
 type FilterType = "all" | "kpi_tracker" | "kpi_master"
 
@@ -34,15 +34,14 @@ export default function IngestionLogsTable({ initialLogs, initialTotal }: Props)
   const [total, setTotal] = useState(initialTotal)
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(false)
-  const [isInitial, setIsInitial] = useState(true)
+  const isFirstRender = useRef(true)
 
   // Keep initial SSR data on first render; fetch client-side on filter/page change
   useEffect(() => {
-    if (isInitial && filter === "all" && page === 1) {
-      setIsInitial(false)
+    if (isFirstRender.current) {
+      isFirstRender.current = false
       return
     }
-    setIsInitial(false)
     setLoading(true)
     const sourceType = filter === "all" ? "" : `&source_type=${filter}`
     fetch(

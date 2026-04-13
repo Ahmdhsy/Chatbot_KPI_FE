@@ -103,7 +103,7 @@ export default function SchedulerConfigCard({ initialConfig }: Props) {
         <Input
           id="sched-url"
           placeholder="https://docs.google.com/spreadsheets/d/..."
-          defaultValue={url}
+          value={url}
           onChange={(e) => setUrl(e.target.value)}
         />
       </div>
@@ -115,7 +115,7 @@ export default function SchedulerConfigCard({ initialConfig }: Props) {
             id="sched-interval-val"
             type="number"
             min="1"
-            defaultValue={intervalVal}
+            value={intervalVal}
             onChange={(e) => setIntervalVal(e.target.value)}
           />
         </div>
