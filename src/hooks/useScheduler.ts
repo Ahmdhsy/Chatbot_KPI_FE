@@ -24,23 +24,6 @@ export function useScheduler() {
   const [error, setError] = useState<string | null>(null);
   const [triggerMsg, setTriggerMsg] = useState<string | null>(null);
 
-  const fetchConfig = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(`${API_BASE}/api/v1/scheduler`, {
-        headers: { ...getAuthHeader() },
-      });
-      if (res.status === 404) { setConfig(null); return; }
-      if (!res.ok) throw new Error((await res.json()).detail ?? "Failed to fetch");
-      setConfig(await res.json());
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Unknown error");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   const saveConfig = useCallback(async (payload: {
     sheet_url: string;
     interval_value: number;
@@ -84,5 +67,5 @@ export function useScheduler() {
     }
   }, []);
 
-  return { config, loading, error, triggerMsg, fetchConfig, saveConfig, triggerNow };
+  return { config, loading, error, triggerMsg, saveConfig, triggerNow };
 }
