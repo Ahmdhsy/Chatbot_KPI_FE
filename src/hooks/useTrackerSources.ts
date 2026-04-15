@@ -1,9 +1,14 @@
+/** KPI Group dengan group_type="tracker" — digunakan sebagai tracker source */
 export interface TrackerSource {
-  id: string;
-  name: string;
-  sheet_url: string;
-  is_active: boolean;
-  is_scheduled: boolean;
-  created_at: string;
-  updated_at: string;
+  id: string
+  nama_grup: string
+  group_type: string
+  sheet_url: string
+  sheet_id: string | null
+  sheet_name: string | null
+  tahun: number | null
+  is_scheduled: boolean
+  is_active: boolean
+  created_at: string
+  updated_at: string
 }
