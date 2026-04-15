@@ -189,7 +189,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const refreshAccessToken = async (): Promise<boolean> => {
-    const currentRefreshToken = localStorage.getItem("refreshToken");
+    const currentRefreshToken = localStorage.getItem("refresh_token");
     
     if (!currentRefreshToken) {
       console.warn("[AuthContext] No refresh token available");

@@ -6,9 +6,9 @@ import {
 } from "@/components/ui/table"
 import Pagination from "@/components/tables/Pagination"
 import { LogEntry } from "@/hooks/useIngestion"
+import { INGEST_LOG_PAGE_SIZE } from "@/lib/ingestionConstants"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"
-export const PAGE_SIZE = 10
 
 type FilterType = "all" | "kpi_tracker" | "kpi_master"
 
@@ -20,6 +20,8 @@ function getAuthHeader(): Record<string, string> {
 interface Props {
   initialLogs: LogEntry[]
   initialTotal: number
+  /** Jika diset, filter dikunci ke nilai ini dan tab filter disembunyikan */
+  fixedFilter?: FilterType
 }
 
 const TABS: { label: string; value: FilterType }[] = [
@@ -28,8 +30,8 @@ const TABS: { label: string; value: FilterType }[] = [
   { label: "KPI Master", value: "kpi_master" },
 ]
 
-export default function IngestionLogsTable({ initialLogs, initialTotal }: Props) {
-  const [filter, setFilter] = useState<FilterType>("all")
+export default function IngestionLogsTable({ initialLogs, initialTotal, fixedFilter }: Props) {
+  const [filter, setFilter] = useState<FilterType>(fixedFilter ?? "all")
   const [logs, setLogs] = useState<LogEntry[]>(initialLogs)
   const [total, setTotal] = useState(initialTotal)
   const [page, setPage] = useState(1)
@@ -45,12 +47,12 @@ export default function IngestionLogsTable({ initialLogs, initialTotal }: Props)
     setLoading(true)
     const sourceType = filter === "all" ? "" : `&source_type=${filter}`
     fetch(
-      `${API_BASE}/api/v1/ingest/logs?limit=${PAGE_SIZE * page}${sourceType}`,
+      `${API_BASE}/api/v1/ingest/logs?limit=${INGEST_LOG_PAGE_SIZE * page}${sourceType}`,
       { headers: { ...getAuthHeader() } },
     )
       .then((r) => r.json())
       .then((data: { total: number; logs: LogEntry[] }) => {
-        setLogs(data.logs.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE))
+        setLogs(data.logs.slice((page - 1) * INGEST_LOG_PAGE_SIZE, page * INGEST_LOG_PAGE_SIZE))
         setTotal(data.total)
       })
       .catch(() => setLogs([]))
@@ -59,13 +61,13 @@ export default function IngestionLogsTable({ initialLogs, initialTotal }: Props)
 
   // When SSR data changes (router.refresh), reset to SSR data
   useEffect(() => {
-    if (filter === "all" && page === 1) {
+    if (page === 1) {
       setLogs(initialLogs)
       setTotal(initialTotal)
     }
   }, [initialLogs, initialTotal])
 
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
+  const totalPages = Math.max(1, Math.ceil(total / INGEST_LOG_PAGE_SIZE))
 
   const statusColor = (status: string) => {
     if (status === "success") return "success"
@@ -81,21 +83,27 @@ export default function IngestionLogsTable({ initialLogs, initialTotal }: Props)
         <h3 className="text-base font-semibold text-gray-800 dark:text-white/90">
           Ingestion Logs
         </h3>
-        <div className="flex gap-1">
-          {TABS.map((tab) => (
-            <button
-              key={tab.value}
-              onClick={() => { setFilter(tab.value); setPage(1) }}
-              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
-                filter === tab.value
-                  ? "bg-brand-500 text-white"
-                  : "text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/[0.05]"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+        {fixedFilter ? (
+          <span className="rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-500 dark:bg-white/5 dark:text-gray-400">
+            {TABS.find((t) => t.value === fixedFilter)?.label ?? fixedFilter}
+          </span>
+        ) : (
+          <div className="flex gap-1">
+            {TABS.map((tab) => (
+              <button
+                key={tab.value}
+                onClick={() => { setFilter(tab.value); setPage(1) }}
+                className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+                  filter === tab.value
+                    ? "bg-brand-500 text-white"
+                    : "text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/5"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="max-w-full overflow-x-auto">
