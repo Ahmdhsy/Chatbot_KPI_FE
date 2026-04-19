@@ -21,11 +21,6 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   {
-    icon: <GridIcon />,
-    name: "Dashboard",
-    path: "/",
-  },
-  {
     icon: <UserCircleIcon />,
     name: "User Management",
     path: "/users",
@@ -249,34 +244,37 @@ const AppSidebar: React.FC = () => {
       onMouseLeave={() => setIsHovered(false)}
     >
       <div
-        className={`py-8 flex  ${
+        className={`py-8 flex items-center gap-0 ${
           !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
         }`}
       >
-        <Link href="/">
+        <Link href="/" className="flex items-center gap-0 -space-x-5">
           {isExpanded || isHovered || isMobileOpen ? (
             <>
               <Image
                 className="dark:hidden"
-                src="/images/logo/logo.svg"
-                alt="Logo"
-                width={150}
+                src="/images/logo/logo-kpi.png"
+                alt="Chatbot KPI Logo"
+                width={65}
                 height={40}
                 style={{ width: "auto", height: "auto" }}
               />
               <Image
                 className="hidden dark:block"
-                src="/images/logo/logo-dark.svg"
-                alt="Logo"
-                width={150}
+                src="/images/logo/logo-kpi.png"
+                alt="Chatbot KPI Logo"
+                width={40}
                 height={40}
                 style={{ width: "auto", height: "auto" }}
               />
+              <span className="text-lg font-semibold text-black dark:text-white">
+                Chatbot KPI
+              </span>
             </>
           ) : (
             <Image
-              src="/images/logo/logo-icon.svg"
-              alt="Logo"
+              src="/images/logo/logo-kpi.png"
+              alt="Chatbot KPI Logo"
               width={32}
               height={32}
             />
