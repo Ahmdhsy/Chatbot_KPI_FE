@@ -20,18 +20,23 @@ export default function AuthLayout({
             <div className="relative items-center justify-center  flex z-1">
               {/* <!-- ===== Common Grid Shape Start ===== --> */}
               <GridShape />
-              <div className="flex flex-col items-center max-w-xs">
-                <Link href="/" className="block mb-4">
+              <div className="flex items-center gap-0 -space-x-5">
+                <Link href="/" className="block">
                   <Image
-                    width={231}
-                    height={48}
-                    src="./images/logo/auth-logo.svg"
-                    alt="Logo"
+                    width={200}
+                    height={200}
+                    src="/images/logo/logo-kpi.png"
+                    alt="KPI Logo"
                   />
                 </Link>
-                <p className="text-center text-gray-400 dark:text-white/60">
-                  Free and Open-Source Tailwind CSS Admin Dashboard Template
-                </p>
+                <div className="flex flex-col">
+                  <h2 className="text-2xl font-bold text-white mb-2">
+                    Chatbot KPI
+                  </h2>
+                  <p className="text-white/80">
+                    Optimalisasi monitoring KPI PT. Aman Media Interaktif
+                  </p>
+                </div>
               </div>
             </div>
           </div>
