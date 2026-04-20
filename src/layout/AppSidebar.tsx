@@ -27,8 +27,11 @@ const navItems: NavItem[] = [
   },
   {
     icon: <PlugInIcon />,
-    name: "Ingestion",
-    path: "/ingestion",
+    name: "KPI Management",
+    subItems: [
+      { name: "KPI Master", path: "/ingestion/kpi-master" },
+      { name: "KPI Tracker", path: "/ingestion/kpi-tracker" },
+    ],
   },
 ];
 
