@@ -86,7 +86,7 @@ export default async function KpiTrackerIngestionPage() {
       <div className="flex flex-col gap-6">
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <SummaryCard
             title="Total Sources"
             value={initialSources.length}
