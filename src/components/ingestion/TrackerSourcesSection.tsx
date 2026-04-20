@@ -225,7 +225,7 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
       {/* ── Table card ──────────────────────────────────────────────── */}
       <div className="rounded-2xl border border-gray-200 bg-white dark:border-white/5 dark:bg-white/3">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4 dark:border-white/5">
+        <div className="flex flex-col gap-3 border-b border-gray-100 px-6 py-4 sm:flex-row sm:items-center sm:justify-between dark:border-white/5">
           <div>
             <h3 className="text-base font-semibold text-gray-800 dark:text-white/90">
               KPI Tracker Sources
