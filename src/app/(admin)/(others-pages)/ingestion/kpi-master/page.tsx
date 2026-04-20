@@ -82,12 +82,6 @@ export default async function KpiMasterIngestionPage() {
   }
 
   const latestLog = initialLogs[0]
-  const lastStatus = latestLog?.status as "success" | "partial" | "failed" | undefined
-  const statusBadgeColor =
-    lastStatus === "success" ? ("success" as const)
-    : lastStatus === "partial" ? ("warning" as const)
-    : lastStatus === "failed" ? ("error" as const)
-    : undefined
 
   return (
     <div>
@@ -95,7 +89,7 @@ export default async function KpiMasterIngestionPage() {
       <div className="flex flex-col gap-8">
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <SummaryCard
             title="Total Sources"
             value={initialManagement.total || "—"}
@@ -107,12 +101,6 @@ export default async function KpiMasterIngestionPage() {
             icon={<CalendarIcon />}
           />
           <SummaryCard
-            title="Last Status"
-            value={lastStatus ?? "—"}
-            icon={<CheckIcon />}
-            badge={lastStatus && statusBadgeColor ? { label: lastStatus, color: statusBadgeColor } : undefined}
-          />
-          <SummaryCard
             title="Records Ingested"
             value={latestLog?.ingested ?? "—"}
             icon={<ArrowDownIcon />}
@@ -121,7 +109,7 @@ export default async function KpiMasterIngestionPage() {
 
         {/* Management Section */}
         <div>
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h3 className="text-base font-semibold text-gray-800 dark:text-white/90">
                 KPI Master Management
