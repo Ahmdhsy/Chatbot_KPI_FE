@@ -396,30 +396,64 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
         )}
       </div>
 
-      {/* ── Add Modal ────────────────────────────────────────────────── */}
-      <Modal isOpen={addOpen} onClose={handleCloseAdd} className="max-w-md p-6">
+      <Modal isOpen={addOpen} onClose={handleCloseAdd} className="max-w-4xl p-6">
         <h4 className="mb-1 text-lg font-semibold text-gray-800 dark:text-white/90">Tambah Sumber Baru</h4>
         <p className="mb-5 text-sm text-gray-500 dark:text-gray-400">
           Nama file akan diambil otomatis dari Google Sheets saat disimpan.
         </p>
-        <div className="flex flex-col gap-4">
-          <div>
-            <Label htmlFor="add-url">Sheet URL</Label>
-            <Input id="add-url" placeholder="https://docs.google.com/spreadsheets/d/..."
-              value={newUrl} onChange={(e) => setNewUrl(e.target.value)} />
+        <div className="grid gap-6 md:grid-cols-2">
+          <div className="flex flex-col gap-4">
+            <div>
+              <Label htmlFor="add-url">Sheet URL</Label>
+              <Input
+                id="add-url"
+                placeholder="https://docs.google.com/spreadsheets/d/..."
+                value={newUrl}
+                onChange={(e) => setNewUrl(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="add-tahun">Tahun</Label>
+              <Input
+                id="add-tahun"
+                type="number"
+                placeholder="2025"
+                value={newTahun}
+                onChange={(e) => setNewTahun(e.target.value)}
+              />
+            </div>
+            <Switch label="Include in Scheduler" defaultChecked={newIsScheduled} onChange={setNewIsScheduled} />
+            {error && <p className="text-sm text-error-500">{error}</p>}
+            <div className="flex justify-end gap-3 pt-1">
+              <Button variant="outline" onClick={handleCloseAdd} disabled={saving}>Batal</Button>
+              <Button onClick={handleAdd} disabled={saving || !newUrl.trim()}>
+                {saving ? "Menyimpan…" : "Add Source"}
+              </Button>
+            </div>
           </div>
-          <div>
-            <Label htmlFor="add-tahun">Tahun</Label>
-            <Input id="add-tahun" type="number" placeholder="2025"
-              value={newTahun} onChange={(e) => setNewTahun(e.target.value)} />
-          </div>
-          <Switch label="Include in Scheduler" defaultChecked={newIsScheduled} onChange={setNewIsScheduled} />
-          {error && <p className="text-sm text-error-500">{error}</p>}
-          <div className="flex justify-end gap-3 pt-1">
-            <Button variant="outline" onClick={handleCloseAdd} disabled={saving}>Batal</Button>
-            <Button onClick={handleAdd} disabled={saving || !newUrl.trim()}>
-              {saving ? "Menyimpan…" : "Add Source"}
-            </Button>
+
+          <div className="rounded-xl border border-gray-100 bg-yellow-50 p-4 dark:border-white/5 dark:bg-white/5">
+            <h5 className="mb-2 text-sm font-semibold text-gray-800 dark:text-white/90">Panduan Ingestion</h5>
+            <ul className="list-disc list-inside space-y-2 text-sm text-gray-600 dark:text-gray-300">
+              <li>
+                Bagikan spreadsheet ke akun berikut (minimal <strong>Viewer</strong>):
+                <div className="mt-1.5 rounded-lg bg-orange-200 px-3 py-2 text-xs font-mono text-gray-800 dark:bg-white/10 dark:text-gray-200 break-all">
+                  sheet-access-bot@impressive-hull-429606-b3.iam.gserviceaccount.com
+                </div>
+              </li>
+              <li>
+                Setiap tab dalam spreadsheet mewakili <strong>data satu karyawan</strong> untuk satu periode.
+              </li>
+              <li>
+                Kolom <strong>wajib</strong>: <code className="text-xs">Nama KPI</code>
+              </li>
+              <li>
+                Kolom <strong>opsional</strong>: Tanggal, Realisasi, Keterangan
+              </li>
+              <li>
+                Nama KPI harus sesuai dengan data <strong>KPI Master</strong> yang sudah diingest sebelumnya.
+              </li>
+            </ul>
           </div>
         </div>
       </Modal>

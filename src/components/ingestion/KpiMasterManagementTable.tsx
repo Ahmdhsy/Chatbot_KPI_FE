@@ -34,9 +34,7 @@ interface KpiMasterManagementResponse {
 }
 
 interface IngestionResponse {
-	status: string
-	count: number
-	message: string
+	id: string
 }
 
 interface Props {
@@ -106,11 +104,12 @@ export default function KpiMasterManagementTable({ initialData }: Props) {
 		setError(null)
 		try {
 			const { data } = await apiClientWithAuth.get<KpiMasterManagementResponse>(
-				"/api/v1/ingest/kpi-master/management",
+				"/api/v1/kpi/",
 				{
 					params: {
 						page: targetPage,
 						page_size: pageSize,
+						group_type: "master",
 					},
 				},
 			)
@@ -150,14 +149,14 @@ export default function KpiMasterManagementTable({ initialData }: Props) {
 		setSuccess(null)
 
 		try {
-			const { data } = await apiClientWithAuth.put<IngestionResponse>(
-				`/api/v1/ingest/kpi-master/management/${editing.id}`,
+			const { data } = await apiClientWithAuth.patch<IngestionResponse>(
+				`/api/v1/kpi/${editing.id}`,
 				payload,
 			)
 
 			closeEdit()
 			await fetchPage(page)
-			setSuccess(`${data.message} (status: ${data.status}, count: ${data.count})`)
+			setSuccess(`KPI Master group berhasil di-update dan di-ingest ulang (ID: ${data.id}).`)
 			router.refresh()
 		} catch (e: unknown) {
 			setError(getErrorMessage(e, "Gagal update dan re-ingest KPI Master."))

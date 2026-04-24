@@ -18,6 +18,46 @@ export const setRefreshTokenCallback = (
   refreshTokenCallback = callback;
 };
 
+const clearClientAuthState = async () => {
+  if (typeof window === "undefined") return;
+
+  try {
+    await fetch("/api/auth/logout", { method: "POST" });
+  } catch {
+    // Ignore cookie-clear failures; local cleanup + redirect still proceeds.
+  }
+
+  localStorage.removeItem("access_token");
+  localStorage.removeItem("refresh_token");
+  localStorage.removeItem("user");
+  localStorage.removeItem("tokenExpiresAt");
+
+  const tokenLikeKeys = Object.keys(localStorage).filter(
+    (key) => key.toLowerCase().includes("token")
+  );
+  tokenLikeKeys.forEach((key) => {
+    if (!["access_token", "refresh_token", "tokenExpiresAt"].includes(key)) {
+      localStorage.removeItem(key);
+    }
+  });
+};
+
+let isForcingLogout = false;
+
+const forceLogoutRedirect = async () => {
+  if (typeof window === "undefined" || isForcingLogout) return;
+  isForcingLogout = true;
+
+  await clearClientAuthState();
+
+  if (!window.location.pathname.startsWith("/signin")) {
+    window.location.replace("/signin");
+    return;
+  }
+
+  isForcingLogout = false;
+};
+
 // Request interceptor to add auth token
 apiClientWithAuth.interceptors.request.use(
   (config) => {
@@ -79,14 +119,17 @@ apiClientWithAuth.interceptors.response.use(
             }
           } else {
             console.log("[API Interceptor] Token refresh failed, user will be logged out");
+            await forceLogoutRedirect();
             return Promise.reject(error);
           }
         } else {
           console.warn("[API Interceptor] No refresh callback available");
+          await forceLogoutRedirect();
           return Promise.reject(error);
         }
       } catch (refreshError) {
         console.error("[API Interceptor] Token refresh error:", refreshError);
+        await forceLogoutRedirect();
         return Promise.reject(refreshError);
       }
     }

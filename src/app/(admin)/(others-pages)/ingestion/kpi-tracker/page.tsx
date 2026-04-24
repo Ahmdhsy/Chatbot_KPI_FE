@@ -68,7 +68,7 @@ export default async function KpiTrackerIngestionPage() {
 
   try {
     const logsData = await serverFetch<LogsResponse>(
-      `/api/v1/ingest/logs?limit=${INGEST_LOG_PAGE_SIZE}&source_type=kpi_tracker`
+      `/api/v1/ingest/logs?limit=${INGEST_LOG_PAGE_SIZE}&group_type=tracker`
     )
     initialLogs = logsData.logs
     initialTotal = logsData.total

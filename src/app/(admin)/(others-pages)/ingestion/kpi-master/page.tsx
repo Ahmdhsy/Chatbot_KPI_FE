@@ -64,7 +64,7 @@ export default async function KpiMasterIngestionPage() {
 
   try {
     const logsData = await serverFetch<LogsResponse>(
-      `/api/v1/ingest/logs?limit=${INGEST_LOG_PAGE_SIZE}&source_type=kpi_master`
+      `/api/v1/ingest/logs?limit=${INGEST_LOG_PAGE_SIZE}&group_type=master`
     )
     initialLogs = logsData.logs
     initialTotal = logsData.total
@@ -75,7 +75,7 @@ export default async function KpiMasterIngestionPage() {
 
   try {
     initialManagement = await serverFetch<KpiMasterManagementResponse>(
-      "/api/v1/ingest/kpi-master/management?page=1&page_size=10"
+      "/api/v1/kpi/?group_type=master&page=1&page_size=10"
     )
   } catch {
     initialManagement = { total: 0, page: 1, page_size: 10, total_pages: 1, data: [] }
@@ -128,6 +128,7 @@ export default async function KpiMasterIngestionPage() {
           initialLogs={initialLogs}
           initialTotal={initialTotal}
           fixedFilter="kpi_master"
+          hidePersonColumn
         />
       </div>
     </div>

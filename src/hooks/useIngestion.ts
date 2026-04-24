@@ -34,9 +34,10 @@ export function useIngestion() {
   const fetchLogs = useCallback(async (
     sourceType?: "kpi_tracker" | "kpi_master",
     limit = 20,
+    offset = 0,
   ): Promise<{ total: number; logs: LogEntry[] }> => {
-    const params = new URLSearchParams({ limit: String(limit) });
-    if (sourceType) params.set("source_type", sourceType);
+    const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
+    if (sourceType) params.set("group_type", sourceType === "kpi_master" ? "master" : "tracker");
     const res = await fetch(
       `${API_BASE}/api/v1/ingest/logs?${params}`,
       { headers: { ...getAuthHeader() } }
