@@ -251,6 +251,12 @@ export default function KpiMasterManagementTable({ initialData }: Props) {
 										<td className="px-6 py-3 text-xs text-gray-400">{formatDate(row.updated_at)}</td>
 										<td className="px-6 py-3">
 											<div className="flex items-center gap-3">
+												<a
+													href={`/ingestion/${row.id}`}
+													className="text-xs font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white/80"
+												>
+													Detail
+												</a>
 												<button
 													onClick={() => openEdit(row)}
 													className="text-xs font-medium text-brand-500 hover:text-brand-600 dark:text-brand-400"

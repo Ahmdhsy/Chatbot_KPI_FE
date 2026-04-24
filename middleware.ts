@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 
-const PROTECTED_PATHS = ["/", "/users", "/ingestion"]
+const PROTECTED_PATHS = ["/", "/users", "/ingestion", "/chat"]
 const AUTH_PATHS = ["/signin", "/signup"]
 
 type TokenState = "missing" | "valid" | "invalid"
