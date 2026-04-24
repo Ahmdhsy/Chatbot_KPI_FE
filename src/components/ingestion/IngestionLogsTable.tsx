@@ -22,6 +22,8 @@ interface Props {
   initialTotal: number
   /** Jika diset, filter dikunci ke nilai ini dan tab filter disembunyikan */
   fixedFilter?: FilterType
+  /** Sembunyikan kolom Person saat memang tidak relevan (mis. KPI Master). */
+  hidePersonColumn?: boolean
 }
 
 const TABS: { label: string; value: FilterType }[] = [
@@ -30,7 +32,12 @@ const TABS: { label: string; value: FilterType }[] = [
   { label: "KPI Master", value: "kpi_master" },
 ]
 
-export default function IngestionLogsTable({ initialLogs, initialTotal, fixedFilter }: Props) {
+export default function IngestionLogsTable({
+  initialLogs,
+  initialTotal,
+  fixedFilter,
+  hidePersonColumn = false,
+}: Props) {
   const [filter, setFilter] = useState<FilterType>(fixedFilter ?? "all")
   const [logs, setLogs] = useState<LogEntry[]>(initialLogs)
   const [total, setTotal] = useState(initialTotal)
@@ -45,14 +52,16 @@ export default function IngestionLogsTable({ initialLogs, initialTotal, fixedFil
       return
     }
     setLoading(true)
-    const sourceType = filter === "all" ? "" : `&source_type=${filter}`
+    const groupType =
+      filter === "all" ? "" : `&group_type=${filter === "kpi_master" ? "master" : "tracker"}`
+    const offset = (page - 1) * INGEST_LOG_PAGE_SIZE
     fetch(
-      `${API_BASE}/api/v1/ingest/logs?limit=${INGEST_LOG_PAGE_SIZE * page}${sourceType}`,
+      `${API_BASE}/api/v1/ingest/logs?limit=${INGEST_LOG_PAGE_SIZE}&offset=${offset}${groupType}`,
       { headers: { ...getAuthHeader() } },
     )
       .then((r) => r.json())
       .then((data: { total: number; logs: LogEntry[] }) => {
-        setLogs(data.logs.slice((page - 1) * INGEST_LOG_PAGE_SIZE, page * INGEST_LOG_PAGE_SIZE))
+        setLogs(data.logs)
         setTotal(data.total)
       })
       .catch(() => setLogs([]))
@@ -76,6 +85,10 @@ export default function IngestionLogsTable({ initialLogs, initialTotal, fixedFil
   }
 
   const typeColor = (type: string) => (type === "kpi_master" ? "info" : "primary")
+  const headers = hidePersonColumn
+    ? ["Date", "Type", "Sheet Name", "Total", "Ingested", "Failed", "Status"]
+    : ["Date", "Type", "Sheet Name", "Person", "Total", "Ingested", "Failed", "Status"]
+  const colSpan = hidePersonColumn ? 7 : 8
 
   return (
     <div className="rounded-2xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
@@ -110,7 +123,7 @@ export default function IngestionLogsTable({ initialLogs, initialTotal, fixedFil
         <Table>
           <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
             <TableRow>
-              {["Date", "Type", "Sheet Name", "Person", "Total", "Ingested", "Failed", "Status"].map(
+              {headers.map(
                 (h) => (
                   <TableCell
                     key={h}
@@ -126,13 +139,13 @@ export default function IngestionLogsTable({ initialLogs, initialTotal, fixedFil
           <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
             {loading ? (
               <TableRow>
-                <TableCell className="px-5 py-4 text-center text-sm text-gray-400" colSpan={8}>
+                <TableCell className="px-5 py-4 text-center text-sm text-gray-400" colSpan={colSpan}>
                   Loading…
                 </TableCell>
               </TableRow>
             ) : logs.length === 0 ? (
               <TableRow>
-                <TableCell className="px-5 py-4 text-center text-sm text-gray-400" colSpan={8}>
+                <TableCell className="px-5 py-4 text-center text-sm text-gray-400" colSpan={colSpan}>
                   No logs found.
                 </TableCell>
               </TableRow>
@@ -150,9 +163,11 @@ export default function IngestionLogsTable({ initialLogs, initialTotal, fixedFil
                   <TableCell className="px-5 py-3 text-theme-sm text-gray-600 dark:text-gray-400">
                     {log.sheet_name ?? "—"}
                   </TableCell>
-                  <TableCell className="px-5 py-3 text-theme-sm text-gray-600 dark:text-gray-400">
-                    {log.nama_orang ?? "—"}
-                  </TableCell>
+                  {!hidePersonColumn && (
+                    <TableCell className="px-5 py-3 text-theme-sm text-gray-600 dark:text-gray-400">
+                      {log.nama_orang ?? "—"}
+                    </TableCell>
+                  )}
                   <TableCell className="px-5 py-3 text-theme-sm text-gray-600 dark:text-gray-400">
                     {log.total_rows}
                   </TableCell>

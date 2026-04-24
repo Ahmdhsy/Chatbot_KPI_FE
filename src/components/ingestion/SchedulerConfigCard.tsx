@@ -5,7 +5,6 @@ import Badge from "@/components/ui/badge/Badge"
 import Button from "@/components/ui/button/Button"
 import Input from "@/components/form/input/InputField"
 import Label from "@/components/form/Label"
-import Select from "@/components/form/Select"
 import Switch from "@/components/form/switch/Switch"
 import { SchedulerConfig } from "@/hooks/useScheduler"
 
@@ -20,12 +19,15 @@ interface Props {
   initialConfig: SchedulerConfig | null
 }
 
-const UNIT_OPTIONS = [
-  { value: "hours", label: "Hours" },
-  { value: "days", label: "Days" },
-  { value: "weeks", label: "Weeks" },
-  { value: "months", label: "Months" },
-]
+function parseIntervalValue(iso: string | null): { day: number; hour: number } {
+  if (!iso) return { day: 1, hour: 0 }
+  const d = new Date(iso)
+  return { day: d.getUTCDate(), hour: d.getUTCHours() }
+}
+
+function buildIntervalValue(day: number, hour: number): string {
+  return new Date(Date.UTC(1900, 0, day, hour, 0, 0)).toISOString()
+}
 
 function formatDatetime(iso: string | null): string {
   if (!iso) return "—"
@@ -34,25 +36,38 @@ function formatDatetime(iso: string | null): string {
 
 export default function SchedulerConfigCard({ initialConfig }: Props) {
   const router = useRouter()
-  const [intervalVal, setIntervalVal] = useState(String(initialConfig?.interval_value ?? 12))
-  const [intervalUnit, setIntervalUnit] = useState<"hours" | "days" | "weeks" | "months">(
-    initialConfig?.interval_unit ?? "hours"
+  const { day: initDay, hour: initHour } = parseIntervalValue(
+    initialConfig?.interval_value ?? null
   )
+  const [day, setDay] = useState(initDay)
+  const [hour, setHour] = useState(initHour)
   const [enabled, setEnabled] = useState(initialConfig?.is_enabled ?? true)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [triggerMsg, setTriggerMsg] = useState<string | null>(null)
 
-  const statusLabel = !initialConfig ? "Not Configured" : initialConfig.is_enabled ? "Active" : "Paused"
-  const statusColor = !initialConfig ? "light" : initialConfig.is_enabled ? "success" : "warning"
+  const statusLabel = !initialConfig
+    ? "Not Configured"
+    : initialConfig.is_enabled
+    ? "Active"
+    : "Paused"
+  const statusColor = !initialConfig
+    ? "light"
+    : initialConfig.is_enabled
+    ? "success"
+    : "warning"
 
   const handleSave = async () => {
     setLoading(true)
     setError(null)
     setTriggerMsg(null)
-    const parsed = parseInt(intervalVal, 10)
-    if (isNaN(parsed) || parsed < 1) {
-      setError("Interval must be a positive number")
+    if (day < 1 || day > 28) {
+      setError("Day must be between 1 and 28")
+      setLoading(false)
+      return
+    }
+    if (hour < 0 || hour > 23) {
+      setError("Hour must be between 0 and 23")
       setLoading(false)
       return
     }
@@ -62,8 +77,7 @@ export default function SchedulerConfigCard({ initialConfig }: Props) {
         method,
         headers: { "Content-Type": "application/json", ...getAuthHeader() },
         body: JSON.stringify({
-          interval_value: parsed,
-          interval_unit: intervalUnit,
+          interval_value: buildIntervalValue(day, hour),
           is_enabled: enabled,
         }),
       })
@@ -105,24 +119,37 @@ export default function SchedulerConfigCard({ initialConfig }: Props) {
         <Badge size="sm" color={statusColor}>{statusLabel}</Badge>
       </div>
 
+      <p className="mb-4 text-xs text-gray-400 dark:text-gray-500">
+        Runs on day{" "}
+        <span className="font-medium text-gray-600 dark:text-gray-300">{day}</span>{" "}
+        of every month at{" "}
+        <span className="font-medium text-gray-600 dark:text-gray-300">
+          {String(hour).padStart(2, "0")}:00 UTC
+        </span>
+        . Auto-pauses after the December run.
+      </p>
+
       <div className="mb-4 flex gap-3">
-        <div className="w-28">
-          <Label htmlFor="sched-interval-val">Interval</Label>
+        <div className="w-32">
+          <Label htmlFor="sched-day">Day of month</Label>
           <Input
-            id="sched-interval-val"
+            id="sched-day"
             type="number"
             min="1"
-            value={intervalVal}
-            onChange={(e) => setIntervalVal(e.target.value)}
+            max="28"
+            value={String(day)}
+            onChange={(e) => setDay(Math.min(28, Math.max(1, parseInt(e.target.value, 10) || 1)))}
           />
         </div>
-        <div className="flex-1">
-          <Label htmlFor="sched-unit">Unit</Label>
-          <Select
-            key={initialConfig?.interval_unit ?? "hours"}
-            options={UNIT_OPTIONS}
-            defaultValue={intervalUnit}
-            onChange={(v) => setIntervalUnit(v as "hours" | "days" | "weeks" | "months")}
+        <div className="w-32">
+          <Label htmlFor="sched-hour">Hour (UTC)</Label>
+          <Input
+            id="sched-hour"
+            type="number"
+            min="0"
+            max="23"
+            value={String(hour)}
+            onChange={(e) => setHour(Math.min(23, Math.max(0, parseInt(e.target.value, 10) || 0)))}
           />
         </div>
       </div>
