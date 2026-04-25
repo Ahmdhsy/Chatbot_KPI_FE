@@ -9,6 +9,8 @@ import Switch from "@/components/form/switch/Switch"
 import { SchedulerConfig } from "@/hooks/useScheduler"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"
+const WIB_OFFSET_HOURS = 7
+const WIB_OFFSET_MS = WIB_OFFSET_HOURS * 60 * 60 * 1000
 
 function getAuthHeader(): Record<string, string> {
   const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null
@@ -21,17 +23,23 @@ interface Props {
 
 function parseIntervalValue(iso: string | null): { day: number; hour: number } {
   if (!iso) return { day: 1, hour: 0 }
-  const d = new Date(iso)
-  return { day: d.getUTCDate(), hour: d.getUTCHours() }
+  const utcDate = new Date(iso)
+  const wibDate = new Date(utcDate.getTime() + WIB_OFFSET_MS)
+  return { day: wibDate.getUTCDate(), hour: wibDate.getUTCHours() }
 }
 
 function buildIntervalValue(day: number, hour: number): string {
-  return new Date(Date.UTC(1900, 0, day, hour, 0, 0)).toISOString()
+  const wibDate = new Date(Date.UTC(1900, 0, day, hour, 0, 0))
+  const utcDate = new Date(wibDate.getTime() - WIB_OFFSET_MS)
+  return utcDate.toISOString()
 }
 
 function formatDatetime(iso: string | null): string {
   if (!iso) return "—"
-  return new Date(iso).toLocaleString()
+  return new Date(iso).toLocaleString("id-ID", {
+    timeZone: "Asia/Jakarta",
+    hour12: false,
+  }) + " WIB"
 }
 
 export default function SchedulerConfigCard({ initialConfig }: Props) {
@@ -124,7 +132,7 @@ export default function SchedulerConfigCard({ initialConfig }: Props) {
         <span className="font-medium text-gray-600 dark:text-gray-300">{day}</span>{" "}
         of every month at{" "}
         <span className="font-medium text-gray-600 dark:text-gray-300">
-          {String(hour).padStart(2, "0")}:00 UTC
+          {String(hour).padStart(2, "0")}:00 WIB
         </span>
         . Auto-pauses after the December run.
       </p>
@@ -142,7 +150,7 @@ export default function SchedulerConfigCard({ initialConfig }: Props) {
           />
         </div>
         <div className="w-32">
-          <Label htmlFor="sched-hour">Hour (UTC)</Label>
+          <Label htmlFor="sched-hour">Hour (WIB)</Label>
           <Input
             id="sched-hour"
             type="number"
