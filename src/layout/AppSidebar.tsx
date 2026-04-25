@@ -10,6 +10,7 @@ import {
   ChevronDownIcon,
   UserCircleIcon,
   PlugInIcon,
+  ChatIcon,
 } from "../icons/index";
 
 type NavItem = {
@@ -24,6 +25,11 @@ const navItems: NavItem[] = [
     icon: <UserCircleIcon />,
     name: "User Management",
     path: "/users",
+  },
+  {
+    icon: <ChatIcon />,
+    name: "Chatbot Management",
+    path: "/chatbots",
   },
   {
     icon: <PlugInIcon />,
