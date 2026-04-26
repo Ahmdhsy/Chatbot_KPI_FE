@@ -1,9 +1,10 @@
 "use client";
-import React, { useEffect, useRef, useState,useCallback } from "react";
+import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
+import { useAuth } from "@/context/AuthContext";
 import {
   GridIcon,
   HorizontaLDots,
@@ -13,11 +14,13 @@ import {
   ChatIcon,
 } from "../icons/index";
 
+type AppRole = "admin" | "hrd" | "kepala_divisi" | "karyawan";
 type NavItem = {
   name: string;
   icon: React.ReactNode;
   path?: string;
-  subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
+  visibleRoles?: AppRole[];
+  subItems?: { name: string; path: string; pro?: boolean; new?: boolean; visibleRoles?: AppRole[] }[];
 };
 
 const navItems: NavItem[] = [
@@ -25,18 +28,21 @@ const navItems: NavItem[] = [
     icon: <UserCircleIcon />,
     name: "User Management",
     path: "/users",
+    visibleRoles: ["admin"],
   },
   {
     icon: <ChatIcon />,
     name: "Chatbot Management",
     path: "/chatbots",
+    visibleRoles: ["admin"],
   },
   {
     icon: <PlugInIcon />,
     name: "KPI Management",
+    visibleRoles: ["hrd"],
     subItems: [
-      { name: "KPI Master", path: "/ingestion/kpi-master" },
-      { name: "KPI Tracker", path: "/ingestion/kpi-tracker" },
+      { name: "KPI Master", path: "/ingestion/kpi-master", visibleRoles: ["hrd"] },
+      { name: "KPI Tracker", path: "/ingestion/kpi-tracker", visibleRoles: ["hrd"] },
     ],
   },
 ];
@@ -45,7 +51,27 @@ const othersItems: NavItem[] = [];
 
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
+  const { user } = useAuth();
   const pathname = usePathname();
+  const currentRole = String(user?.role ?? "").toLowerCase() as AppRole;
+
+  const canAccess = useCallback(
+    (allowedRoles?: AppRole[]) =>
+      !allowedRoles || allowedRoles.length === 0 || allowedRoles.includes(currentRole),
+    [currentRole]
+  );
+
+  const filteredNavItems = useMemo(
+    () =>
+      navItems
+        .filter((item) => canAccess(item.visibleRoles))
+        .map((item) => ({
+          ...item,
+          subItems: item.subItems?.filter((subItem) => canAccess(subItem.visibleRoles)),
+        }))
+        .filter((item) => !item.subItems || item.subItems.length > 0),
+    [canAccess]
+  );
 
   const renderMenuItems = (
     navItems: NavItem[],
@@ -183,13 +209,13 @@ const AppSidebar: React.FC = () => {
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   // const isActive = (path: string) => path === pathname;
-   const isActive = useCallback((path: string) => path === pathname, [pathname]);
+  const isActive = useCallback((path: string) => path === pathname, [pathname]);
 
   useEffect(() => {
     // Check if the current path matches any submenu item
     let submenuMatched = false;
     ["main", "others"].forEach((menuType) => {
-      const items = menuType === "main" ? navItems : othersItems;
+      const items = menuType === "main" ? filteredNavItems : othersItems;
       items.forEach((nav, index) => {
         if (nav.subItems) {
           nav.subItems.forEach((subItem) => {
@@ -209,7 +235,7 @@ const AppSidebar: React.FC = () => {
     if (!submenuMatched) {
       setOpenSubmenu(null);
     }
-  }, [pathname,isActive]);
+  }, [pathname, isActive, filteredNavItems]);
 
   useEffect(() => {
     // Set the height of the submenu items when the submenu is opened
@@ -307,7 +333,7 @@ const AppSidebar: React.FC = () => {
                   <HorizontaLDots />
                 )}
               </h2>
-              {renderMenuItems(navItems, "main")}
+              {renderMenuItems(filteredNavItems, "main")}
             </div>
           </div>
         </nav>

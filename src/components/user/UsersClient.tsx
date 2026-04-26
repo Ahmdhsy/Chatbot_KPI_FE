@@ -20,11 +20,17 @@ function getUserRoleAliases(roleValue: string) {
   const normalizedRole = roleValue.toLowerCase();
   const aliases = [normalizedRole];
 
-  if (normalizedRole === "user") {
-    aliases.push("karyawan");
+  if (normalizedRole === "karyawan") {
+    aliases.push("user", "karyawan");
+  }
+  if (normalizedRole === "hrd") {
+    aliases.push("hrd");
   }
   if (normalizedRole === "kepala_divisi" || normalizedRole === "kepala-divisi") {
-    aliases.push("kepala divisi");
+    aliases.push("kepala divisi", "kepala_divisi", "kepala-divisi");
+  }
+  if (normalizedRole === "admin") {
+    aliases.push("admin");
   }
 
   return aliases;

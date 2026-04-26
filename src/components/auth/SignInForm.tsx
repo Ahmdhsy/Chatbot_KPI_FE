@@ -6,7 +6,7 @@ import Button from "@/components/ui/button/Button";
 import { EyeCloseIcon, EyeIcon } from "@/icons";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 
@@ -17,8 +17,15 @@ export default function SignInForm() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const { addToast } = useToast();
+
+  useEffect(() => {
+    if (!isAuthLoading && isAuthenticated) {
+      router.replace("/");
+    }
+  }, [isAuthLoading, isAuthenticated, router]);
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -44,11 +51,12 @@ export default function SignInForm() {
         throw new Error(msg);
       }
 
-      // Check if user role is admin (only admin can access)
-      if (response.user.role !== "admin") {
+      const normalizedRole = String(response?.user?.role ?? "").toLowerCase();
+      const allowedRoles = ["admin", "hrd"];
+      if (!allowedRoles.includes(normalizedRole)) {
         addToast(
           "error",
-          "Only admin users are allowed to access this dashboard",
+          "Role akun Anda belum memiliki akses ke dashboard KMS",
           "Access Denied"
         );
         setIsLoading(false);
@@ -67,7 +75,7 @@ export default function SignInForm() {
 
       // Redirect to dashboard after 1 second
       setTimeout(() => {
-        router.push("/");
+        router.replace("/");
       }, 1000);
     } catch (error: any) {
       console.error("Login error:", error);

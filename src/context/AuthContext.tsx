@@ -9,7 +9,7 @@ export interface User {
   username: string;
   email: string;
   full_name: string;
-  role: "admin" | "user";
+  role: "admin" | "hrd" | "kepala_divisi" | "karyawan";
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -241,12 +241,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     try {
       if (refreshToken) {
-        await authService.logout(refreshToken);
+        try {
+          await authService.logout(refreshToken);
+        } catch {
+          // Backend logout can fail for expired/revoked refresh token.
+          // Keep logout flow running to clear local session regardless.
+        }
       }
-      // Clear httpOnly cookie
-      await fetch("/api/auth/logout", { method: "POST" })
-    } catch (error) {
-      console.error("Logout API call failed:", error);
+
+      try {
+        // Clear httpOnly cookie
+        await fetch("/api/auth/logout", { method: "POST" });
+      } catch {
+        // Ignore cookie-clear failure; local auth state is still cleared below.
+      }
     } finally {
       setAccessToken(null);
       setRefreshToken(null);
