@@ -25,7 +25,7 @@ export default function CreateUserModal({
     email: "",
     full_name: "",
     password: "",
-    role: "user",
+    role: "karyawan",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -117,7 +117,7 @@ export default function CreateUserModal({
         email: "",
         full_name: "",
         password: "",
-        role: "user",
+        role: "karyawan",
       });
     } catch (error) {
       const axiosError = error as { response?: { status?: number; data?: { detail?: unknown } } }
@@ -299,32 +299,28 @@ export default function CreateUserModal({
 
           {/* Role */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Role *
             </label>
-            <div className="space-y-2">
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="role"
-                  checked={formData.role === "admin"}
-                  onChange={(e) => {
-                    setFormData((prev) => ({
-                      ...prev,
-                      role: e.target.checked ? "admin" : "user",
-                    }));
-                  }}
-                  disabled={loading}
-                  className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-brand-500 focus:ring-brand-500 cursor-pointer"
-                />
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Admin
-                </span>
-              </label>
-            </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-              {formData.role === "admin" ? "User will have admin privileges" : "User will have standard user privileges"}
-            </p>
+            <select
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              disabled={loading}
+              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 dark:bg-gray-700 dark:text-white dark:border-gray-600 ${
+                errors.role
+                  ? "border-red-500"
+                  : "border-gray-300 dark:border-gray-600"
+              }`}
+            >
+              <option value="karyawan">Karyawan</option>
+              <option value="hrd">HRD</option>
+              <option value="kepala_divisi">Kepala Divisi</option>
+              <option value="admin">Admin</option>
+            </select>
+            {errors.role && (
+              <p className="text-red-500 text-sm mt-1">{errors.role}</p>
+            )}
           </div>
 
           {/* Actions */}

@@ -24,7 +24,7 @@ export interface LoginResponse {
     username: string;
     email: string;
     full_name: string;
-    role: "admin" | "user";
+    role: "admin" | "hrd" | "kepala_divisi" | "karyawan";
     is_active: boolean;
     created_at: string;
     updated_at: string;
@@ -45,7 +45,7 @@ export interface RefreshTokenResponse {
     username: string;
     email: string;
     full_name: string;
-    role: "admin" | "user";
+    role: "admin" | "hrd" | "kepala_divisi" | "karyawan";
     is_active: boolean;
     created_at: string;
     updated_at: string;
