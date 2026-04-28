@@ -27,7 +27,6 @@ interface TrackerRecord {
   realisasi: string | null
   nama_orang: string | null
   keterangan: string | null
-  source_row: number | null
   created_at: string
   updated_at: string
 }
@@ -178,7 +177,6 @@ function TrackerRecordsTable({ records }: { records: TrackerRecord[] }) {
               <th className="px-6 py-3 font-medium">Tahun</th>
               <th className="px-6 py-3 font-medium">Realisasi</th>
               <th className="px-6 py-3 font-medium">Keterangan</th>
-              <th className="px-6 py-3 font-medium">Source Row</th>
               <th className="px-6 py-3 font-medium">Updated At</th>
             </tr>
           </thead>
@@ -191,7 +189,6 @@ function TrackerRecordsTable({ records }: { records: TrackerRecord[] }) {
                 <td className="max-w-xs px-6 py-3 text-xs text-gray-400 truncate" title={r.keterangan ?? undefined}>
                   {r.keterangan ?? "—"}
                 </td>
-                <td className="px-6 py-3 text-gray-500">{r.source_row ?? "—"}</td>
                 <td className="px-6 py-3 text-xs text-gray-400">{formatDate(r.updated_at)}</td>
               </tr>
             ))}
@@ -317,25 +314,19 @@ export default async function IngestionDetailPage({
                 {formatDate(group.updated_at)}
               </p>
             </div>
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">
-                Scheduled
-              </p>
-              <Badge
-                size="sm"
-                color={group.is_scheduled ? "success" : "warning"}
-              >
-                {group.is_scheduled ? "Yes" : "No"}
-              </Badge>
-            </div>
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">
-                Group Type
-              </p>
-              <Badge size="sm" color={isMaster ? "primary" : "info"}>
-                {group.group_type}
-              </Badge>
-            </div>
+            {!isMaster && (
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                  Scheduled
+                </p>
+                <Badge
+                  size="sm"
+                  color={group.is_scheduled ? "success" : "warning"}
+                >
+                  {group.is_scheduled ? "Yes" : "No"}
+                </Badge>
+              </div>
+            )}
           </div>
         </div>
 

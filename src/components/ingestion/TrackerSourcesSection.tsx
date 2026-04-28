@@ -56,7 +56,8 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
   const [editIsActive, setEditIsActive] = useState(true)
 
   // ── Delete confirm ────────────────────────────────────────────────────
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
+  const [deleteCandidate, setDeleteCandidate] = useState<TrackerSource | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   // ── Ingestion state ───────────────────────────────────────────────────
   const [ingestingId, setIngestingId] = useState<string | null>(null)
@@ -114,12 +115,23 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
     setEditTahun(source.tahun != null ? String(source.tahun) : "")
     setEditIsScheduled(source.is_scheduled)
     setEditIsActive(source.is_active)
-    setError(null); setDeleteConfirmId(null)
+    setError(null); setDeleteCandidate(null)
   }
 
   const handleCloseEdit = () => {
     setEditSource(null); setEditUrl(""); setEditTahun("")
     setEditIsScheduled(true); setEditIsActive(true); setError(null)
+  }
+
+  const openDeleteConfirmation = (source: TrackerSource) => {
+    setDeleteCandidate(source)
+    setError(null)
+  }
+
+  const closeDeleteConfirmation = () => {
+    if (!deletingId) {
+      setDeleteCandidate(null)
+    }
   }
 
   const selectableSources = useMemo(
@@ -198,17 +210,22 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
   }
 
   // ── Delete → DELETE /api/v1/kpi/{id} ──────────────────────────────────
-  const handleDelete = async (id: string) => {
-    setSaving(true); setError(null)
+  const handleDelete = async () => {
+    if (!deleteCandidate) return
+
+    setDeletingId(deleteCandidate.id)
+    setError(null)
     try {
-      await apiClientWithAuth.delete(`/api/v1/kpi/${id}`)
-      setDeleteConfirmId(null)
-      handleCloseEdit()
+      await apiClientWithAuth.delete(`/api/v1/kpi/${deleteCandidate.id}`)
+      if (editSource?.id === deleteCandidate.id) {
+        handleCloseEdit()
+      }
+      setDeleteCandidate(null)
       await fetchSources()
       router.refresh()
     } catch (e: unknown) {
       setError(getErrorMessage(e, "Delete failed"))
-    } finally { setSaving(false) }
+    } finally { setDeletingId(null) }
   }
 
   // ── Ingest satu sumber ────────────────────────────────────────────────
@@ -378,8 +395,7 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
               </thead>
               <tbody className="divide-y divide-gray-50 dark:divide-white/5">
                 {rows.map((source) => (
-                  <React.Fragment key={source.id}>
-                    <tr className="text-gray-700 dark:text-white/80">
+                  <tr key={source.id} className="text-gray-700 dark:text-white/80">
                       {isBatchMode && (
                         <td className="px-6 py-3">
                           <input
@@ -436,34 +452,15 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
                             Edit
                           </button>
                           <button
-                            onClick={() => { setDeleteConfirmId(source.id); setEditSource(null) }}
-                            className="text-xs font-medium text-gray-400 hover:text-error-500"
+                            onClick={() => openDeleteConfirmation(source)}
+                            disabled={deletingId === source.id}
+                            className="text-xs font-medium text-gray-400 hover:text-error-500 disabled:cursor-not-allowed disabled:opacity-40"
                           >
-                            Delete
+                            {deletingId === source.id ? "Deleting..." : "Delete"}
                           </button>
                         </div>
                       </td>
                     </tr>
-
-                    {deleteConfirmId === source.id && (
-                      <tr>
-                        <td colSpan={isBatchMode ? 8 : 7} className="px-6 pb-3 pt-1">
-                          <div className="flex items-center gap-3 rounded-lg bg-error-50 px-4 py-2.5 text-sm dark:bg-error-500/10">
-                            <span className="text-error-600 dark:text-error-400">
-                              Hapus &quot;{source.nama_grup}&quot; beserta semua data terkait? Tidak bisa dibatalkan.
-                            </span>
-                            <button onClick={() => handleDelete(source.id)} disabled={saving}
-                              className="font-semibold text-error-600 hover:text-error-700 disabled:opacity-40">
-                              Ya, hapus
-                            </button>
-                            <button onClick={() => setDeleteConfirmId(null)} className="text-gray-500 hover:text-gray-700">
-                              Batal
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
                 ))}
               </tbody>
             </table>
@@ -558,10 +555,11 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
           {error && <p className="text-sm text-error-500">{error}</p>}
           <div className="flex items-center justify-between pt-1">
             <button
-              onClick={() => { setDeleteConfirmId(editSource!.id); handleCloseEdit() }}
-              className="text-sm font-medium text-gray-400 hover:text-error-500"
+              onClick={() => editSource && openDeleteConfirmation(editSource)}
+              disabled={!editSource || deletingId === editSource?.id}
+              className="text-sm font-medium text-gray-400 hover:text-error-500 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              Delete
+              {deletingId === editSource?.id ? "Deleting..." : "Delete"}
             </button>
             <div className="flex gap-3">
               <Button variant="outline" onClick={handleCloseEdit} disabled={saving}>Batal</Button>
@@ -570,6 +568,22 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
               </Button>
             </div>
           </div>
+        </div>
+      </Modal>
+
+      <Modal isOpen={!!deleteCandidate} onClose={closeDeleteConfirmation} className="max-w-md p-6">
+        <h4 className="mb-2 text-lg font-semibold text-error-700 dark:text-error-400">Konfirmasi Hapus KPI Tracker</h4>
+        <p className="mb-3 text-sm text-gray-600 dark:text-gray-300">
+          Apakah Anda yakin ingin menghapus source <strong>{deleteCandidate?.nama_grup}</strong>?
+        </p>
+        <div className="mb-6 rounded-lg border border-error-100 bg-error-50 px-3 py-2 text-xs text-error-700 dark:border-error-500/20 dark:bg-error-500/10 dark:text-error-400">
+          Semua data KPI Tracker terkait juga akan terhapus. Tindakan ini tidak dapat dibatalkan.
+        </div>
+        <div className="flex justify-end gap-3">
+          <Button variant="outline" onClick={closeDeleteConfirmation} disabled={!!deletingId}>Batal</Button>
+          <Button onClick={handleDelete} disabled={!!deletingId} className="bg-error-600 hover:bg-error-700">
+            {deletingId ? "Deleting..." : "Hapus"}
+          </Button>
         </div>
       </Modal>
     </>
