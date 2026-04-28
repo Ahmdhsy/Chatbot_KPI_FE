@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import axios from "axios"
 import { useRouter } from "next/navigation"
 
@@ -73,6 +73,8 @@ export default function KpiMasterManagementTable({ initialData }: Props) {
 	const [totalPages, setTotalPages] = useState(Math.max(1, initialData.total_pages || 1))
 	const [total, setTotal] = useState(initialData.total || 0)
 	const [pageSize] = useState(initialData.page_size || 10)
+	const [search, setSearch] = useState("")
+	const [yearFilter, setYearFilter] = useState("")
 
 	const [loading, setLoading] = useState(false)
 	const [saving, setSaving] = useState(false)
@@ -103,6 +105,8 @@ export default function KpiMasterManagementTable({ initialData }: Props) {
 		setLoading(true)
 		setError(null)
 		try {
+			const parsedYear = yearFilter.trim() ? Number.parseInt(yearFilter, 10) : null
+			const validYear = parsedYear !== null && !Number.isNaN(parsedYear) ? parsedYear : null
 			const { data } = await apiClientWithAuth.get<KpiMasterManagementResponse>(
 				"/api/v1/kpi/",
 				{
@@ -110,6 +114,8 @@ export default function KpiMasterManagementTable({ initialData }: Props) {
 						page: targetPage,
 						page_size: pageSize,
 						group_type: "master",
+						...(search.trim() ? { search: search.trim() } : {}),
+						...(validYear !== null ? { tahun: validYear } : {}),
 					},
 				},
 			)
@@ -124,6 +130,15 @@ export default function KpiMasterManagementTable({ initialData }: Props) {
 			setLoading(false)
 		}
 	}
+
+	useEffect(() => {
+		const timeoutId = window.setTimeout(() => {
+			void fetchPage(1)
+		}, 300)
+
+		return () => window.clearTimeout(timeoutId)
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [search, yearFilter])
 
 	const handleSave = async () => {
 		if (!editing) return
@@ -208,6 +223,19 @@ export default function KpiMasterManagementTable({ initialData }: Props) {
 					<Button variant="outline" size="sm" onClick={() => fetchPage(page)} disabled={loading}>
 						{loading ? "Refreshing..." : "Refresh"}
 					</Button>
+				</div>
+
+				<div className="grid grid-cols-1 gap-3 border-b border-gray-100 px-6 py-4 sm:grid-cols-2 dark:border-white/5">
+					<Input
+						placeholder="Cari nama grup..."
+						value={search}
+						onChange={(event) => setSearch(event.target.value)}
+					/>
+					<Input
+						placeholder="Filter tahun (contoh: 2025)"
+						value={yearFilter}
+						onChange={(event) => setYearFilter(event.target.value)}
+					/>
 				</div>
 
 				{success && (

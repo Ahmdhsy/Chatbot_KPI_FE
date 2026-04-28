@@ -37,7 +37,7 @@ export function useChat() {
     }).catch(() => {
       addToast('error', 'Failed to load chat sessions.')
     })
-  }, [])
+  }, [addToast])
 
   useEffect(() => {
     if (!activeSessionId) return
@@ -47,7 +47,7 @@ export function useChat() {
         setMessages((p) => ({ ...p, [activeSessionId]: history }))
       }
     }).catch(() => {})
-  }, [activeSessionId])
+  }, [activeSessionId, messages])
 
   const sendMessage = useCallback(async (text: string) => {
     const tempId = `temp-${Date.now()}`

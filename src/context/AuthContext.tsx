@@ -1,6 +1,13 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+} from "react";
 import { authService } from "@/services/authService";
 import { setRefreshTokenCallback } from "@/services/apiClientWithAuth";
 
@@ -34,10 +41,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [tokenExpiresAt, setTokenExpiresAt] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [refreshTimeoutId, setRefreshTimeoutId] = useState<NodeJS.Timeout | null>(null);
+  const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const refreshAccessTokenRef = useRef<(() => Promise<boolean>) | null>(null);
 
   // Helper function to clean up duplicate tokens in localStorage
-  const cleanupDuplicateTokens = () => {
+  const cleanupDuplicateTokens = useCallback(() => {
     try {
       const allKeys = Object.keys(localStorage);
       const accessTokenKeys = allKeys.filter(key => 
@@ -54,10 +62,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.warn("[AuthContext] Failed to cleanup duplicate tokens:", error);
     }
-  };
+  }, []);
+
+  const scheduleTokenRefresh = useCallback((expiresAt: number) => {
+    if (refreshTimeoutRef.current) {
+      clearTimeout(refreshTimeoutRef.current);
+    }
+
+    const now = Date.now();
+    const timeUntilRefresh = expiresAt - now - 60 * 1000;
+
+    if (timeUntilRefresh > 0) {
+      refreshTimeoutRef.current = setTimeout(() => {
+        refreshAccessTokenRef.current?.();
+      }, timeUntilRefresh);
+    }
+  }, []);
 
   // Helper function to setup refresh callback
-  const setupRefreshCallback = (refreshTokenValue: string) => {
+  const setupRefreshCallback = useCallback((refreshTokenValue: string) => {
     setRefreshTokenCallback(async () => {
       try {
         console.log("[AuthContext] Token refresh triggered by interceptor");
@@ -94,7 +117,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return false;
       }
     });
-  };
+  }, [scheduleTokenRefresh]);
 
   // Load auth data from localStorage on mount
   useEffect(() => {
@@ -130,25 +153,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
     setIsLoading(false);
-  }, []);
+  }, [cleanupDuplicateTokens, scheduleTokenRefresh, setupRefreshCallback]);
 
-  const scheduleTokenRefresh = (expiresAt: number) => {
-    // Clear existing timeout
-    if (refreshTimeoutId) {
-      clearTimeout(refreshTimeoutId);
-    }
-
-    // Refresh token 1 minute before expiry
-    const now = Date.now();
-    const timeUntilRefresh = expiresAt - now - 60 * 1000;
-
-    if (timeUntilRefresh > 0) {
-      const timeoutId = setTimeout(() => {
-        refreshAccessToken();
-      }, timeUntilRefresh);
-      setRefreshTimeoutId(timeoutId);
-    }
-  };
 
   const login = (
     newAccessToken: string,
@@ -188,7 +194,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setupRefreshCallback(newRefreshToken);
   };
 
-  const refreshAccessToken = async (): Promise<boolean> => {
+  const logout = useCallback(async () => {
+    try {
+      if (refreshToken) {
+        try {
+          await authService.logout(refreshToken);
+        } catch {
+          // Backend logout can fail for expired/revoked refresh token.
+          // Keep logout flow running to clear local session regardless.
+        }
+      }
+
+      try {
+        // Clear httpOnly cookie
+        await fetch("/api/auth/logout", { method: "POST" });
+      } catch {
+        // Ignore cookie-clear failure; local auth state is still cleared below.
+      }
+    } finally {
+      setAccessToken(null);
+      setRefreshToken(null);
+      setUser(null);
+      setIsAuthenticated(false);
+      setTokenExpiresAt(null);
+
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current);
+        refreshTimeoutRef.current = null;
+      }
+
+      // Clear all token-related keys from localStorage
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+      localStorage.removeItem("user");
+      localStorage.removeItem("tokenExpiresAt");
+      
+      // Clean up any duplicate token keys
+      cleanupDuplicateTokens();
+      
+      console.log("[AuthContext] Logout complete - all tokens cleared");
+    }
+  }, [cleanupDuplicateTokens, refreshToken]);
+
+  const refreshAccessToken = useCallback(async (): Promise<boolean> => {
     const currentRefreshToken = localStorage.getItem("refresh_token");
     
     if (!currentRefreshToken) {
@@ -236,49 +284,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await logout();
       return false;
     }
-  };
+  }, [logout, scheduleTokenRefresh, setupRefreshCallback]);
 
-  const logout = async () => {
-    try {
-      if (refreshToken) {
-        try {
-          await authService.logout(refreshToken);
-        } catch {
-          // Backend logout can fail for expired/revoked refresh token.
-          // Keep logout flow running to clear local session regardless.
-        }
-      }
-
-      try {
-        // Clear httpOnly cookie
-        await fetch("/api/auth/logout", { method: "POST" });
-      } catch {
-        // Ignore cookie-clear failure; local auth state is still cleared below.
-      }
-    } finally {
-      setAccessToken(null);
-      setRefreshToken(null);
-      setUser(null);
-      setIsAuthenticated(false);
-      setTokenExpiresAt(null);
-
-      if (refreshTimeoutId) {
-        clearTimeout(refreshTimeoutId);
-        setRefreshTimeoutId(null);
-      }
-
-      // Clear all token-related keys from localStorage
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("refresh_token");
-      localStorage.removeItem("user");
-      localStorage.removeItem("tokenExpiresAt");
-      
-      // Clean up any duplicate token keys
-      cleanupDuplicateTokens();
-      
-      console.log("[AuthContext] Logout complete - all tokens cleared");
-    }
-  };
+  useEffect(() => {
+    refreshAccessTokenRef.current = refreshAccessToken;
+  }, [refreshAccessToken]);
 
   return (
     <AuthContext.Provider

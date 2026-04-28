@@ -24,7 +24,7 @@ export function LogoutModal({ userEmail, onConfirm, onCancel }: LogoutModalProps
         </div>
         <h3 className="text-base font-bold text-[#101828] dark:text-[#e5e7eb] mb-2">Log out?</h3>
         <p className="text-[13px] text-[#6b7280] leading-relaxed mb-[22px]">
-          You'll be signed out of{' '}
+          You&apos;ll be signed out of{' '}
           <span className="font-semibold text-[#374151] dark:text-[#9ca3af]">{userEmail}</span>.
           Any unsaved progress will remain in your sessions.
         </p>

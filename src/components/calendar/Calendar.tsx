@@ -29,6 +29,7 @@ const Calendar: React.FC = () => {
   const [eventLevel, setEventLevel] = useState("");
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const calendarRef = useRef<FullCalendar>(null);
+  const nextEventIdRef = useRef(4);
   const { isOpen, openModal, closeModal } = useModal();
 
   const calendarsEvents = {
@@ -40,6 +41,7 @@ const Calendar: React.FC = () => {
 
   useEffect(() => {
     // Initialize with some events
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setEvents([
       {
         id: "1",
@@ -99,7 +101,7 @@ const Calendar: React.FC = () => {
     } else {
       // Add new event
       const newEvent: CalendarEvent = {
-        id: Date.now().toString(),
+        id: `event-${nextEventIdRef.current++}`,
         title: eventTitle,
         start: eventStartDate,
         end: eventEndDate,

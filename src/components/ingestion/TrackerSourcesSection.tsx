@@ -1,5 +1,5 @@
 "use client"
-import React, { useMemo, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import axios from "axios"
 import { useRouter } from "next/navigation"
 import { Modal } from "@/components/ui/modal"
@@ -29,10 +29,18 @@ interface Props {
   initialSources: TrackerSource[]
 }
 
+interface KpiTrackerGroupListResponse {
+  data: TrackerSource[]
+}
+
 const MAX_BATCH_SOURCES = 6
 
 export default function TrackerSourcesSection({ initialSources }: Props) {
   const router = useRouter()
+  const [rows, setRows] = useState<TrackerSource[]>(initialSources)
+  const [search, setSearch] = useState("")
+  const [yearFilter, setYearFilter] = useState("")
+  const [loadingRows, setLoadingRows] = useState(false)
 
   // ── Add modal ─────────────────────────────────────────────────────────
   const [addOpen, setAddOpen] = useState(false)
@@ -60,6 +68,41 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  useEffect(() => {
+    setRows(initialSources)
+  }, [initialSources])
+
+  const fetchSources = async () => {
+    setLoadingRows(true)
+    try {
+      const parsedYear = yearFilter.trim() ? Number.parseInt(yearFilter, 10) : null
+      const validYear = parsedYear !== null && !Number.isNaN(parsedYear) ? parsedYear : null
+      const { data } = await apiClientWithAuth.get<KpiTrackerGroupListResponse>("/api/v1/kpi/", {
+        params: {
+          group_type: "tracker",
+          page: 1,
+          page_size: 100,
+          ...(search.trim() ? { search: search.trim() } : {}),
+          ...(validYear !== null ? { tahun: validYear } : {}),
+        },
+      })
+      setRows(data.data ?? [])
+    } catch (e: unknown) {
+      setError(getErrorMessage(e, "Gagal memuat sumber tracker"))
+      setRows([])
+    } finally {
+      setLoadingRows(false)
+    }
+  }
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      void fetchSources()
+    }, 300)
+    return () => window.clearTimeout(timeoutId)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, yearFilter])
+
   const handleCloseAdd = () => {
     setAddOpen(false); setNewUrl(""); setNewTahun("")
     setNewIsScheduled(true); setError(null)
@@ -80,8 +123,8 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
   }
 
   const selectableSources = useMemo(
-    () => initialSources.filter((s) => s.is_active && s.is_scheduled),
-    [initialSources],
+    () => rows.filter((s) => s.is_active && s.is_scheduled),
+    [rows],
   )
 
   const selectedSources = useMemo(
@@ -127,7 +170,9 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
         is_scheduled: newIsScheduled,
         is_active: true,
       })
-      handleCloseAdd(); router.refresh()
+      handleCloseAdd()
+      await fetchSources()
+      router.refresh()
     } catch (e: unknown) {
       setError(getErrorMessage(e, "Add failed"))
     } finally { setSaving(false) }
@@ -144,7 +189,9 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
         is_scheduled: editIsScheduled,
         is_active: editIsActive,
       })
-      handleCloseEdit(); router.refresh()
+      handleCloseEdit()
+      await fetchSources()
+      router.refresh()
     } catch (e: unknown) {
       setError(getErrorMessage(e, "Update failed"))
     } finally { setSaving(false) }
@@ -155,7 +202,10 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
     setSaving(true); setError(null)
     try {
       await apiClientWithAuth.delete(`/api/v1/kpi/${id}`)
-      setDeleteConfirmId(null); handleCloseEdit(); router.refresh()
+      setDeleteConfirmId(null)
+      handleCloseEdit()
+      await fetchSources()
+      router.refresh()
     } catch (e: unknown) {
       setError(getErrorMessage(e, "Delete failed"))
     } finally { setSaving(false) }
@@ -172,6 +222,7 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
       const isSuccess = data.overall_status === "success"
       const marker = isSuccess ? "✓" : "✕"
       setIngestResult(`${marker} ${source.nama_grup}: ${data.grand_ingested ?? 0} records ingested (${data.overall_status})`)
+      await fetchSources()
       router.refresh()
     } catch (e: unknown) {
       setError(getErrorMessage(e, "Ingest failed"))
@@ -214,6 +265,7 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
       )
       setIsBatchMode(false)
       setSelectedSourceIds([])
+      await fetchSources()
       router.refresh()
     } catch (e: unknown) {
       setError(getErrorMessage(e, "Batch ingest failed"))
@@ -269,6 +321,19 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
           </div>
         </div>
 
+        <div className="grid grid-cols-1 gap-3 border-b border-gray-100 px-6 py-4 sm:grid-cols-2 dark:border-white/5">
+          <Input
+            placeholder="Cari nama grup tracker..."
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
+          <Input
+            placeholder="Filter tahun (contoh: 2025)"
+            value={yearFilter}
+            onChange={(event) => setYearFilter(event.target.value)}
+          />
+        </div>
+
         {/* Banner hasil ingest */}
         {ingestResult && (
           <div className={`border-b px-6 py-2.5 text-sm ${
@@ -288,9 +353,13 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
         )}
 
         {/* Table */}
-        {initialSources.length === 0 ? (
+        {loadingRows ? (
           <div className="px-6 py-10 text-center text-sm text-gray-400 dark:text-gray-500">
-            Belum ada sumber. Klik <span className="font-medium">+ Add Source</span> untuk menambahkan.
+            Loading sumber tracker...
+          </div>
+        ) : rows.length === 0 ? (
+          <div className="px-6 py-10 text-center text-sm text-gray-400 dark:text-gray-500">
+            Belum ada sumber sesuai filter/search. Klik <span className="font-medium">+ Add Source</span> untuk menambahkan.
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -308,7 +377,7 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50 dark:divide-white/5">
-                {initialSources.map((source) => (
+                {rows.map((source) => (
                   <React.Fragment key={source.id}>
                     <tr className="text-gray-700 dark:text-white/80">
                       {isBatchMode && (

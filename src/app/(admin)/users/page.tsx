@@ -1,32 +1,43 @@
 import PageBreadCrumb from "@/components/common/PageBreadCrumb"
 import UsersClient from "@/components/user/UsersClient"
 import { serverFetch } from "@/lib/server-api"
-import { User } from "@/services/userService"
+import { GetUsersResponse } from "@/services/userService"
+
+const fallbackData: GetUsersResponse = {
+  total: 0,
+  limit: 10,
+  offset: 0,
+  users: [],
+}
+
+function isGetUsersResponse(value: unknown): value is GetUsersResponse {
+  if (!value || typeof value !== "object") return false
+
+  const candidate = value as Partial<GetUsersResponse>
+  return (
+    typeof candidate.total === "number" &&
+    typeof candidate.limit === "number" &&
+    typeof candidate.offset === "number" &&
+    Array.isArray(candidate.users)
+  )
+}
 
 export default async function UsersPage() {
-  let users: User[] = []
+  let initialData: GetUsersResponse = fallbackData
 
   try {
-    const data = await serverFetch<unknown>("/api/v1/users")
-    if (Array.isArray(data)) {
-      users = data.filter((item): item is User => item && typeof item === "object" && "id" in item)
-    } else if (data && typeof data === "object" && "users" in data && Array.isArray((data as { users: unknown[] }).users)) {
-      users = ((data as { users: User[] }).users).filter((item): item is User => item && typeof item === "object" && "id" in item)
-    } else if (data && typeof data === "object" && "data" in data && Array.isArray((data as { data: unknown[] }).data)) {
-      users = ((data as { data: User[] }).data).filter((item): item is User => item && typeof item === "object" && "id" in item)
-    } else if (data && typeof data === "object") {
-      users = Object.values(data as Record<string, unknown>).filter(
-        (item): item is User => !!item && typeof item === "object" && "id" in item,
-      )
+    const data = await serverFetch<unknown>("/api/v1/users?limit=10&offset=0")
+    if (isGetUsersResponse(data)) {
+      initialData = data
     }
   } catch {
-    users = []
+    initialData = fallbackData
   }
 
   return (
     <>
       <PageBreadCrumb pageTitle="User Management" />
-      <UsersClient initialUsers={users} />
+      <UsersClient initialData={initialData} />
     </>
   )
 }

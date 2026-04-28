@@ -51,6 +51,7 @@ export default function IngestionLogsTable({
       isFirstRender.current = false
       return
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true)
     const groupType =
       filter === "all" ? "" : `&group_type=${filter === "kpi_master" ? "master" : "tracker"}`
@@ -71,10 +72,11 @@ export default function IngestionLogsTable({
   // When SSR data changes (router.refresh), reset to SSR data
   useEffect(() => {
     if (page === 1) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLogs(initialLogs)
       setTotal(initialTotal)
     }
-  }, [initialLogs, initialTotal])
+  }, [initialLogs, initialTotal, page])
 
   const totalPages = Math.max(1, Math.ceil(total / INGEST_LOG_PAGE_SIZE))
 

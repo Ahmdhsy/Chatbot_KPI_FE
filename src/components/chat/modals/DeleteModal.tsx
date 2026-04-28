@@ -24,7 +24,7 @@ export function DeleteModal({ title, onConfirm, onCancel }: DeleteModalProps) {
         </div>
         <h3 className="text-base font-bold text-[#101828] dark:text-[#e5e7eb] mb-2">Delete this chat?</h3>
         <p className="text-[13px] text-[#6b7280] leading-relaxed mb-[22px]">
-          "<span className="font-medium text-[#374151] dark:text-[#9ca3af]">{title}</span>" will be permanently deleted. This action cannot be undone.
+          &quot;<span className="font-medium text-[#374151] dark:text-[#9ca3af]">{title}</span>&quot; will be permanently deleted. This action cannot be undone.
         </p>
         <div className="flex gap-2.5 justify-end">
           <button

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import Image from 'next/image'
 import { BotIcon, UserIcon, CopyIcon, CheckIcon, EditIcon, RetryIcon } from './icons'
 import type { Message } from '@/types/chat'
 
@@ -146,9 +147,12 @@ export function ChatBubble({ msg, onEditSave, onRetry }: ChatBubbleProps) {
             <>
               {msg.content && <RichText text={msg.content} />}
               {msg.graphic_image_base64 && (
-                <img
+                <Image
                   src={`data:image/png;base64,${msg.graphic_image_base64}`}
                   alt="Chart visualization"
+                  width={960}
+                  height={540}
+                  unoptimized
                   className="mt-2.5 rounded-lg w-full max-w-[480px]"
                 />
               )}

@@ -49,8 +49,11 @@ export function ChatSidebar({
 
   // Group sessions by date label (today / yesterday / older)
   const grouped = useMemo(() => {
-    const today = new Date().toDateString()
-    const yesterday = new Date(Date.now() - 86400000).toDateString()
+    const todayDate = new Date()
+    const today = todayDate.toDateString()
+    const yesterdayDate = new Date(todayDate)
+    yesterdayDate.setDate(yesterdayDate.getDate() - 1)
+    const yesterday = yesterdayDate.toDateString()
     const groups: Record<string, Session[]> = {}
     sessions.forEach((s) => {
       const d = new Date(s.created_at).toDateString()

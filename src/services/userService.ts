@@ -26,11 +26,20 @@ export interface UpdateUserRequest {
   is_active?: boolean;
 }
 
-export interface GetUsersResponse {
-  [key: string]: User;
+export interface GetUsersParams {
+  limit?: number;
+  offset?: number;
+  search?: string;
+  role?: User["role"];
+  status?: "active" | "inactive";
 }
 
-export type UsersApiResponse = User[] | GetUsersResponse | { users: User[] } | { data: User[] };
+export interface GetUsersResponse {
+  total: number;
+  limit: number;
+  offset: number;
+  users: User[];
+}
 
 export interface CreateUserResponse {
   id: string;
@@ -43,160 +52,83 @@ export interface CreateUserResponse {
   updated_at: string;
 }
 
-/**
- * Get all users with pagination
- * @param limit - Number of users to fetch (default: 20, max: 100)
- * @param offset - Offset for pagination (default: 0)
- */
-export const getUsers = async (limit: number = 20, offset: number = 0) => {
+type FastApiErrorItem = {
+  loc?: Array<string | number>;
+  msg?: string;
+  type?: string;
+};
+
+function extractErrorMessage(error: unknown, fallback: string): string {
+  const maybeError = error as {
+    message?: string;
+    response?: { data?: { detail?: string | FastApiErrorItem[] } };
+  };
+
+  const detail = maybeError?.response?.data?.detail;
+  if (typeof detail === "string" && detail.trim()) {
+    return detail;
+  }
+
+  if (Array.isArray(detail) && detail.length > 0) {
+    const mapped = detail
+      .map((item) => {
+        if (!item) return "";
+        const loc = Array.isArray(item.loc) ? item.loc.join(".") : "field";
+        return item.msg ? `${loc}: ${item.msg}` : "";
+      })
+      .filter(Boolean)
+      .join("; ");
+
+    if (mapped) {
+      return mapped;
+    }
+  }
+
+  if (typeof maybeError?.message === "string" && maybeError.message.trim()) {
+    return maybeError.message;
+  }
+
+  return fallback;
+}
+
+export const getUsers = async (
+  params: GetUsersParams = {}
+): Promise<GetUsersResponse> => {
   try {
-    console.log("[UserService] Fetching users with limit:", limit, "offset:", offset);
-    
-    // Use limit and offset as query parameters
-    const response = await apiClientWithAuth.get<GetUsersResponse>(
-      "/api/v1/users",
-      {
-        params: {
-          limit,
-          offset,
-        },
-      }
-    );
-    
-    console.log("[UserService] Users response received:", response.data);
-    
-    // Handle multiple response formats
-    let users: User[] = [];
-    const data = response.data as any;
-    
-    if (Array.isArray(data)) {
-      // Format 1: Direct array response
-      users = data.filter((item: any): item is User => 
-        item && typeof item === 'object' && 'id' in item
-      );
-    } else if (data?.users && Array.isArray(data.users)) {
-      // Format 2: { users: [...] }
-      users = data.users.filter((item: any): item is User => 
-        item && typeof item === 'object' && 'id' in item
-      );
-    } else if (data?.data && Array.isArray(data.data)) {
-      // Format 3: { data: [...] }
-      users = data.data.filter((item: any): item is User => 
-        item && typeof item === 'object' && 'id' in item
-      );
-    } else if (typeof data === 'object' && !Array.isArray(data)) {
-      // Format 4: Object with user IDs/usernames as keys { "user1": {...}, "user2": {...} }
-      // This is the format returned by the backend: { "additionalProp1": {...} }
-      users = Object.values(data)
-        .filter((item: any) => item && typeof item === 'object')
-        .filter((item: any): item is User => 'id' in item);
-    }
-    
-    console.log("[UserService] Parsed users, count:", users.length);
-    return users;
-  } catch (error: any) {
-    console.error("[UserService] Error fetching users:");
-    console.error("  Status:", error?.response?.status);
-    console.error("  Response Data:", error?.response?.data);
-    console.error("  Message:", error?.message);
-    
-    // Log detail validation errors dari FastAPI
-    if (error?.response?.data?.detail && Array.isArray(error.response.data.detail)) {
-      console.error("[UserService] Validation Details:");
-      error.response.data.detail.forEach((err: any, idx: number) => {
-        console.error(`  [${idx}] Location:`, err.loc, "Message:", err.msg, "Type:", err.type);
-      });
-    }
-    
-    // If we got 422, try without query params (some backends don't support them)
-    if (error?.response?.status === 422) {
-      console.log("[UserService] Got 422, trying without query params...");
-      try {
-        const fallbackResponse = await apiClientWithAuth.get<GetUsersResponse>(
-          "/api/v1/users"
-        );
-        console.log("[UserService] Fallback request successful!");
-        
-        let users: User[] = [];
-        const fallbackData = fallbackResponse.data as any;
-        
-        if (Array.isArray(fallbackData)) {
-          users = fallbackData.filter((item: any): item is User => 
-            item && typeof item === 'object' && 'id' in item
-          );
-        } else if (fallbackData?.users && Array.isArray(fallbackData.users)) {
-          users = fallbackData.users.filter((item: any): item is User => 
-            item && typeof item === 'object' && 'id' in item
-          );
-        } else if (fallbackData?.data && Array.isArray(fallbackData.data)) {
-          users = fallbackData.data.filter((item: any): item is User => 
-            item && typeof item === 'object' && 'id' in item
-          );
-        } else if (typeof fallbackData === 'object' && !Array.isArray(fallbackData)) {
-          users = Object.values(fallbackData)
-            .filter((item: any) => item && typeof item === 'object')
-            .filter((item: any): item is User => 'id' in item);
-        }
-        return users;
-      } catch (fallbackError: any) {
-        console.error("[UserService] Fallback also failed:", fallbackError?.message);
-        
-        // Log fallback validation errors too
-        if (fallbackError?.response?.data?.detail && Array.isArray(fallbackError.response.data.detail)) {
-          console.error("[UserService] Fallback Validation Details:");
-          fallbackError.response.data.detail.forEach((err: any, idx: number) => {
-            console.error(`  [${idx}] Location:`, err.loc, "Message:", err.msg);
-          });
-        }
-      }
-    }
-    
-    // Extract error message from FastAPI validation error
-    let errorMessage = "Failed to fetch users";
-    
-    if (error?.response?.data?.detail) {
-      const detail = error.response.data.detail;
-      
-      // If detail is an array (FastAPI validation errors)
-      if (Array.isArray(detail)) {
-        errorMessage = detail.map((err: any) => 
-          `${err.loc?.join('.')} - ${err.msg}`
-        ).join('; ');
-      } else if (typeof detail === 'string') {
-        // If detail is a string
-        errorMessage = detail;
-      }
-    } else if (error?.message) {
-      errorMessage = error.message;
-    }
-    
-    throw new Error(errorMessage);
+    const response = await apiClientWithAuth.get<GetUsersResponse>("/api/v1/users", {
+      params: {
+        limit: params.limit ?? 20,
+        offset: params.offset ?? 0,
+        ...(params.search?.trim() ? { search: params.search.trim() } : {}),
+        ...(params.role ? { role: params.role } : {}),
+        ...(params.status ? { status: params.status } : {}),
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    throw new Error(extractErrorMessage(error, "Failed to fetch users"));
   }
 };
 
-/**
- * Get a specific user by ID
- * @param userId - User ID to fetch
- */
 export const getUserById = async (userId: string): Promise<User> => {
   try {
-    const response = await apiClientWithAuth.get<User>(
-      `/api/v1/users/${userId}`
-    );
+    const response = await apiClientWithAuth.get<User>(`/api/v1/users/${userId}`);
     return response.data;
-  } catch (error: any) {
-    const errorMessage =
-      error?.response?.data?.detail?.[0]?.msg ||
-      error?.message ||
-      "Failed to fetch user";
-    throw new Error(errorMessage);
+  } catch (error) {
+    throw new Error(extractErrorMessage(error, "Failed to fetch user"));
   }
 };
 
-/**
- * Create a new user (Admin only)
- * @param userData - User data to create
- */
+export const getCurrentUser = async (): Promise<User> => {
+  try {
+    const response = await apiClientWithAuth.get<User>("/api/v1/users/me");
+    return response.data;
+  } catch (error) {
+    throw new Error(extractErrorMessage(error, "Failed to fetch current user"));
+  }
+};
+
 export const createUser = async (
   userData: CreateUserRequest
 ): Promise<CreateUserResponse> => {
@@ -206,20 +138,11 @@ export const createUser = async (
       userData
     );
     return response.data;
-  } catch (error: any) {
-    const errorMessage =
-      error?.response?.data?.detail?.[0]?.msg ||
-      error?.message ||
-      "Failed to create user";
-    throw new Error(errorMessage);
+  } catch (error) {
+    throw new Error(extractErrorMessage(error, "Failed to create user"));
   }
 };
 
-/**
- * Update a user
- * @param userId - User ID to update
- * @param userData - Updated user data
- */
 export const updateUser = async (
   userId: string,
   userData: UpdateUserRequest
@@ -230,48 +153,18 @@ export const updateUser = async (
       userData
     );
     return response.data;
-  } catch (error: any) {
-    const errorMessage =
-      error?.response?.data?.detail?.[0]?.msg ||
-      error?.message ||
-      "Failed to update user";
-    throw new Error(errorMessage);
+  } catch (error) {
+    throw new Error(extractErrorMessage(error, "Failed to update user"));
   }
 };
 
-/**
- * Delete a user
- * @param userId - User ID to delete
- */
 export const deleteUser = async (userId: string): Promise<{ message: string }> => {
   try {
     const response = await apiClientWithAuth.delete<{ message: string }>(
       `/api/v1/users/${userId}`
     );
     return response.data;
-  } catch (error: any) {
-    const errorMessage =
-      error?.response?.data?.detail?.[0]?.msg ||
-      error?.message ||
-      "Failed to delete user";
-    throw new Error(errorMessage);
-  }
-};
-
-/**
- * Get current logged in user
- */
-export const getCurrentUser = async (): Promise<User> => {
-  try {
-    const response = await apiClientWithAuth.get<User>(
-      "/api/v1/users/me"
-    );
-    return response.data;
-  } catch (error: any) {
-    const errorMessage =
-      error?.response?.data?.detail ||
-      error?.message ||
-      "Failed to fetch current user";
-    throw new Error(errorMessage);
+  } catch (error) {
+    throw new Error(extractErrorMessage(error, "Failed to delete user"));
   }
 };

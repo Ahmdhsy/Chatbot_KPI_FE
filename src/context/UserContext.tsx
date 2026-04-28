@@ -38,8 +38,8 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       setLoading(true);
       setError(null);
       try {
-        const result = await getUsers(limit, offset);
-        setUsers(result);
+        const result = await getUsers({ limit, offset });
+        setUsers(result.users);
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : "Failed to fetch users";

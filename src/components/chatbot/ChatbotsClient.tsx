@@ -7,6 +7,7 @@ import { useToast } from "@/context/ToastContext";
 import { useHeaderSearch } from "@/context/HeaderSearchContext";
 import {
   Chatbot,
+  ChatbotAuthority,
   GetChatbotsResponse,
   getChatbots,
 } from "@/services/chatbotService";
@@ -20,49 +21,16 @@ interface ChatbotsClientProps {
 }
 
 const PAGE_SIZE = 10;
-const FETCH_PAGE_SIZE = 100;
-
-function getAuthorityAliases(otoritas: string) {
-  const normalized = otoritas.toLowerCase().trim();
-  const aliases = [normalized];
-
-  if (normalized === "kepala_divisi" || normalized === "kepala-divisi") {
-    aliases.push("kepala divisi");
-  }
-
-  return aliases;
-}
-
-function getChatbotStatusAliases(isActive: boolean) {
-  return isActive
-    ? ["active", "aktif"]
-    : ["inactive", "nonactive", "non-active", "unactive", "nonaktif", "tidak aktif"];
-}
-
-function matchesChatbotQuery(chatbot: Chatbot, query: string) {
-  if (!query) return true;
-
-  const text = [
-    chatbot.id,
-    chatbot.nama_chatbot,
-    ...(chatbot.addon_prompt ? [chatbot.addon_prompt] : []),
-    ...getAuthorityAliases(chatbot.otoritas),
-    ...getChatbotStatusAliases(chatbot.is_active),
-  ]
-    .join(" ")
-    .toLowerCase();
-
-  const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
-  return terms.every((term) => text.includes(term));
-}
 
 export default function ChatbotsClient({ initialData }: ChatbotsClientProps) {
   const { addToast } = useToast();
   const { query, registerScope } = useHeaderSearch();
 
-  const [allChatbots, setAllChatbots] = useState<Chatbot[]>(initialData.data);
-  const [loading, setLoading] = useState(initialData.data.length === 0);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [chatbots, setChatbots] = useState<Chatbot[]>(initialData.data ?? []);
+  const [total, setTotal] = useState(initialData.total ?? 0);
+  const [currentPage, setCurrentPage] = useState(initialData.page || 1);
+  const [authorityFilter, setAuthorityFilter] = useState<"" | ChatbotAuthority>("");
+  const [loading, setLoading] = useState(false);
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -71,75 +39,54 @@ export default function ChatbotsClient({ initialData }: ChatbotsClientProps) {
 
   const normalizedQuery = query.trim();
 
-  const fetchAllChatbots = useCallback(async () => {
+  const totalPages = useMemo(
+    () => Math.max(1, Math.ceil(total / PAGE_SIZE)),
+    [total]
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [normalizedQuery, authorityFilter]);
+
+  const fetchChatbots = useCallback(async (page: number) => {
     setLoading(true);
 
     try {
-      let page = 1;
-      let totalPages = 1;
-      const collected: Chatbot[] = [];
+      const response = await getChatbots({
+        page,
+        page_size: PAGE_SIZE,
+        ...(authorityFilter ? { otoritas: authorityFilter } : {}),
+        ...(normalizedQuery ? { search: normalizedQuery } : {}),
+      });
 
-      do {
-        const response = await getChatbots({
-          page,
-          page_size: FETCH_PAGE_SIZE,
-        });
-
-        collected.push(...response.data);
-        totalPages = response.total_pages || 1;
-        page += 1;
-      } while (page <= totalPages);
-
-      setAllChatbots(collected);
+      setChatbots(response.data);
+      setTotal(response.total);
+      setCurrentPage(response.page);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Gagal memuat data chatbot";
       addToast("error", message, "Error");
+      setChatbots([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
-  }, [addToast]);
+  }, [addToast, authorityFilter, normalizedQuery]);
 
   useEffect(() => {
-    void fetchAllChatbots();
-  }, [fetchAllChatbots]);
-
-  const filteredChatbots = useMemo(
-    () => allChatbots.filter((chatbot) => matchesChatbotQuery(chatbot, normalizedQuery)),
-    [allChatbots, normalizedQuery]
-  );
-
-  const totalPages = useMemo(
-    () => Math.max(1, Math.ceil(filteredChatbots.length / PAGE_SIZE)),
-    [filteredChatbots.length]
-  );
-  const activePage = Math.min(currentPage, totalPages);
-
-  const currentPageChatbots = useMemo(
-    () =>
-      filteredChatbots.slice(
-        (activePage - 1) * PAGE_SIZE,
-        activePage * PAGE_SIZE
-      ),
-    [activePage, filteredChatbots]
-  );
+    void fetchChatbots(currentPage);
+  }, [currentPage, fetchChatbots]);
 
   useEffect(() => {
     return registerScope({
       id: "chatbots-management",
       label: "Chatbot Management",
-      getMatchCount: (searchText: string) =>
-        allChatbots.filter((chatbot) => matchesChatbotQuery(chatbot, searchText.trim()))
-          .length,
+      getMatchCount: () => total,
     });
-  }, [allChatbots, registerScope]);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [normalizedQuery]);
+  }, [registerScope, total]);
 
   const refreshCurrentPage = async () => {
-    await fetchAllChatbots();
+    await fetchChatbots(currentPage);
   };
 
   return (
@@ -153,19 +100,33 @@ export default function ChatbotsClient({ initialData }: ChatbotsClientProps) {
           variant: "primary",
         }}
       >
+        <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <select
+            value={authorityFilter}
+            onChange={(event) =>
+              setAuthorityFilter(event.target.value as "" | ChatbotAuthority)
+            }
+            className="h-11 rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-700 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:text-gray-300"
+          >
+            <option value="">Semua Otoritas</option>
+            <option value="HRD">HRD</option>
+            <option value="Karyawan">Karyawan</option>
+          </select>
+        </div>
+
         {loading ? (
           <div className="flex justify-center items-center py-12">
             <p className="text-gray-500 dark:text-gray-400">Loading chatbots...</p>
           </div>
-        ) : currentPageChatbots.length === 0 ? (
+        ) : chatbots.length === 0 ? (
           <div className="flex justify-center items-center py-12">
             <p className="text-gray-500 dark:text-gray-400">
-              No chatbot found. Create one to get started.
+              No chatbot found. Adjust filter/search or create one.
             </p>
           </div>
         ) : (
           <ChatbotTable
-            chatbots={currentPageChatbots}
+            chatbots={chatbots}
             onEdit={(chatbot) => {
               setSelectedChatbot(chatbot);
               setIsEditOpen(true);
@@ -179,10 +140,10 @@ export default function ChatbotsClient({ initialData }: ChatbotsClientProps) {
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <p className="text-xs text-gray-500 dark:text-gray-400">
-            Total {filteredChatbots.length} chatbot(s)
+            Total {total} chatbot(s)
           </p>
           <Pagination
-            currentPage={activePage}
+            currentPage={Math.min(currentPage, totalPages)}
             totalPages={totalPages}
             onPageChange={setCurrentPage}
           />

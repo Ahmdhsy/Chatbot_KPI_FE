@@ -33,6 +33,7 @@ export default function EditUserModal({
   // Initialize form with user data
   useEffect(() => {
     if (user && isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData({
         full_name: user.full_name,
         email: user.email,
