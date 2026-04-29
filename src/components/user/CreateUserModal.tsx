@@ -314,7 +314,6 @@ export default function CreateUserModal({
               }`}
             >
               <option value="karyawan">Karyawan</option>
-              <option value="hrd">HRD</option>
               <option value="kepala_divisi">Kepala Divisi</option>
               <option value="admin">Admin</option>
             </select>

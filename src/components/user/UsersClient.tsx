@@ -6,8 +6,8 @@ import CreateUserModal from "@/components/user/CreateUserModal"
 import EditUserModal from "@/components/user/EditUserModal"
 import DeleteUserModal from "@/components/user/DeleteUserModal"
 import UserTable from "@/components/user/UserTable"
+import Input from "@/components/form/input/InputField"
 import { GetUsersResponse, User, getUsers } from "@/services/userService"
-import { useHeaderSearch } from "@/context/HeaderSearchContext"
 import { useToast } from "@/context/ToastContext"
 
 interface Props {
@@ -18,11 +18,11 @@ const PAGE_SIZE = 10
 
 export default function UsersClient({ initialData }: Props) {
   const { addToast } = useToast()
-  const { query, registerScope } = useHeaderSearch()
 
   const [users, setUsers] = useState<User[]>(initialData.users ?? [])
   const [total, setTotal] = useState(initialData.total ?? 0)
   const [currentPage, setCurrentPage] = useState(1)
+  const [search, setSearch] = useState("")
   const [roleFilter, setRoleFilter] = useState<"" | User["role"]>("")
   const [statusFilter, setStatusFilter] = useState<"" | "active" | "inactive">("")
   const [loading, setLoading] = useState(false)
@@ -32,7 +32,7 @@ export default function UsersClient({ initialData }: Props) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
 
-  const normalizedQuery = query.trim()
+  const normalizedQuery = search.trim()
 
   const totalPages = useMemo(
     () => Math.max(1, Math.ceil(total / PAGE_SIZE)),
@@ -82,14 +82,6 @@ export default function UsersClient({ initialData }: Props) {
     }
   }, [addToast, currentPage, normalizedQuery, roleFilter, statusFilter])
 
-  useEffect(() => {
-    return registerScope({
-      id: "users-management",
-      label: "User Management",
-      getMatchCount: () => total,
-    })
-  }, [registerScope, total])
-
   const refreshCurrentPage = async (targetPage: number = currentPage) => {
     setLoading(true)
     try {
@@ -123,7 +115,12 @@ export default function UsersClient({ initialData }: Props) {
           variant: "primary",
         }}
       >
-        <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <Input
+            placeholder="Search username, email, full name, status, role..."
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
           <select
             value={roleFilter}
             onChange={(event) => setRoleFilter(event.target.value as "" | User["role"])}
@@ -131,7 +128,6 @@ export default function UsersClient({ initialData }: Props) {
           >
             <option value="">Semua Role</option>
             <option value="admin">Admin</option>
-            <option value="hrd">HRD</option>
             <option value="kepala_divisi">Kepala Divisi</option>
             <option value="karyawan">Karyawan</option>
           </select>

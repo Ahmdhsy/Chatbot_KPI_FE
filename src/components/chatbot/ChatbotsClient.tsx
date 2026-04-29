@@ -4,7 +4,6 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import ComponentCard from "@/components/common/ComponentCard";
 import Pagination from "@/components/tables/Pagination";
 import { useToast } from "@/context/ToastContext";
-import { useHeaderSearch } from "@/context/HeaderSearchContext";
 import {
   Chatbot,
   ChatbotAuthority,
@@ -24,7 +23,6 @@ const PAGE_SIZE = 10;
 
 export default function ChatbotsClient({ initialData }: ChatbotsClientProps) {
   const { addToast } = useToast();
-  const { query, registerScope } = useHeaderSearch();
 
   const [chatbots, setChatbots] = useState<Chatbot[]>(initialData.data ?? []);
   const [total, setTotal] = useState(initialData.total ?? 0);
@@ -37,8 +35,6 @@ export default function ChatbotsClient({ initialData }: ChatbotsClientProps) {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedChatbot, setSelectedChatbot] = useState<Chatbot | null>(null);
 
-  const normalizedQuery = query.trim();
-
   const totalPages = useMemo(
     () => Math.max(1, Math.ceil(total / PAGE_SIZE)),
     [total]
@@ -46,7 +42,7 @@ export default function ChatbotsClient({ initialData }: ChatbotsClientProps) {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [normalizedQuery, authorityFilter]);
+  }, [authorityFilter]);
 
   const fetchChatbots = useCallback(async (page: number) => {
     setLoading(true);
@@ -56,7 +52,6 @@ export default function ChatbotsClient({ initialData }: ChatbotsClientProps) {
         page,
         page_size: PAGE_SIZE,
         ...(authorityFilter ? { otoritas: authorityFilter } : {}),
-        ...(normalizedQuery ? { search: normalizedQuery } : {}),
       });
 
       setChatbots(response.data);
@@ -71,19 +66,11 @@ export default function ChatbotsClient({ initialData }: ChatbotsClientProps) {
     } finally {
       setLoading(false);
     }
-  }, [addToast, authorityFilter, normalizedQuery]);
+  }, [addToast, authorityFilter]);
 
   useEffect(() => {
     void fetchChatbots(currentPage);
   }, [currentPage, fetchChatbots]);
-
-  useEffect(() => {
-    return registerScope({
-      id: "chatbots-management",
-      label: "Chatbot Management",
-      getMatchCount: () => total,
-    });
-  }, [registerScope, total]);
 
   const refreshCurrentPage = async () => {
     await fetchChatbots(currentPage);

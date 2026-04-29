@@ -67,6 +67,7 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
 
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const normalizedQuery = search.trim()
 
   useEffect(() => {
     setRows(initialSources)
@@ -82,7 +83,7 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
           group_type: "tracker",
           page: 1,
           page_size: 100,
-          ...(search.trim() ? { search: search.trim() } : {}),
+          ...(normalizedQuery ? { search: normalizedQuery } : {}),
           ...(validYear !== null ? { tahun: validYear } : {}),
         },
       })
@@ -101,7 +102,7 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
     }, 300)
     return () => window.clearTimeout(timeoutId)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, yearFilter])
+  }, [normalizedQuery, yearFilter])
 
   const handleCloseAdd = () => {
     setAddOpen(false); setNewUrl(""); setNewTahun("")
@@ -323,7 +324,7 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
 
         <div className="grid grid-cols-1 gap-3 border-b border-gray-100 px-6 py-4 sm:grid-cols-2 dark:border-white/5">
           <Input
-            placeholder="Cari nama grup tracker..."
+            placeholder="Cari nama grup tracker, sheet url, tahun..."
             value={search}
             onChange={(event) => setSearch(event.target.value)}
           />

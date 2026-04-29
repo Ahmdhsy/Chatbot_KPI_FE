@@ -75,6 +75,7 @@ export default function KpiMasterManagementTable({ initialData }: Props) {
 	const [pageSize] = useState(initialData.page_size || 10)
 	const [search, setSearch] = useState("")
 	const [yearFilter, setYearFilter] = useState("")
+	const normalizedQuery = search.trim()
 
 	const [loading, setLoading] = useState(false)
 	const [saving, setSaving] = useState(false)
@@ -114,7 +115,7 @@ export default function KpiMasterManagementTable({ initialData }: Props) {
 						page: targetPage,
 						page_size: pageSize,
 						group_type: "master",
-						...(search.trim() ? { search: search.trim() } : {}),
+						...(normalizedQuery ? { search: normalizedQuery } : {}),
 						...(validYear !== null ? { tahun: validYear } : {}),
 					},
 				},
@@ -138,7 +139,7 @@ export default function KpiMasterManagementTable({ initialData }: Props) {
 
 		return () => window.clearTimeout(timeoutId)
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [search, yearFilter])
+	}, [normalizedQuery, yearFilter])
 
 	const handleSave = async () => {
 		if (!editing) return
@@ -227,7 +228,7 @@ export default function KpiMasterManagementTable({ initialData }: Props) {
 
 				<div className="grid grid-cols-1 gap-3 border-b border-gray-100 px-6 py-4 sm:grid-cols-2 dark:border-white/5">
 					<Input
-						placeholder="Cari nama grup..."
+						placeholder="Cari nama grup, sheet url, tahun..."
 						value={search}
 						onChange={(event) => setSearch(event.target.value)}
 					/>

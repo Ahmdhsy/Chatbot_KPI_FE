@@ -1,9 +1,7 @@
 "use client";
 import Checkbox from "@/components/form/input/Checkbox";
-import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
-import Button from "@/components/ui/button/Button";
-import { EyeCloseIcon, EyeIcon } from "@/icons";
+import { AlertIcon, EyeCloseIcon, EyeIcon } from "@/icons";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -16,9 +14,15 @@ export default function SignInForm() {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [identifierError, setIdentifierError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   const router = useRouter();
   const { login, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const { addToast } = useToast();
+
+  const validateEmail = (value: string): boolean => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  };
 
   useEffect(() => {
     if (!isAuthLoading && isAuthenticated) {
@@ -28,10 +32,22 @@ export default function SignInForm() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setIdentifierError("");
+    setPasswordError("");
 
-    // Validate inputs
-    if (!identifier.trim() || !password.trim()) {
-      addToast("error", "Please fill in all fields", "Validation Error");
+    const trimmedIdentifier = identifier.trim();
+    const trimmedPassword = password.trim();
+
+    let hasError = false;
+    if (!trimmedIdentifier || !validateEmail(trimmedIdentifier)) {
+      setIdentifierError("Harap isi email yang valid.");
+      hasError = true;
+    }
+    if (!trimmedPassword) {
+      setPasswordError("Password wajib diisi.");
+      hasError = true;
+    }
+    if (hasError) {
       return;
     }
 
@@ -41,14 +57,31 @@ export default function SignInForm() {
       const res = await fetch("/api/auth/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier, password }),
+        cache: "no-store",
+        body: JSON.stringify({ identifier: trimmedIdentifier, password }),
       });
 
       const response = await res.json();
 
       if (!res.ok) {
         const msg = response?.detail?.[0]?.msg ?? response?.detail ?? "Login failed";
-        throw new Error(msg);
+        const lowered = String(msg).toLowerCase();
+
+        if (
+          lowered.includes("email") ||
+          lowered.includes("user not found") ||
+          lowered.includes("not found")
+        ) {
+          setIdentifierError("Email tidak ditemukan / tidak valid.");
+        } else if (lowered.includes("password")) {
+          setPasswordError("Password salah.");
+        } else {
+          setIdentifierError("Email atau password salah.");
+          setPasswordError("Email atau password salah.");
+        }
+
+        addToast("error", String(msg), "Login Failed");
+        return;
       }
 
       const normalizedRole = String(response?.user?.role ?? "").toLowerCase();
@@ -77,9 +110,9 @@ export default function SignInForm() {
       setTimeout(() => {
         router.replace("/");
       }, 1000);
-    } catch (error: any) {
-      console.error("Login error:", error);
-      const errorMessage = error.message || "Login failed. Please try again.";
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Login failed. Please try again.";
       addToast("error", errorMessage, "Login Failed");
     } finally {
       setIsLoading(false);
@@ -101,7 +134,7 @@ export default function SignInForm() {
           <div>
             <form onSubmit={handleSubmit}>
               <div className="space-y-6">
-                <div>
+                <div className="relative">
                   <Label>
                     Email <span className="text-error-500">*</span>{" "}
                   </Label>
@@ -109,10 +142,25 @@ export default function SignInForm() {
                     placeholder="info@gmail.com"
                     type="email"
                     value={identifier}
-                    onChange={(e) => setIdentifier(e.target.value)}
+                    onChange={(e) => {
+                      setIdentifier(e.target.value);
+                      if (identifierError) setIdentifierError("");
+                    }}
                     disabled={isLoading}
-                    className="h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800 disabled:text-gray-500 disabled:border-gray-300 disabled:cursor-not-allowed disabled:dark:bg-gray-800 disabled:dark:text-gray-400 disabled:dark:border-gray-700"
+                    className={`h-11 w-full rounded-lg border appearance-none px-4 py-2.5 pr-10 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 bg-transparent text-gray-800 disabled:text-gray-500 disabled:cursor-not-allowed disabled:dark:bg-gray-800 disabled:dark:text-gray-400 ${
+                      identifierError
+                        ? "border-error-500 focus:border-error-500 focus:ring-error-500/20 dark:border-error-500 dark:focus:border-error-500"
+                        : "border-gray-300 focus:border-brand-300 focus:ring-brand-500/10 dark:border-gray-700 dark:focus:border-brand-800"
+                    }`}
                   />
+                  {identifierError && (
+                    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+                      <AlertIcon className="h-5 w-5 fill-error-500" />
+                    </span>
+                  )}
+                  {identifierError && (
+                    <p className="mt-1 text-sm text-error-600 dark:text-error-400">{identifierError}</p>
+                  )}
                 </div>
                 <div>
                   <Label>
@@ -123,10 +171,22 @@ export default function SignInForm() {
                       type={showPassword ? "text" : "password"}
                       placeholder="Enter your password"
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        if (passwordError) setPasswordError("");
+                      }}
                       disabled={isLoading}
-                      className="h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800 disabled:text-gray-500 disabled:border-gray-300 disabled:cursor-not-allowed disabled:dark:bg-gray-800 disabled:dark:text-gray-400 disabled:dark:border-gray-700"
+                      className={`h-11 w-full rounded-lg border appearance-none px-4 py-2.5 pr-18 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 bg-transparent text-gray-800 disabled:text-gray-500 disabled:cursor-not-allowed disabled:dark:bg-gray-800 disabled:dark:text-gray-400 ${
+                        passwordError
+                          ? "border-error-500 focus:border-error-500 focus:ring-error-500/20 dark:border-error-500 dark:focus:border-error-500"
+                          : "border-gray-300 focus:border-brand-300 focus:ring-brand-500/10 dark:border-gray-700 dark:focus:border-brand-800"
+                      }`}
                     />
+                    {passwordError && (
+                      <span className="pointer-events-none absolute right-11 top-1/2 -translate-y-1/2">
+                        <AlertIcon className="h-5 w-5 fill-error-500" />
+                      </span>
+                    )}
                     <span
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2"
@@ -138,6 +198,9 @@ export default function SignInForm() {
                       )}
                     </span>
                   </div>
+                  {passwordError && (
+                    <p className="mt-1 text-sm text-error-600 dark:text-error-400">{passwordError}</p>
+                  )}
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
