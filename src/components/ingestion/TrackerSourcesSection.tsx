@@ -10,6 +10,7 @@ import Switch from "@/components/form/switch/Switch"
 import { TrackerSource } from "@/hooks/useTrackerSources"
 import apiClientWithAuth from "@/services/apiClientWithAuth"
 import { useToast } from "@/context/ToastContext"
+import useDebounce from "@/hooks/useDebounce"
 
 function getErrorMessage(error: unknown, fallback: string): string {
   if (axios.isAxiosError(error)) {
@@ -43,6 +44,9 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
   const [search, setSearch] = useState("")
   const [yearFilter, setYearFilter] = useState("")
   const [loadingRows, setLoadingRows] = useState(false)
+  const normalizedQuery = search.trim()
+  const debouncedSearch = useDebounce(normalizedQuery, 1000)
+  const debouncedYearFilter = useDebounce(yearFilter, 1000)
 
   // ── Add modal ─────────────────────────────────────────────────────────
   const [addOpen, setAddOpen] = useState(false)
@@ -68,8 +72,6 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
 
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const normalizedQuery = search.trim()
-
   useEffect(() => {
     setRows(initialSources)
   }, [initialSources])
@@ -77,14 +79,14 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
   const fetchSources = async () => {
     setLoadingRows(true)
     try {
-      const parsedYear = yearFilter.trim() ? Number.parseInt(yearFilter, 10) : null
+      const parsedYear = debouncedYearFilter.trim() ? Number.parseInt(debouncedYearFilter, 10) : null
       const validYear = parsedYear !== null && !Number.isNaN(parsedYear) ? parsedYear : null
       const { data } = await apiClientWithAuth.get<KpiTrackerGroupListResponse>("/api/v1/kpi/", {
         params: {
           group_type: "tracker",
           page: 1,
           page_size: 100,
-          ...(normalizedQuery ? { search: normalizedQuery } : {}),
+          ...(debouncedSearch ? { search: debouncedSearch } : {}),
           ...(validYear !== null ? { tahun: validYear } : {}),
         },
       })
@@ -98,12 +100,9 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
   }
 
   useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      void fetchSources()
-    }, 300)
-    return () => window.clearTimeout(timeoutId)
+    void fetchSources()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [normalizedQuery, yearFilter])
+  }, [debouncedSearch, debouncedYearFilter])
 
   const handleCloseAdd = () => {
     setAddOpen(false); setNewUrl(""); setNewTahun("")
@@ -170,24 +169,59 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
     setError(null)
   }
 
-  // ── Add → POST /api/v1/kpi/ ───────────────────────────────────────────
+  // ── Add → create → ingest → rollback jika gagal ─────────────────────
   const handleAdd = async () => {
     if (!newUrl.trim()) return
-    setSaving(true); setError(null)
+    setSaving(true)
+    setError(null)
+    const url = newUrl.trim()
+    const tahunParsed = newTahun ? parseInt(newTahun) : null
+
+    // Step 1: Buat record group
+    let groupId: string | null = null
     try {
-      await apiClientWithAuth.post("/api/v1/kpi/", {
+      const createRes = await apiClientWithAuth.post<{ id: string }>("/api/v1/kpi/", {
         group_type: "tracker",
-        sheet_url: newUrl.trim(),
-        tahun: newTahun ? parseInt(newTahun) : null,
+        sheet_url: url,
+        tahun: tahunParsed,
         is_active: true,
       })
-      addToast("success", "Sumber KPI Tracker berhasil ditambahkan.", "Success")
+      groupId = createRes.data.id
+    } catch (e: unknown) {
+      setError(getErrorMessage(e, "Gagal menambahkan sumber"))
+      setSaving(false)
+      return
+    }
+
+    // Step 2: Langsung ingest — validasi akses + template implisit
+    try {
+      const params: Record<string, string> = { sheet_url: url }
+      if (tahunParsed) params.tahun = String(tahunParsed)
+      const res = await apiClientWithAuth.post("/api/v1/ingest/google-sheets", null, { params })
+      const data = res.data
+      const nIngested: number = data.grand_ingested ?? 0
+
+      if (nIngested === 0) {
+        // Tidak ada data teringest — rollback group
+        if (groupId) await apiClientWithAuth.delete(`/api/v1/kpi/${groupId}`).catch(() => {})
+        const sheets: Array<{ status: string; errors?: string[]; reason?: string }> = data.sheets ?? []
+        const firstBad = sheets.find((s) => s.status === "failed" || s.status === "skipped")
+        setError(firstBad?.errors?.[0] ?? firstBad?.reason ?? "Tidak ada data yang berhasil diingest.")
+        setSaving(false)
+        return
+      }
+
+      addToast("success", `Sumber berhasil ditambahkan: ${nIngested} records diingest.`, "Success")
       handleCloseAdd()
       await fetchSources()
       router.refresh()
-    } catch (e: unknown) {
-      setError(getErrorMessage(e, "Add failed"))
-    } finally { setSaving(false) }
+    } catch (ingestErr: unknown) {
+      // HTTP error (misal 404 = belum di-invite ke service account)
+      if (groupId) await apiClientWithAuth.delete(`/api/v1/kpi/${groupId}`).catch(() => {})
+      setError(getErrorMessage(ingestErr, "Gagal mengakses atau membaca sheet"))
+    } finally {
+      setSaving(false)
+    }
   }
 
   // ── Edit → PATCH /api/v1/kpi/{id} ─────────────────────────────────────
@@ -507,22 +541,21 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
             <h5 className="mb-2 text-sm font-semibold text-gray-800 dark:text-white/90">Panduan Ingestion</h5>
             <ul className="list-disc list-inside space-y-2 text-sm text-gray-600 dark:text-gray-300">
               <li>
-                Bagikan spreadsheet ke akun berikut (minimal <strong>Viewer</strong>):
+                Invite spreadsheet ke akun berikut (minimal <strong>Viewer</strong>):
                 <div className="mt-1.5 rounded-lg bg-orange-200 px-3 py-2 text-xs font-mono text-gray-800 dark:bg-white/10 dark:text-gray-200 break-all">
                   sheet-access-bot@impressive-hull-429606-b3.iam.gserviceaccount.com
                 </div>
               </li>
               <li>
-                Setiap tab dalam spreadsheet mewakili <strong>data satu karyawan</strong> untuk satu periode.
-              </li>
-              <li>
-                Kolom <strong>wajib</strong>: <code className="text-xs">Nama KPI</code>
-              </li>
-              <li>
-                Kolom <strong>opsional</strong>: Tanggal, Realisasi, Keterangan
-              </li>
-              <li>
-                Nama KPI harus sesuai dengan data <strong>KPI Master</strong> yang sudah diingest sebelumnya.
+                Gunakan format dari sheet contoh berikut agar proses ingestion dapat berjalan:{" "}
+                <a
+                  href="https://docs.google.com/spreadsheets/d/1p9Zh2wJ6loFJz2rmiw8g2H2NZYf-x6w17O1t9uPxDTU/edit?usp=sharing"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs font-medium text-brand-600 hover:underline dark:text-brand-400"
+                >
+                  Contoh format KPI Tracker
+                </a>
               </li>
             </ul>
           </div>
@@ -572,22 +605,21 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
             <p className="mb-2 text-sm font-semibold text-amber-800 dark:text-amber-300">Panduan Edit KPI Tracker</p>
             <ul className="list-disc list-inside space-y-2 text-xs text-amber-700 dark:text-amber-400">
               <li>
-                Jika mengganti <strong>Sheet URL</strong>, pastikan spreadsheet sudah dibagikan ke akun berikut (minimal <strong>Viewer</strong>):
+                Invite spreadsheet ke akun berikut (minimal <strong>Viewer</strong>):
                 <div className="mt-1.5 rounded-lg bg-orange-200 px-3 py-2 font-mono text-gray-800 dark:bg-white/10 dark:text-gray-200 break-all">
                   sheet-access-bot@impressive-hull-429606-b3.iam.gserviceaccount.com
                 </div>
               </li>
               <li>
-                <strong>Tahun</strong> digunakan untuk mengelompokkan data tracker per periode. Pastikan sesuai dengan isi spreadsheet.
-              </li>
-              <li>
-                Aktifkan <strong>Active</strong> agar sumber ini ikut dijalankan otomatis oleh scheduler dan bisa dipilih saat Run Batch.
-              </li>
-              <li>
-                Non-aktifkan <strong>Active</strong> jika ingin menonaktifkan sumber sementara tanpa menghapus data.
-              </li>
-              <li>
-                Nama KPI di spreadsheet harus sesuai dengan data <strong>KPI Master</strong> yang sudah diingest.
+                Gunakan format dari sheet contoh berikut agar proses ingestion dapat berjalan:{" "}
+                <a
+                  href="https://docs.google.com/spreadsheets/d/1p9Zh2wJ6loFJz2rmiw8g2H2NZYf-x6w17O1t9uPxDTU/edit?usp=sharing"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-medium text-amber-800 hover:underline dark:text-amber-300"
+                >
+                  Contoh format KPI Tracker
+                </a>
               </li>
             </ul>
           </div>

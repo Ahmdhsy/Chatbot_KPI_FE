@@ -11,6 +11,7 @@ import Button from "@/components/ui/button/Button"
 import { Modal } from "@/components/ui/modal"
 import apiClientWithAuth from "@/services/apiClientWithAuth"
 import { useToast } from "@/context/ToastContext"
+import useDebounce from "@/hooks/useDebounce"
 
 export interface KpiMasterGroup {
 	id: string
@@ -85,6 +86,8 @@ const KpiMasterManagementTable = forwardRef<KpiMasterManagementTableHandle, Prop
 	const [search, setSearch] = useState("")
 	const [yearFilter, setYearFilter] = useState("")
 	const normalizedQuery = search.trim()
+	const debouncedSearch = useDebounce(normalizedQuery, 1000)
+	const debouncedYearFilter = useDebounce(yearFilter, 1000)
 
 	const [loading, setLoading] = useState(false)
 	const [saving, setSaving] = useState(false)
@@ -114,7 +117,7 @@ const KpiMasterManagementTable = forwardRef<KpiMasterManagementTableHandle, Prop
 		setLoading(true)
 		setError(null)
 		try {
-			const parsedYear = yearFilter.trim() ? Number.parseInt(yearFilter, 10) : null
+			const parsedYear = debouncedYearFilter.trim() ? Number.parseInt(debouncedYearFilter, 10) : null
 			const validYear = parsedYear !== null && !Number.isNaN(parsedYear) ? parsedYear : null
 			const { data } = await apiClientWithAuth.get<KpiMasterManagementResponse>(
 				"/api/v1/kpi/",
@@ -123,7 +126,7 @@ const KpiMasterManagementTable = forwardRef<KpiMasterManagementTableHandle, Prop
 						page: targetPage,
 						page_size: pageSize,
 						group_type: "master",
-						...(search.trim() ? { search: search.trim() } : {}),
+						...(debouncedSearch ? { search: debouncedSearch } : {}),
 						...(validYear !== null ? { tahun: validYear } : {}),
 					},
 				},
@@ -141,13 +144,9 @@ const KpiMasterManagementTable = forwardRef<KpiMasterManagementTableHandle, Prop
 	}
 
 	useEffect(() => {
-		const timeoutId = window.setTimeout(() => {
-			void fetchPage(1)
-		}, 300)
-
-		return () => window.clearTimeout(timeoutId)
+		void fetchPage(1)
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [search, yearFilter])
+	}, [debouncedSearch, debouncedYearFilter])
 
 	const handleSave = async () => {
 		if (!editing) return
@@ -243,7 +242,10 @@ const KpiMasterManagementTable = forwardRef<KpiMasterManagementTableHandle, Prop
 					<Input
 						placeholder="Filter tahun (contoh: 2025)"
 						value={yearFilter}
-						onChange={(event) => setYearFilter(event.target.value)}
+						type="text"
+						inputMode="numeric"
+						pattern="[0-9]*"
+						onChange={(event) => setYearFilter(event.target.value.replace(/\D/g, ""))}
 					/>
 				</div>
 

@@ -9,6 +9,8 @@ interface InputProps {
   defaultValue?: string | number;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   className?: string;
+  inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
+  pattern?: string;
   min?: string;
   max?: string;
   step?: number;
@@ -27,6 +29,8 @@ const Input: FC<InputProps> = ({
   defaultValue,
   onChange,
   className = "",
+  inputMode,
+  pattern,
   min,
   max,
   step,
@@ -59,6 +63,8 @@ const Input: FC<InputProps> = ({
         value={value}
         defaultValue={value !== undefined ? undefined : defaultValue}
         onChange={onChange}
+        inputMode={inputMode}
+        pattern={pattern}
         min={min}
         max={max}
         step={step}
