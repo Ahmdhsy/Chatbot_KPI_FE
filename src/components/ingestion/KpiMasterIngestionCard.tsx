@@ -7,13 +7,28 @@ import Input from "@/components/form/input/InputField"
 import Label from "@/components/form/Label"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"
+const INVITE_HELP_MESSAGE =
+  "Pastikan email Google Sheets sudah di-invite ke spreadsheet ini, lalu coba lagi."
 
 function getAuthHeader(): Record<string, string> {
   const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null
   return token ? { Authorization: `Bearer ${token}` } : {}
 }
 
-type IngestionStatus = "success" | "partial" | "failed"
+async function getIngestionErrorMessage(res: Response): Promise<string> {
+  if (res.status === 500) {
+    return INVITE_HELP_MESSAGE
+  }
+
+  try {
+    const body = await res.json()
+    return body?.detail ?? body?.message ?? "Ingestion failed"
+  } catch {
+    return "Ingestion failed"
+  }
+}
+
+type IngestionStatus = "success" | "failed"
 
 interface IngestionResult {
   status: IngestionStatus
@@ -48,7 +63,7 @@ export default function KpiMasterIngestionCard() {
         `${API_BASE}/api/v1/ingest/kpi-master?sheet_url=${encodeURIComponent(url)}&tahun=${tahunNum}`,
         { method: "POST", headers: { ...getAuthHeader() } },
       )
-      if (!res.ok) throw new Error((await res.json()).detail ?? "Ingestion failed")
+      if (!res.ok) throw new Error(await getIngestionErrorMessage(res))
       const data = await res.json()
       setResult({ status: data.status, ingested: data.ingested, failed: data.failed, errors: data.errors })
       setUrl("")
@@ -61,8 +76,7 @@ export default function KpiMasterIngestionCard() {
     }
   }
 
-  const statusColor =
-    result?.status === "success" ? "success" : result?.status === "partial" ? "warning" : "error"
+  const statusColor = result?.status === "success" ? "success" : "error"
 
   return (
     <div className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-white/[0.05] dark:bg-white/[0.03]">

@@ -5,7 +5,7 @@ export interface User {
   username: string;
   email: string;
   full_name: string;
-  role: "admin" | "hrd" | "kepala_divisi" | "karyawan";
+  role: "admin" | "kepala_divisi" | "karyawan";
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -16,13 +16,13 @@ export interface CreateUserRequest {
   email: string;
   full_name: string;
   password: string;
-  role: "admin" | "hrd" | "kepala_divisi" | "karyawan";
+  role: "admin" | "kepala_divisi" | "karyawan";
 }
 
 export interface UpdateUserRequest {
   full_name?: string;
   email?: string;
-  role?: "admin" | "hrd" | "kepala_divisi" | "karyawan";
+  role?: "admin" | "kepala_divisi" | "karyawan";
   is_active?: boolean;
 }
 
@@ -46,7 +46,7 @@ export interface CreateUserResponse {
   username: string;
   email: string;
   full_name: string;
-  role: "admin" | "hrd" | "kepala_divisi" | "karyawan";
+  role: "admin" | "kepala_divisi" | "karyawan";
   is_active: boolean;
   created_at: string;
   updated_at: string;

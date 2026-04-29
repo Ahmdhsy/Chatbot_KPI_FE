@@ -4,11 +4,11 @@ const PROTECTED_PATHS = ["/", "/users", "/chatbots", "/ingestion", "/chat"]
 const AUTH_PATHS = ["/signin", "/signup"]
 
 type TokenState = "missing" | "valid" | "invalid"
-type UserRole = "admin" | "hrd" | "unknown"
+type UserRole = "admin" | "kepala_divisi" | "unknown"
 
 const ROLE_ALLOWED_PREFIXES: Record<UserRole, string[]> = {
   admin: ["/", "/users", "/chatbots"],
-  hrd: ["/", "/ingestion"],
+  kepala_divisi: ["/", "/ingestion"],
   unknown: [],
 }
 
@@ -46,7 +46,7 @@ function getRoleFromToken(token: string | undefined): UserRole {
 
   const payload = decodeJwtPayload(token)
   const role = String(payload?.role ?? "").toLowerCase()
-  if (role === "admin" || role === "hrd") {
+  if (role === "admin" || role === "kepala_divisi") {
     return role
   }
   return "unknown"
@@ -54,7 +54,7 @@ function getRoleFromToken(token: string | undefined): UserRole {
 
 function getHomePathByRole(role: UserRole): string {
   if (role === "admin") return "/users"
-  if (role === "hrd") return "/ingestion"
+  if (role === "kepala_divisi") return "/ingestion"
   return "/signin"
 }
 

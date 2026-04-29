@@ -24,6 +24,8 @@ interface Props {
   fixedFilter?: FilterType
   /** Sembunyikan kolom Person saat memang tidak relevan (mis. KPI Master). */
   hidePersonColumn?: boolean
+  /** Increment untuk trigger client-side refresh dari parent */
+  refreshTrigger?: number
 }
 
 const TABS: { label: string; value: FilterType }[] = [
@@ -37,6 +39,7 @@ export default function IngestionLogsTable({
   initialTotal,
   fixedFilter,
   hidePersonColumn = false,
+  refreshTrigger,
 }: Props) {
   const [filter, setFilter] = useState<FilterType>(fixedFilter ?? "all")
   const [logs, setLogs] = useState<LogEntry[]>(initialLogs)
@@ -45,11 +48,11 @@ export default function IngestionLogsTable({
   const [loading, setLoading] = useState(false)
   const isFirstRender = useRef(true)
 
-  // Keep initial SSR data on first render; fetch client-side on filter/page change
+  // Keep initial SSR data on first render if it has data; fetch client-side otherwise or on filter/page change
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false
-      return
+      if (initialLogs.length > 0 && refreshTrigger === undefined) return
     }
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true)
@@ -68,6 +71,27 @@ export default function IngestionLogsTable({
       .catch(() => setLogs([]))
       .finally(() => setLoading(false))
   }, [filter, page])
+
+  // Trigger client-side refresh when parent increments refreshTrigger
+  useEffect(() => {
+    if (refreshTrigger === undefined || refreshTrigger === 0) return
+    setLoading(true)
+    const groupType =
+      filter === "all" ? "" : `&group_type=${filter === "kpi_master" ? "master" : "tracker"}`
+    fetch(
+      `${API_BASE}/api/v1/ingest/logs?limit=${INGEST_LOG_PAGE_SIZE}&offset=0${groupType}`,
+      { headers: { ...getAuthHeader() } },
+    )
+      .then((r) => r.json())
+      .then((data: { total: number; logs: LogEntry[] }) => {
+        setLogs(data.logs)
+        setTotal(data.total)
+        setPage(1)
+      })
+      .catch(() => setLogs([]))
+      .finally(() => setLoading(false))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshTrigger])
 
   // When SSR data changes (router.refresh), reset to SSR data
   useEffect(() => {
@@ -93,8 +117,8 @@ export default function IngestionLogsTable({
   const colSpan = hidePersonColumn ? 7 : 8
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-      <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4 dark:border-white/[0.05]">
+    <div className="rounded-2xl border border-gray-200 bg-white dark:border-white/5 dark:bg-white/3">
+      <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4 dark:border-white/5">
         <h3 className="text-base font-semibold text-gray-800 dark:text-white/90">
           Ingestion Logs
         </h3>
@@ -123,7 +147,7 @@ export default function IngestionLogsTable({
 
       <div className="max-w-full overflow-x-auto">
         <Table>
-          <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
+          <TableHeader className="border-b border-gray-100 dark:border-white/5">
             <TableRow>
               {headers.map(
                 (h) => (
@@ -138,7 +162,7 @@ export default function IngestionLogsTable({
               )}
             </TableRow>
           </TableHeader>
-          <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
+          <TableBody className="divide-y divide-gray-100 dark:divide-white/5">
             {loading ? (
               <TableRow>
                 <TableCell className="px-5 py-4 text-center text-sm text-gray-400" colSpan={colSpan}>
@@ -191,7 +215,7 @@ export default function IngestionLogsTable({
         </Table>
       </div>
 
-      <div className="flex justify-end border-t border-gray-100 px-6 py-3 dark:border-white/[0.05]">
+      <div className="flex justify-end border-t border-gray-100 px-6 py-3 dark:border-white/5">
         <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
       </div>
     </div>

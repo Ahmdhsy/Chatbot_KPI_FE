@@ -1,8 +1,6 @@
 import PageBreadCrumb from "@/components/common/PageBreadCrumb"
-import KpiMasterManagementTable, { KpiMasterGroup } from "@/components/ingestion/KpiMasterManagementTable"
-import IngestionLogsTable from "@/components/ingestion/IngestionLogsTable"
 import SummaryCard from "@/components/ingestion/SummaryCard"
-import KpiMasterIngestionModal from "@/components/ingestion/KpiMasterIngestionModal"
+import KpiMasterPageClient from "@/components/ingestion/KpiMasterPageClient"
 import { INGEST_LOG_PAGE_SIZE } from "@/lib/ingestionConstants"
 import { serverFetch } from "@/lib/server-api"
 import { LogEntry } from "@/hooks/useIngestion"
@@ -43,18 +41,10 @@ interface LogsResponse {
   logs: LogEntry[]
 }
 
-interface KpiMasterManagementResponse {
-  total: number
-  page: number
-  page_size: number
-  total_pages: number
-  data: KpiMasterGroup[]
-}
-
 export default async function KpiMasterIngestionPage() {
   let initialLogs: LogEntry[] = []
   let initialTotal = 0
-  let initialManagement: KpiMasterManagementResponse = {
+  let initialManagement = {
     total: 0,
     page: 1,
     page_size: 10,
@@ -74,7 +64,7 @@ export default async function KpiMasterIngestionPage() {
   }
 
   try {
-    initialManagement = await serverFetch<KpiMasterManagementResponse>(
+    initialManagement = await serverFetch<typeof initialManagement>(
       "/api/v1/kpi/?group_type=master&page=1&page_size=10"
     )
   } catch {
@@ -107,28 +97,10 @@ export default async function KpiMasterIngestionPage() {
           />
         </div>
 
-        {/* Management Section */}
-        <div>
-          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h3 className="text-base font-semibold text-gray-800 dark:text-white/90">
-                KPI Master Management
-              </h3>
-              <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
-                Kelola sumber data KPI Master yang telah diingest.
-              </p>
-            </div>
-            <KpiMasterIngestionModal />
-          </div>
-          <KpiMasterManagementTable initialData={initialManagement} />
-        </div>
-
-        {/* Ingestion Logs */}
-        <IngestionLogsTable
+        <KpiMasterPageClient
           initialLogs={initialLogs}
           initialTotal={initialTotal}
-          fixedFilter="kpi_master"
-          hidePersonColumn
+          initialManagement={initialManagement}
         />
       </div>
     </div>

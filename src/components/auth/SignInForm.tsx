@@ -85,7 +85,7 @@ export default function SignInForm() {
       }
 
       const normalizedRole = String(response?.user?.role ?? "").toLowerCase();
-      const allowedRoles = ["admin", "hrd"];
+      const allowedRoles = ["admin", "kepala_divisi"];
       if (!allowedRoles.includes(normalizedRole)) {
         addToast(
           "error",

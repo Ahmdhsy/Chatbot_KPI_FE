@@ -14,7 +14,7 @@ import {
   ChatIcon,
 } from "../icons/index";
 
-type AppRole = "admin" | "hrd" | "kepala_divisi" | "karyawan";
+type AppRole = "admin" | "kepala_divisi" | "karyawan";
 type NavItem = {
   name: string;
   icon: React.ReactNode;
@@ -39,10 +39,10 @@ const navItems: NavItem[] = [
   {
     icon: <PlugInIcon />,
     name: "KPI Management",
-    visibleRoles: ["hrd"],
+    visibleRoles: ["kepala_divisi"],
     subItems: [
-      { name: "KPI Master", path: "/ingestion/kpi-master", visibleRoles: ["hrd"] },
-      { name: "KPI Tracker", path: "/ingestion/kpi-tracker", visibleRoles: ["hrd"] },
+      { name: "KPI Master", path: "/ingestion/kpi-master", visibleRoles: ["kepala_divisi"] },
+      { name: "KPI Tracker", path: "/ingestion/kpi-tracker", visibleRoles: ["kepala_divisi"] },
     ],
   },
 ];
