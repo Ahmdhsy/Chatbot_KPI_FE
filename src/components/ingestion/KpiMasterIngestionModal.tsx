@@ -6,6 +6,7 @@ import Button from "@/components/ui/button/Button"
 import Input from "@/components/form/input/InputField"
 import Label from "@/components/form/Label"
 import { Modal } from "@/components/ui/modal"
+import { useToast } from "@/context/ToastContext"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"
 
@@ -25,6 +26,7 @@ interface IngestionResult {
 
 export default function KpiMasterIngestionModal() {
   const router = useRouter()
+  const { addToast } = useToast()
   const [open, setOpen] = useState(false)
   const [url, setUrl] = useState("")
   const [tahun, setTahun] = useState("")
@@ -61,10 +63,13 @@ export default function KpiMasterIngestionModal() {
       if (!res.ok) throw new Error((await res.json()).detail ?? "Ingestion failed")
       const data = await res.json()
       setResult({ status: data.status, ingested: data.ingested, failed: data.failed, errors: data.errors })
+      addToast("success", `KPI Master berhasil diingest: ${data.ingested} records.`, "Success")
       handleClose()
       router.refresh()
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Unknown error")
+      const msg = e instanceof Error ? e.message : "Unknown error"
+      setError(msg)
+      addToast("error", msg, "Error")
     } finally {
       setLoading(false)
     }
