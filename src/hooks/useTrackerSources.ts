@@ -7,7 +7,6 @@ export interface TrackerSource {
   sheet_id: string | null
   sheet_name: string | null
   tahun: number | null
-  is_scheduled: boolean
   is_active: boolean
   created_at: string
   updated_at: string

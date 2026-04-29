@@ -9,6 +9,7 @@ import Label from "@/components/form/Label"
 import Switch from "@/components/form/switch/Switch"
 import { TrackerSource } from "@/hooks/useTrackerSources"
 import apiClientWithAuth from "@/services/apiClientWithAuth"
+import { useToast } from "@/context/ToastContext"
 
 function getErrorMessage(error: unknown, fallback: string): string {
   if (axios.isAxiosError(error)) {
@@ -37,6 +38,7 @@ const MAX_BATCH_SOURCES = 6
 
 export default function TrackerSourcesSection({ initialSources }: Props) {
   const router = useRouter()
+  const { addToast } = useToast()
   const [rows, setRows] = useState<TrackerSource[]>(initialSources)
   const [search, setSearch] = useState("")
   const [yearFilter, setYearFilter] = useState("")
@@ -46,17 +48,16 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
   const [addOpen, setAddOpen] = useState(false)
   const [newUrl, setNewUrl] = useState("")
   const [newTahun, setNewTahun] = useState("")
-  const [newIsScheduled, setNewIsScheduled] = useState(true)
 
   // ── Edit modal ────────────────────────────────────────────────────────
   const [editSource, setEditSource] = useState<TrackerSource | null>(null)
   const [editUrl, setEditUrl] = useState("")
   const [editTahun, setEditTahun] = useState("")
-  const [editIsScheduled, setEditIsScheduled] = useState(true)
   const [editIsActive, setEditIsActive] = useState(true)
 
   // ── Delete confirm ────────────────────────────────────────────────────
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
+  const [deleteCandidate, setDeleteCandidate] = useState<TrackerSource | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   // ── Ingestion state ───────────────────────────────────────────────────
   const [ingestingId, setIngestingId] = useState<string | null>(null)
@@ -106,25 +107,35 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
 
   const handleCloseAdd = () => {
     setAddOpen(false); setNewUrl(""); setNewTahun("")
-    setNewIsScheduled(true); setError(null)
+    setError(null)
   }
 
   const handleOpenEdit = (source: TrackerSource) => {
     setEditSource(source)
     setEditUrl(source.sheet_url)
     setEditTahun(source.tahun != null ? String(source.tahun) : "")
-    setEditIsScheduled(source.is_scheduled)
     setEditIsActive(source.is_active)
-    setError(null); setDeleteConfirmId(null)
+    setError(null); setDeleteCandidate(null)
   }
 
   const handleCloseEdit = () => {
     setEditSource(null); setEditUrl(""); setEditTahun("")
-    setEditIsScheduled(true); setEditIsActive(true); setError(null)
+    setEditIsActive(true); setError(null)
+  }
+
+  const openDeleteConfirmation = (source: TrackerSource) => {
+    setDeleteCandidate(source)
+    setError(null)
+  }
+
+  const closeDeleteConfirmation = () => {
+    if (!deletingId) {
+      setDeleteCandidate(null)
+    }
   }
 
   const selectableSources = useMemo(
-    () => rows.filter((s) => s.is_active && s.is_scheduled),
+    () => rows.filter((s) => s.is_active),
     [rows],
   )
 
@@ -134,7 +145,7 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
   )
 
   const toggleSourceSelection = (source: TrackerSource) => {
-    if (!(source.is_active && source.is_scheduled)) return
+    if (!source.is_active) return
 
     setSelectedSourceIds((prev) => {
       if (prev.includes(source.id)) {
@@ -168,9 +179,9 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
         group_type: "tracker",
         sheet_url: newUrl.trim(),
         tahun: newTahun ? parseInt(newTahun) : null,
-        is_scheduled: newIsScheduled,
         is_active: true,
       })
+      addToast("success", "Sumber KPI Tracker berhasil ditambahkan.", "Success")
       handleCloseAdd()
       await fetchSources()
       router.refresh()
@@ -187,9 +198,9 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
       await apiClientWithAuth.patch(`/api/v1/kpi/${editSource.id}`, {
         sheet_url: editUrl.trim(),
         tahun: editTahun ? parseInt(editTahun) : null,
-        is_scheduled: editIsScheduled,
         is_active: editIsActive,
       })
+      addToast("success", "Sumber KPI Tracker berhasil diperbarui.", "Success")
       handleCloseEdit()
       await fetchSources()
       router.refresh()
@@ -199,17 +210,24 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
   }
 
   // ── Delete → DELETE /api/v1/kpi/{id} ──────────────────────────────────
-  const handleDelete = async (id: string) => {
-    setSaving(true); setError(null)
+  const handleDelete = async () => {
+    if (!deleteCandidate) return
+
+    setDeletingId(deleteCandidate.id)
+    setError(null)
+    const deletedName = deleteCandidate.nama_grup
     try {
-      await apiClientWithAuth.delete(`/api/v1/kpi/${id}`)
-      setDeleteConfirmId(null)
-      handleCloseEdit()
+      await apiClientWithAuth.delete(`/api/v1/kpi/${deleteCandidate.id}`)
+      if (editSource?.id === deleteCandidate.id) {
+        handleCloseEdit()
+      }
+      setDeleteCandidate(null)
+      addToast("success", `Sumber "${deletedName}" berhasil dihapus.`, "Success")
       await fetchSources()
       router.refresh()
     } catch (e: unknown) {
       setError(getErrorMessage(e, "Delete failed"))
-    } finally { setSaving(false) }
+    } finally { setDeletingId(null) }
   }
 
   // ── Ingest satu sumber ────────────────────────────────────────────────
@@ -222,7 +240,9 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
       const data = res.data
       const isSuccess = data.overall_status === "success"
       const marker = isSuccess ? "✓" : "✕"
-      setIngestResult(`${marker} ${source.nama_grup}: ${data.grand_ingested ?? 0} records ingested (${data.overall_status})`)
+      const resultMsg = `${marker} ${source.nama_grup}: ${data.grand_ingested ?? 0} records ingested (${data.overall_status})`
+      setIngestResult(resultMsg)
+      addToast(isSuccess ? "success" : "warning", resultMsg, "Ingest")
       await fetchSources()
       router.refresh()
     } catch (e: unknown) {
@@ -261,9 +281,9 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
 
       const isSuccess = (data.failed ?? 0) === 0
       const marker = isSuccess ? "✓" : "✕"
-      setIngestResult(
-        `${marker} Run Selected: ${totalIngested} records dari ${data.succeeded ?? 0}/${data.total_urls ?? selectedSources.length} sumber`,
-      )
+      const batchMsg = `${marker} Run Selected: ${totalIngested} records dari ${data.succeeded ?? 0}/${data.total_urls ?? selectedSources.length} sumber`
+      setIngestResult(batchMsg)
+      addToast(isSuccess ? "success" : "warning", batchMsg, "Batch Ingest")
       setIsBatchMode(false)
       setSelectedSourceIds([])
       await fetchSources()
@@ -371,7 +391,6 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
                   <th className="px-6 py-3 font-medium">Nama File</th>
                   <th className="px-6 py-3 font-medium">Sheet URL</th>
                   <th className="px-6 py-3 font-medium">Tahun</th>
-                  <th className="px-6 py-3 font-medium">Scheduled</th>
                   <th className="px-6 py-3 font-medium">Active</th>
                   <th className="px-6 py-3 font-medium">Ingest</th>
                   <th className="px-6 py-3 font-medium">Aksi</th>
@@ -379,23 +398,22 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
               </thead>
               <tbody className="divide-y divide-gray-50 dark:divide-white/5">
                 {rows.map((source) => (
-                  <React.Fragment key={source.id}>
-                    <tr className="text-gray-700 dark:text-white/80">
+                  <tr key={source.id} className="text-gray-700 dark:text-white/80">
                       {isBatchMode && (
                         <td className="px-6 py-3">
                           <input
                             type="checkbox"
                             checked={selectedSourceIds.includes(source.id)}
                             disabled={
-                              !(source.is_active && source.is_scheduled) ||
+                              !source.is_active ||
                               (!selectedSourceIds.includes(source.id) && selectedSourceIds.length >= MAX_BATCH_SOURCES)
                             }
                             onChange={() => toggleSourceSelection(source)}
                             className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500 disabled:cursor-not-allowed disabled:opacity-40"
                             title={
-                              source.is_active && source.is_scheduled
+                              source.is_active
                                 ? "Pilih sumber ini untuk batch ingest"
-                                : "Hanya sumber Active dan Scheduled yang bisa dipilih"
+                                : "Hanya sumber Active yang bisa dipilih"
                             }
                           />
                         </td>
@@ -406,9 +424,6 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
                       </td>
                       <td className="px-6 py-3 text-gray-500">
                         {source.tahun ?? <span className="text-gray-300 dark:text-gray-600">—</span>}
-                      </td>
-                      <td className="px-6 py-3">
-                        <Badge active={source.is_scheduled} label={source.is_scheduled ? "Ya" : "Tidak"} color="blue" />
                       </td>
                       <td className="px-6 py-3">
                         <Badge active={source.is_active} label={source.is_active ? "Ya" : "Tidak"} color="green" />
@@ -437,34 +452,15 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
                             Edit
                           </button>
                           <button
-                            onClick={() => { setDeleteConfirmId(source.id); setEditSource(null) }}
-                            className="text-xs font-medium text-gray-400 hover:text-error-500"
+                            onClick={() => openDeleteConfirmation(source)}
+                            disabled={deletingId === source.id}
+                            className="text-xs font-medium text-gray-400 hover:text-error-500 disabled:cursor-not-allowed disabled:opacity-40"
                           >
-                            Delete
+                            {deletingId === source.id ? "Deleting..." : "Delete"}
                           </button>
                         </div>
                       </td>
                     </tr>
-
-                    {deleteConfirmId === source.id && (
-                      <tr>
-                        <td colSpan={isBatchMode ? 8 : 7} className="px-6 pb-3 pt-1">
-                          <div className="flex items-center gap-3 rounded-lg bg-error-50 px-4 py-2.5 text-sm dark:bg-error-500/10">
-                            <span className="text-error-600 dark:text-error-400">
-                              Hapus &quot;{source.nama_grup}&quot; beserta semua data terkait? Tidak bisa dibatalkan.
-                            </span>
-                            <button onClick={() => handleDelete(source.id)} disabled={saving}
-                              className="font-semibold text-error-600 hover:text-error-700 disabled:opacity-40">
-                              Ya, hapus
-                            </button>
-                            <button onClick={() => setDeleteConfirmId(null)} className="text-gray-500 hover:text-gray-700">
-                              Batal
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
                 ))}
               </tbody>
             </table>
@@ -498,7 +494,6 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
                 onChange={(e) => setNewTahun(e.target.value)}
               />
             </div>
-            <Switch label="Include in Scheduler" defaultChecked={newIsScheduled} onChange={setNewIsScheduled} />
             {error && <p className="text-sm text-error-500">{error}</p>}
             <div className="flex justify-end gap-3 pt-1">
               <Button variant="outline" onClick={handleCloseAdd} disabled={saving}>Batal</Button>
@@ -535,42 +530,83 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
       </Modal>
 
       {/* ── Edit Modal ───────────────────────────────────────────────── */}
-      <Modal isOpen={!!editSource} onClose={handleCloseEdit} className="max-w-md p-6">
-        <h4 className="mb-1 text-lg font-semibold text-gray-800 dark:text-white/90">Edit Sumber</h4>
+      <Modal isOpen={!!editSource} onClose={handleCloseEdit} className="max-w-2xl p-6">
+        <h4 className="mb-1 text-lg font-semibold text-gray-800 dark:text-white/90">Edit Sumber KPI Tracker</h4>
         <p className="mb-1 text-sm font-medium text-gray-600 dark:text-gray-300">{editSource?.nama_grup}</p>
         <p className="mb-5 font-mono text-xs text-gray-300 dark:text-gray-600">
           {editSource && truncateUrl(editSource.sheet_url, 60)}
         </p>
-        <div className="flex flex-col gap-4">
-          <div>
-            <Label htmlFor="edit-url">Sheet URL</Label>
-            <Input id="edit-url" placeholder="https://docs.google.com/spreadsheets/d/..."
-              value={editUrl} onChange={(e) => setEditUrl(e.target.value)} />
-          </div>
-          <div>
-            <Label htmlFor="edit-tahun">Tahun</Label>
-            <Input id="edit-tahun" type="number" placeholder="2025"
-              value={editTahun} onChange={(e) => setEditTahun(e.target.value)} />
-          </div>
-          <Switch key={`sched-${editSource?.id}`} label="Include in Scheduler"
-            defaultChecked={editIsScheduled} onChange={setEditIsScheduled} />
-          <Switch key={`active-${editSource?.id}`} label="Active"
-            defaultChecked={editIsActive} onChange={setEditIsActive} />
-          {error && <p className="text-sm text-error-500">{error}</p>}
-          <div className="flex items-center justify-between pt-1">
-            <button
-              onClick={() => { setDeleteConfirmId(editSource!.id); handleCloseEdit() }}
-              className="text-sm font-medium text-gray-400 hover:text-error-500"
-            >
-              Delete
-            </button>
-            <div className="flex gap-3">
-              <Button variant="outline" onClick={handleCloseEdit} disabled={saving}>Batal</Button>
-              <Button onClick={handleEditSave} disabled={saving || !editUrl.trim()}>
-                {saving ? "Menyimpan…" : "Simpan"}
-              </Button>
+        <div className="grid gap-6 md:grid-cols-2">
+          <div className="flex flex-col gap-4">
+            <div>
+              <Label htmlFor="edit-url">Sheet URL</Label>
+              <Input id="edit-url" placeholder="https://docs.google.com/spreadsheets/d/..."
+                value={editUrl} onChange={(e) => setEditUrl(e.target.value)} />
+            </div>
+            <div>
+              <Label htmlFor="edit-tahun">Tahun</Label>
+              <Input id="edit-tahun" type="number" placeholder="2025"
+                value={editTahun} onChange={(e) => setEditTahun(e.target.value)} />
+            </div>
+            <Switch key={`active-${editSource?.id}`} label="Active"
+              defaultChecked={editIsActive} onChange={setEditIsActive} />
+            {error && <p className="text-sm text-error-500">{error}</p>}
+            <div className="flex items-center justify-between pt-1">
+              <button
+                onClick={() => editSource && openDeleteConfirmation(editSource)}
+                disabled={!editSource || deletingId === editSource?.id}
+                className="text-sm font-medium text-gray-400 hover:text-error-500 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {deletingId === editSource?.id ? "Deleting..." : "Delete"}
+              </button>
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={handleCloseEdit} disabled={saving}>Batal</Button>
+                <Button onClick={handleEditSave} disabled={saving || !editUrl.trim()}>
+                  {saving ? "Menyimpan…" : "Simpan"}
+                </Button>
+              </div>
             </div>
           </div>
+
+          <div className="rounded-xl border border-amber-100 bg-amber-50 p-4 dark:border-amber-500/20 dark:bg-amber-500/10">
+            <p className="mb-2 text-sm font-semibold text-amber-800 dark:text-amber-300">Panduan Edit KPI Tracker</p>
+            <ul className="list-disc list-inside space-y-2 text-xs text-amber-700 dark:text-amber-400">
+              <li>
+                Jika mengganti <strong>Sheet URL</strong>, pastikan spreadsheet sudah dibagikan ke akun berikut (minimal <strong>Viewer</strong>):
+                <div className="mt-1.5 rounded-lg bg-orange-200 px-3 py-2 font-mono text-gray-800 dark:bg-white/10 dark:text-gray-200 break-all">
+                  sheet-access-bot@impressive-hull-429606-b3.iam.gserviceaccount.com
+                </div>
+              </li>
+              <li>
+                <strong>Tahun</strong> digunakan untuk mengelompokkan data tracker per periode. Pastikan sesuai dengan isi spreadsheet.
+              </li>
+              <li>
+                Aktifkan <strong>Active</strong> agar sumber ini ikut dijalankan otomatis oleh scheduler dan bisa dipilih saat Run Batch.
+              </li>
+              <li>
+                Non-aktifkan <strong>Active</strong> jika ingin menonaktifkan sumber sementara tanpa menghapus data.
+              </li>
+              <li>
+                Nama KPI di spreadsheet harus sesuai dengan data <strong>KPI Master</strong> yang sudah diingest.
+              </li>
+            </ul>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal isOpen={!!deleteCandidate} onClose={closeDeleteConfirmation} className="max-w-md p-6">
+        <h4 className="mb-2 text-lg font-semibold text-error-700 dark:text-error-400">Konfirmasi Hapus KPI Tracker</h4>
+        <p className="mb-3 text-sm text-gray-600 dark:text-gray-300">
+          Apakah Anda yakin ingin menghapus source <strong>{deleteCandidate?.nama_grup}</strong>?
+        </p>
+        <div className="mb-6 rounded-lg border border-error-100 bg-error-50 px-3 py-2 text-xs text-error-700 dark:border-error-500/20 dark:bg-error-500/10 dark:text-error-400">
+          Semua data KPI Tracker terkait juga akan terhapus. Tindakan ini tidak dapat dibatalkan.
+        </div>
+        <div className="flex justify-end gap-3">
+          <Button variant="outline" onClick={closeDeleteConfirmation} disabled={!!deletingId}>Batal</Button>
+          <Button onClick={handleDelete} disabled={!!deletingId} className="bg-error-600 hover:bg-error-700">
+            {deletingId ? "Deleting..." : "Hapus"}
+          </Button>
         </div>
       </Modal>
     </>

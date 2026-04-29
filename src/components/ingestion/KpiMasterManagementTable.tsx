@@ -10,6 +10,7 @@ import Pagination from "@/components/tables/Pagination"
 import Button from "@/components/ui/button/Button"
 import { Modal } from "@/components/ui/modal"
 import apiClientWithAuth from "@/services/apiClientWithAuth"
+import { useToast } from "@/context/ToastContext"
 
 export interface KpiMasterGroup {
 	id: string
@@ -19,7 +20,6 @@ export interface KpiMasterGroup {
 	sheet_id: string | null
 	sheet_name: string | null
 	tahun: number | null
-	is_scheduled: boolean
 	is_active: boolean
 	created_at: string
 	updated_at: string
@@ -67,6 +67,7 @@ function truncateUrl(url: string, max = 64): string {
 
 export default function KpiMasterManagementTable({ initialData }: Props) {
 	const router = useRouter()
+	const { addToast } = useToast()
 
 	const [rows, setRows] = useState<KpiMasterGroup[]>(initialData.data ?? [])
 	const [page, setPage] = useState(initialData.page || 1)
@@ -80,19 +81,18 @@ export default function KpiMasterManagementTable({ initialData }: Props) {
 	const [loading, setLoading] = useState(false)
 	const [saving, setSaving] = useState(false)
 	const [deletingId, setDeletingId] = useState<string | null>(null)
+	const [deleteCandidate, setDeleteCandidate] = useState<KpiMasterGroup | null>(null)
 	const [error, setError] = useState<string | null>(null)
-	const [success, setSuccess] = useState<string | null>(null)
 
 	const [editing, setEditing] = useState<KpiMasterGroup | null>(null)
 	const [editUrl, setEditUrl] = useState("")
 	const [editTahun, setEditTahun] = useState("")
 
-	const openEdit = (row: KpiMasterGroup) => {
+const openEdit = (row: KpiMasterGroup) => {
 		setEditing(row)
 		setEditUrl(row.sheet_url)
 		setEditTahun(row.tahun != null ? String(row.tahun) : "")
 		setError(null)
-		setSuccess(null)
 	}
 
 	const closeEdit = () => {
@@ -162,17 +162,16 @@ export default function KpiMasterManagementTable({ initialData }: Props) {
 
 		setSaving(true)
 		setError(null)
-		setSuccess(null)
 
 		try {
-			const { data } = await apiClientWithAuth.patch<IngestionResponse>(
+			await apiClientWithAuth.patch<IngestionResponse>(
 				`/api/v1/kpi/${editing.id}`,
 				payload,
 			)
 
 			closeEdit()
 			await fetchPage(page)
-			setSuccess(`KPI Master group berhasil di-update dan di-ingest ulang (ID: ${data.id}).`)
+			addToast("success", "KPI Master group berhasil di-update dan di-ingest ulang.", "Success")
 			router.refresh()
 		} catch (e: unknown) {
 			setError(getErrorMessage(e, "Gagal update dan re-ingest KPI Master."))
@@ -181,26 +180,35 @@ export default function KpiMasterManagementTable({ initialData }: Props) {
 		}
 	}
 
-	const handleDelete = async (row: KpiMasterGroup) => {
-		const ok = window.confirm(
-			`Hapus group \"${row.nama_grup}\" beserta semua data KPI Master terkait? Tindakan ini tidak dapat dibatalkan.`,
-		)
-		if (!ok) return
-
-		setDeletingId(row.id)
+	const openDeleteConfirmation = (row: KpiMasterGroup) => {
+		setDeleteCandidate(row)
 		setError(null)
-		setSuccess(null)
+	}
 
+	const closeDeleteConfirmation = () => {
+		if (!deletingId) {
+			setDeleteCandidate(null)
+		}
+	}
+
+	const handleDelete = async () => {
+		if (!deleteCandidate) return
+
+		setDeletingId(deleteCandidate.id)
+		setError(null)
+
+		const deletedName = deleteCandidate.nama_grup
 		try {
-			await apiClientWithAuth.delete(`/api/v1/kpi/${row.id}`)
-			if (editing?.id === row.id) {
+			await apiClientWithAuth.delete(`/api/v1/kpi/${deleteCandidate.id}`)
+			if (editing?.id === deleteCandidate.id) {
 				closeEdit()
 			}
+			setDeleteCandidate(null)
 
 			// Jika item terakhir di page terhapus, mundur 1 halaman bila memungkinkan.
 			const nextPage = rows.length === 1 && page > 1 ? page - 1 : page
 			await fetchPage(nextPage)
-			setSuccess(`KPI Master group \"${row.nama_grup}\" berhasil dihapus.`)
+			addToast("success", `KPI Master group "${deletedName}" berhasil dihapus.`, "Success")
 			router.refresh()
 		} catch (e: unknown) {
 			setError(getErrorMessage(e, "Gagal menghapus KPI Master group."))
@@ -238,13 +246,6 @@ export default function KpiMasterManagementTable({ initialData }: Props) {
 						onChange={(event) => setYearFilter(event.target.value)}
 					/>
 				</div>
-
-				{success && (
-					<div className="border-b border-success-100 bg-success-50 px-6 py-2.5 text-sm text-success-700 dark:border-success-500/20 dark:bg-success-500/10 dark:text-success-400">
-						{success}
-						<button onClick={() => setSuccess(null)} className="ml-3 opacity-60 hover:opacity-100">x</button>
-					</div>
-				)}
 
 				{error && (
 					<div className="border-b border-error-100 bg-error-50 px-6 py-2.5 text-sm text-error-700 dark:border-error-500/20 dark:bg-error-500/10 dark:text-error-400">
@@ -293,7 +294,7 @@ export default function KpiMasterManagementTable({ initialData }: Props) {
 													Edit
 												</button>
 												<button
-													onClick={() => handleDelete(row)}
+													onClick={() => openDeleteConfirmation(row)}
 													disabled={deletingId === row.id}
 													className="text-xs font-medium text-gray-400 hover:text-error-500 disabled:cursor-not-allowed disabled:opacity-40"
 												>
@@ -321,6 +322,14 @@ export default function KpiMasterManagementTable({ initialData }: Props) {
 				<p className="mb-5 text-sm text-gray-500 dark:text-gray-400">
 					Ubah Sheet URL dan/atau Tahun. Simpan akan memicu re-ingest otomatis.
 				</p>
+				<div className="mb-5 rounded-xl border border-amber-100 bg-amber-50 p-3.5 text-xs text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">
+					<p className="font-semibold">Panduan Edit KPI Master</p>
+					<ul className="mt-2 list-disc space-y-1 pl-4">
+						<li>Jika mengganti <strong>Sheet URL</strong>, sertakan <strong>Tahun</strong> yang sesuai.</li>
+						<li>Pastikan Sheet URL bisa diakses service account ingestion.</li>
+						<li>Simpan akan menjalankan re-ingest dan memperbarui data KPI Master pada group ini.</li>
+					</ul>
+				</div>
 
 				<div className="flex flex-col gap-4">
 					<div>
@@ -346,7 +355,7 @@ export default function KpiMasterManagementTable({ initialData }: Props) {
 
 					<div className="flex items-center justify-between gap-3 pt-1">
 						<button
-							onClick={() => editing && handleDelete(editing)}
+							onClick={() => editing && openDeleteConfirmation(editing)}
 							disabled={!editing || deletingId === editing?.id}
 							className="text-sm font-medium text-gray-400 hover:text-error-500 disabled:cursor-not-allowed disabled:opacity-40"
 						>
@@ -359,6 +368,22 @@ export default function KpiMasterManagementTable({ initialData }: Props) {
 						</Button>
 						</div>
 					</div>
+				</div>
+			</Modal>
+
+			<Modal isOpen={!!deleteCandidate} onClose={closeDeleteConfirmation} className="max-w-md p-6">
+				<h4 className="mb-2 text-lg font-semibold text-error-700 dark:text-error-400">Konfirmasi Hapus KPI Master</h4>
+				<p className="mb-3 text-sm text-gray-600 dark:text-gray-300">
+					Apakah Anda yakin ingin menghapus group <strong>{deleteCandidate?.nama_grup}</strong>?
+				</p>
+				<div className="mb-6 rounded-lg border border-error-100 bg-error-50 px-3 py-2 text-xs text-error-700 dark:border-error-500/20 dark:bg-error-500/10 dark:text-error-400">
+					Semua data KPI Master terkait juga akan terhapus. Tindakan ini tidak dapat dibatalkan.
+				</div>
+				<div className="flex justify-end gap-3">
+					<Button variant="outline" onClick={closeDeleteConfirmation} disabled={!!deletingId}>Batal</Button>
+					<Button onClick={handleDelete} disabled={!!deletingId} className="bg-error-600 hover:bg-error-700">
+						{deletingId ? "Deleting..." : "Hapus"}
+					</Button>
 				</div>
 			</Modal>
 		</>

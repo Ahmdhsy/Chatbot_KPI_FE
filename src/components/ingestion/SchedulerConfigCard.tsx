@@ -7,6 +7,7 @@ import Input from "@/components/form/input/InputField"
 import Label from "@/components/form/Label"
 import Switch from "@/components/form/switch/Switch"
 import { SchedulerConfig } from "@/hooks/useScheduler"
+import { useToast } from "@/context/ToastContext"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"
 const WIB_OFFSET_HOURS = 7
@@ -44,6 +45,7 @@ function formatDatetime(iso: string | null): string {
 
 export default function SchedulerConfigCard({ initialConfig }: Props) {
   const router = useRouter()
+  const { addToast } = useToast()
   const { day: initDay, hour: initHour } = parseIntervalValue(
     initialConfig?.interval_value ?? null
   )
@@ -90,6 +92,7 @@ export default function SchedulerConfigCard({ initialConfig }: Props) {
         }),
       })
       if (!res.ok) throw new Error((await res.json()).detail ?? "Save failed")
+      addToast("success", "Konfigurasi scheduler berhasil disimpan.", "Success")
       router.refresh()
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Unknown error")
@@ -109,7 +112,9 @@ export default function SchedulerConfigCard({ initialConfig }: Props) {
       })
       if (!res.ok) throw new Error((await res.json()).detail ?? "Trigger failed")
       const data = await res.json()
-      setTriggerMsg(data.message ?? "Triggered successfully")
+      const msg = data.message ?? "Triggered successfully"
+      setTriggerMsg(msg)
+      addToast("success", msg, "Scheduler")
       router.refresh()
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Unknown error")

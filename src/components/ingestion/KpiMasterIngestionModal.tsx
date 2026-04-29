@@ -6,6 +6,7 @@ import Button from "@/components/ui/button/Button"
 import Input from "@/components/form/input/InputField"
 import Label from "@/components/form/Label"
 import { Modal } from "@/components/ui/modal"
+import { useToast } from "@/context/ToastContext"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"
 
@@ -25,6 +26,7 @@ interface IngestionResult {
 
 export default function KpiMasterIngestionModal() {
   const router = useRouter()
+  const { addToast } = useToast()
   const [open, setOpen] = useState(false)
   const [url, setUrl] = useState("")
   const [tahun, setTahun] = useState("")
@@ -61,10 +63,13 @@ export default function KpiMasterIngestionModal() {
       if (!res.ok) throw new Error((await res.json()).detail ?? "Ingestion failed")
       const data = await res.json()
       setResult({ status: data.status, ingested: data.ingested, failed: data.failed, errors: data.errors })
+      addToast("success", `KPI Master berhasil diingest: ${data.ingested} records.`, "Success")
       handleClose()
       router.refresh()
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Unknown error")
+      const msg = e instanceof Error ? e.message : "Unknown error"
+      setError(msg)
+      addToast("error", msg, "Error")
     } finally {
       setLoading(false)
     }
@@ -128,27 +133,21 @@ export default function KpiMasterIngestionModal() {
             <h5 className="mb-2 text-sm font-semibold text-gray-800 dark:text-white/90">Panduan Ingestion</h5>
             <ul className="list-disc list-inside space-y-2 text-sm text-gray-600 dark:text-gray-300">
               <li>
-                Bagikan spreadsheet ke akun berikut (minimal <strong>Viewer</strong>):
+                Invite spreadsheet ke akun berikut (minimal <strong>Viewer</strong>):
                 <div className="mt-1.5 rounded-lg bg-orange-200 px-3 py-2 text-xs font-mono text-gray-800 dark:bg-white/10 dark:text-gray-200 break-all">
                   sheet-access-bot@impressive-hull-429606-b3.iam.gserviceaccount.com
                 </div>
               </li>
               <li>
-                Sheet pertama harus bernama <strong>KPI</strong>.
-              </li>
-              <li>
-                Format baris dalam sheet:
-                <ul className="mt-1 ml-3 list-none space-y-0.5 text-xs text-gray-500 dark:text-gray-400">
-                  <li>• <em>Category row</em> — hanya kolom pertama terisi, diawali &ldquo;KPI &rdquo;</li>
-                  <li>• <em>Header row</em> — kolom pertama bernilai tepat &ldquo;KPI&rdquo;</li>
-                  <li>• <em>Data row</em> — baris data KPI</li>
-                </ul>
-              </li>
-              <li>
-                Kolom <strong>wajib</strong>: <code className="text-xs">KPI</code>, <code className="text-xs">Responsibility Persons</code>
-              </li>
-              <li>
-                Kolom <strong>opsional</strong>: Definisi Operasional, Target, Achieve, Partial, Fail
+                Gunakan format dari sheet contoh berikut agar proses ingestion lebih konsisten: {" "}
+                <a
+                  href="https://docs.google.com/spreadsheets/d/1iDMoJIIMZGbrWrXTaEQkChlBmeHgzpk5fWN4nWRL0vE/edit?usp=sharing"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs font-medium text-brand-600 hover:underline dark:text-brand-400"
+                >
+                  Contoh format KPI Master
+                </a>
               </li>
             </ul>
           </div>
