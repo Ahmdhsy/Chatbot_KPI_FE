@@ -56,16 +56,8 @@ export default function SchedulerConfigCard({ initialConfig }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [triggerMsg, setTriggerMsg] = useState<string | null>(null)
 
-  const statusLabel = !initialConfig
-    ? "Not Configured"
-    : initialConfig.is_enabled
-    ? "Active"
-    : "Paused"
-  const statusColor = !initialConfig
-    ? "light"
-    : initialConfig.is_enabled
-    ? "success"
-    : "warning"
+  const statusLabel = enabled ? "Active" : "Paused"
+  const statusColor = enabled ? "success" : "warning"
 
   const handleSave = async () => {
     setLoading(true)
@@ -82,9 +74,8 @@ export default function SchedulerConfigCard({ initialConfig }: Props) {
       return
     }
     try {
-      const method = initialConfig ? "PATCH" : "POST"
       const res = await fetch(`${API_BASE}/api/v1/scheduler`, {
-        method,
+        method: "PATCH",
         headers: { "Content-Type": "application/json", ...getAuthHeader() },
         body: JSON.stringify({
           interval_value: buildIntervalValue(day, hour),
@@ -176,22 +167,20 @@ export default function SchedulerConfigCard({ initialConfig }: Props) {
         />
       </div>
 
-      {initialConfig && (
-        <div className="mb-5 grid grid-cols-2 gap-3 rounded-lg bg-gray-50 p-3 text-sm dark:bg-white/3">
-          <div>
-            <span className="block text-theme-xs text-gray-500 dark:text-gray-400">Last Run</span>
-            <span className="font-medium text-gray-700 dark:text-white/80">
-              {formatDatetime(initialConfig.last_run_at)}
-            </span>
-          </div>
-          <div>
-            <span className="block text-theme-xs text-gray-500 dark:text-gray-400">Next Run</span>
-            <span className="font-medium text-gray-700 dark:text-white/80">
-              {formatDatetime(initialConfig.next_run_at)}
-            </span>
-          </div>
+      <div className="mb-5 grid grid-cols-2 gap-3 rounded-lg bg-gray-50 p-3 text-sm dark:bg-white/3">
+        <div>
+          <span className="block text-theme-xs text-gray-500 dark:text-gray-400">Last Run</span>
+          <span className="font-medium text-gray-700 dark:text-white/80">
+            {formatDatetime(initialConfig?.last_run_at ?? null)}
+          </span>
         </div>
-      )}
+        <div>
+          <span className="block text-theme-xs text-gray-500 dark:text-gray-400">Next Run</span>
+          <span className="font-medium text-gray-700 dark:text-white/80">
+            {formatDatetime(initialConfig?.next_run_at ?? null)}
+          </span>
+        </div>
+      </div>
 
       {error && <p className="mb-3 text-sm text-error-500">{error}</p>}
       {triggerMsg && <p className="mb-3 text-sm text-success-500">{triggerMsg}</p>}
@@ -200,11 +189,9 @@ export default function SchedulerConfigCard({ initialConfig }: Props) {
         <Button onClick={handleSave} disabled={loading}>
           {loading ? "Saving…" : "Save Scheduler"}
         </Button>
-        {initialConfig && (
-          <Button variant="outline" onClick={handleTrigger} disabled={loading}>
-            Run Now
-          </Button>
-        )}
+        <Button variant="outline" onClick={handleTrigger} disabled={loading}>
+          Run Now
+        </Button>
       </div>
     </div>
   )
