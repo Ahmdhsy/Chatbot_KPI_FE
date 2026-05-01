@@ -67,17 +67,16 @@ export default function SignInForm() {
         const msg = response?.detail?.[0]?.msg ?? response?.detail ?? "Login failed";
         const lowered = String(msg).toLowerCase();
 
-        if (
-          lowered.includes("email") ||
-          lowered.includes("user not found") ||
-          lowered.includes("not found")
-        ) {
-          setIdentifierError("Email tidak ditemukan / tidak valid.");
-        } else if (lowered.includes("password")) {
-          setPasswordError("Password salah.");
-        } else {
+        if (res.status === 401) {
           setIdentifierError("Email atau password salah.");
           setPasswordError("Email atau password salah.");
+        } else if (res.status === 403 || lowered.includes("tidak aktif") || lowered.includes("inactive")) {
+          setIdentifierError("Akun tidak aktif.");
+          setPasswordError("Akun tidak aktif.");
+        } else if (res.status === 422) {
+          setIdentifierError("Harap isi email yang valid.");
+        } else {
+          setIdentifierError("Login gagal. Silakan coba lagi.");
         }
 
         addToast("error", String(msg), "Login Failed");
@@ -85,7 +84,7 @@ export default function SignInForm() {
       }
 
       const normalizedRole = String(response?.user?.role ?? "").toLowerCase();
-      const allowedRoles = ["admin", "hrd"];
+      const allowedRoles = ["admin", "kepala_divisi"];
       if (!allowedRoles.includes(normalizedRole)) {
         addToast(
           "error",

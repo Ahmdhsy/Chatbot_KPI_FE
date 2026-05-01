@@ -22,7 +22,7 @@ export default async function Dashboard() {
   const token = cookieStore.get("access_token")?.value;
   const role = getRoleFromAccessToken(token);
 
-  if (role === "hrd") {
+  if (role === "kepala_divisi") {
     redirect("/ingestion");
   }
 
