@@ -1,40 +1,68 @@
-"use client";
-import React, { useState } from "react";
-import Badge from "@/components/ui/badge/Badge";
-import Button from "@/components/ui/button/Button";
-import Input from "@/components/form/input/InputField";
-import Label from "@/components/form/Label";
-import { IngestionResult } from "@/hooks/useIngestion";
+"use client"
+import React, { useState } from "react"
+import { useRouter } from "next/navigation"
+import Badge from "@/components/ui/badge/Badge"
+import Button from "@/components/ui/button/Button"
+import Input from "@/components/form/input/InputField"
+import Label from "@/components/form/Label"
 
-interface Props {
-  onIngest: (url: string, tahun: number) => Promise<void>;
-  loading: boolean;
-  result: IngestionResult | null;
-  error: string | null;
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"
+
+function getAuthHeader(): Record<string, string> {
+  const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null
+  return token ? { Authorization: `Bearer ${token}` } : {}
 }
 
-export default function KpiMasterIngestionCard({ onIngest, loading, result, error }: Props) {
-  const [url, setUrl] = useState("");
-  const [tahun, setTahun] = useState("");
+type IngestionStatus = "success" | "partial" | "failed"
 
-  const tahunNum = parseInt(tahun, 10);
-  const isValidTahun = !isNaN(tahunNum) && tahun.trim() === String(tahunNum) && tahunNum >= 2001 && tahunNum <= new Date().getFullYear() + 1;
-  const canSubmit = !loading && url.trim() !== "" && isValidTahun;
+interface IngestionResult {
+  status: IngestionStatus
+  ingested: number
+  failed: number
+  errors: string[]
+}
+
+export default function KpiMasterIngestionCard() {
+  const router = useRouter()
+  const [url, setUrl] = useState("")
+  const [tahun, setTahun] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [result, setResult] = useState<IngestionResult | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  const tahunNum = parseInt(tahun, 10)
+  const isValidTahun =
+    !isNaN(tahunNum) &&
+    tahun.trim() === String(tahunNum) &&
+    tahunNum >= 2001 &&
+    tahunNum <= new Date().getFullYear() + 1
+  const canSubmit = !loading && url.trim() !== "" && isValidTahun
 
   const handleSubmit = async () => {
-    if (!canSubmit) return;
-    await onIngest(url, tahunNum);
-    setUrl("");
-    setTahun("");
-  };
+    if (!canSubmit) return
+    setLoading(true)
+    setResult(null)
+    setError(null)
+    try {
+      const res = await fetch(
+        `${API_BASE}/api/v1/ingest/kpi-master?sheet_url=${encodeURIComponent(url)}&tahun=${tahunNum}`,
+        { method: "POST", headers: { ...getAuthHeader() } },
+      )
+      if (!res.ok) throw new Error((await res.json()).detail ?? "Ingestion failed")
+      const data = await res.json()
+      setResult({ status: data.status, ingested: data.ingested, failed: data.failed, errors: data.errors })
+      setUrl("")
+      setTahun("")
+      router.refresh()
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Unknown error")
+    } finally {
+      setLoading(false)
+    }
+  }
 
-  const statusColor = result
-    ? result.status === "success"
-      ? "success"
-      : result.status === "partial"
-      ? "warning"
-      : "error"
-    : "primary";
+  const statusColor =
+    result?.status === "success" ? "success" : result?.status === "partial" ? "warning" : "error"
 
   return (
     <div className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-white/[0.05] dark:bg-white/[0.03]">
@@ -74,14 +102,12 @@ export default function KpiMasterIngestionCard({ onIngest, loading, result, erro
 
       {result && (
         <div className="mt-4 flex items-center gap-3">
-          <Badge size="sm" color={statusColor}>
-            {result.status}
-          </Badge>
+          <Badge size="sm" color={statusColor}>{result.status}</Badge>
           <span className="text-sm text-gray-600 dark:text-gray-400">
             {result.ingested} records ingested
           </span>
         </div>
       )}
     </div>
-  );
+  )
 }

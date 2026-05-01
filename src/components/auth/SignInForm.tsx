@@ -7,7 +7,6 @@ import { EyeCloseIcon, EyeIcon } from "@/icons";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
-import { authService } from "@/services/authService";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 
@@ -32,10 +31,18 @@ export default function SignInForm() {
     setIsLoading(true);
 
     try {
-      const response = await authService.login({
-        identifier,
-        password,
+      const res = await fetch("/api/auth/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier, password }),
       });
+
+      const response = await res.json();
+
+      if (!res.ok) {
+        const msg = response?.detail?.[0]?.msg ?? response?.detail ?? "Login failed";
+        throw new Error(msg);
+      }
 
       // Check if user role is admin (only admin can access)
       if (response.user.role !== "admin") {
@@ -48,7 +55,8 @@ export default function SignInForm() {
         return;
       }
 
-      // Login successful - pass refresh token and expiry time
+      // Login successful - cookie is set by /api/auth/session
+      // Also store in AuthContext for client-side state
       login(
         response.access_token,
         response.refresh_token,

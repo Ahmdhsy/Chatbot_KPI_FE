@@ -189,7 +189,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const refreshAccessToken = async (): Promise<boolean> => {
-    const currentRefreshToken = localStorage.getItem("refreshToken");
+    const currentRefreshToken = localStorage.getItem("refresh_token");
     
     if (!currentRefreshToken) {
       console.warn("[AuthContext] No refresh token available");
@@ -243,6 +243,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (refreshToken) {
         await authService.logout(refreshToken);
       }
+      // Clear httpOnly cookie
+      await fetch("/api/auth/logout", { method: "POST" })
     } catch (error) {
       console.error("Logout API call failed:", error);
     } finally {
