@@ -16,7 +16,7 @@ export interface User {
   username: string;
   email: string;
   full_name: string;
-  role: "admin" | "hrd" | "kepala_divisi" | "karyawan";
+  role: "admin" | "kepala_divisi" | "karyawan";
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -247,7 +247,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     try {
       console.log("[AuthContext] Refreshing access token...");
-      const response = await authService.refresh(currentRefreshToken);
+      const res = await fetch("/api/auth/refresh", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refresh_token: currentRefreshToken }),
+      });
+      if (!res.ok) throw new Error(`Refresh failed: ${res.status}`);
+      const response = await res.json();
 
       const newExpiresAt = Date.now() + response.expires_in * 1000;
 

@@ -1,6 +1,5 @@
 "use client"
 import React, { useState } from "react"
-import { useRouter } from "next/navigation"
 import Badge from "@/components/ui/badge/Badge"
 import Button from "@/components/ui/button/Button"
 import Input from "@/components/form/input/InputField"
@@ -9,13 +8,28 @@ import { Modal } from "@/components/ui/modal"
 import { useToast } from "@/context/ToastContext"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"
+const INVITE_HELP_MESSAGE =
+  "Pastikan email Google Sheets sudah di-invite ke spreadsheet ini, lalu coba lagi."
 
 function getAuthHeader(): Record<string, string> {
   const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null
   return token ? { Authorization: `Bearer ${token}` } : {}
 }
 
-type IngestionStatus = "success" | "partial" | "failed"
+async function getIngestionErrorMessage(res: Response): Promise<string> {
+  if (res.status === 500) {
+    return INVITE_HELP_MESSAGE
+  }
+
+  try {
+    const body = await res.json()
+    return body?.detail ?? body?.message ?? "Ingestion failed"
+  } catch {
+    return "Ingestion failed"
+  }
+}
+
+type IngestionStatus = "success" | "failed"
 
 interface IngestionResult {
   status: IngestionStatus
@@ -24,8 +38,11 @@ interface IngestionResult {
   errors: string[]
 }
 
-export default function KpiMasterIngestionModal() {
-  const router = useRouter()
+interface Props {
+  onSuccess?: () => void | Promise<void>
+}
+
+export default function KpiMasterIngestionModal({ onSuccess }: Props) {
   const { addToast } = useToast()
   const [open, setOpen] = useState(false)
   const [url, setUrl] = useState("")
@@ -60,12 +77,12 @@ export default function KpiMasterIngestionModal() {
         `${API_BASE}/api/v1/ingest/kpi-master?sheet_url=${encodeURIComponent(url)}&tahun=${tahunNum}`,
         { method: "POST", headers: { ...getAuthHeader() } },
       )
-      if (!res.ok) throw new Error((await res.json()).detail ?? "Ingestion failed")
+      if (!res.ok) throw new Error(await getIngestionErrorMessage(res))
       const data = await res.json()
       setResult({ status: data.status, ingested: data.ingested, failed: data.failed, errors: data.errors })
       addToast("success", `KPI Master berhasil diingest: ${data.ingested} records.`, "Success")
       handleClose()
-      router.refresh()
+      await onSuccess?.()
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Unknown error"
       setError(msg)
@@ -75,8 +92,7 @@ export default function KpiMasterIngestionModal() {
     }
   }
 
-  const statusColor =
-    result?.status === "success" ? "success" : result?.status === "partial" ? "warning" : "error"
+  const statusColor = result?.status === "success" ? "success" : "error"
 
   return (
     <>
