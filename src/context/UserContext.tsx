@@ -9,6 +9,7 @@ import {
   deleteUser,
   CreateUserRequest,
   UpdateUserRequest,
+  DeleteUserResult,
 } from "@/services/userService";
 
 export interface UserContextType {
@@ -18,7 +19,7 @@ export interface UserContextType {
   fetchUsers: (limit?: number, offset?: number) => Promise<void>;
   addUser: (userData: CreateUserRequest) => Promise<User>;
   editUser: (userId: string, userData: UpdateUserRequest) => Promise<User>;
-  removeUser: (userId: string) => Promise<void>;
+  removeUser: (userId: string) => Promise<DeleteUserResult>;
   clearError: () => void;
 }
 
@@ -100,9 +101,10 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      await deleteUser(userId);
+      const result = await deleteUser(userId);
       // Remove user from list
       setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
+      return result;
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to delete user";

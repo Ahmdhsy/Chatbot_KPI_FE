@@ -11,11 +11,6 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"
 const INVITE_HELP_MESSAGE =
   "Pastikan email Google Sheets sudah di-invite ke spreadsheet ini, lalu coba lagi."
 
-function getAuthHeader(): Record<string, string> {
-  const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null
-  return token ? { Authorization: `Bearer ${token}` } : {}
-}
-
 async function getIngestionErrorMessage(res: Response): Promise<string> {
   if (res.status === 500) {
     return INVITE_HELP_MESSAGE
@@ -75,7 +70,7 @@ export default function KpiMasterIngestionModal({ onSuccess }: Props) {
     try {
       const res = await fetch(
         `${API_BASE}/api/v1/ingest/kpi-master?sheet_url=${encodeURIComponent(url)}&tahun=${tahunNum}`,
-        { method: "POST", headers: { ...getAuthHeader() } },
+        { method: "POST", headers: { "Content-Type": "application/json" } },
       )
       if (!res.ok) throw new Error(await getIngestionErrorMessage(res))
       const data = await res.json()

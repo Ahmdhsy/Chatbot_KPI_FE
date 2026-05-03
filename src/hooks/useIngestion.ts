@@ -3,11 +3,6 @@ import { useCallback } from "react";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
-function getAuthHeader(): Record<string, string> {
-  const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
 export interface IngestionResult {
   status: "success" | "partial" | "failed";
   ingested: number;
@@ -40,7 +35,7 @@ export function useIngestion() {
     if (sourceType) params.set("group_type", sourceType === "kpi_master" ? "master" : "tracker");
     const res = await fetch(
       `${API_BASE}/api/v1/ingest/logs?${params}`,
-      { headers: { ...getAuthHeader() } }
+      { headers: { "Content-Type": "application/json" } }
     );
     if (!res.ok) throw new Error("Failed to fetch logs");
     return res.json();

@@ -9,15 +9,6 @@ export const apiClientWithAuth = axios.create({
   },
 });
 
-// Store for refresh callback - will be set by AuthContext
-let refreshTokenCallback: (() => Promise<boolean>) | null = null;
-
-export const setRefreshTokenCallback = (
-  callback: () => Promise<boolean>
-) => {
-  refreshTokenCallback = callback;
-};
-
 const clearClientAuthState = async () => {
   if (typeof window === "undefined") return;
 
@@ -26,20 +17,6 @@ const clearClientAuthState = async () => {
   } catch {
     // Ignore cookie-clear failures; local cleanup + redirect still proceeds.
   }
-
-  localStorage.removeItem("access_token");
-  localStorage.removeItem("refresh_token");
-  localStorage.removeItem("user");
-  localStorage.removeItem("tokenExpiresAt");
-
-  const tokenLikeKeys = Object.keys(localStorage).filter(
-    (key) => key.toLowerCase().includes("token")
-  );
-  tokenLikeKeys.forEach((key) => {
-    if (!["access_token", "refresh_token", "tokenExpiresAt"].includes(key)) {
-      localStorage.removeItem(key);
-    }
-  });
 };
 
 let isForcingLogout = false;
@@ -57,30 +34,6 @@ const forceLogoutRedirect = async () => {
 
   isForcingLogout = false;
 };
-
-// Request interceptor to add auth token
-apiClientWithAuth.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("access_token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-      console.log("[API Request] Authorization header set with Bearer token");
-    } else {
-      console.warn("[API Request] No access token found in localStorage");
-    }
-    console.log("[API Request]", {
-      url: config.url,
-      method: config.method,
-      params: config.params,
-      hasAuth: !!token,
-      authHeader: config.headers.Authorization ? "Bearer <token>" : "Not set",
-    });
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
 
 // Response interceptor to handle token refresh
 apiClientWithAuth.interceptors.response.use(
@@ -106,27 +59,19 @@ apiClientWithAuth.interceptors.response.use(
       console.log("[API Interceptor] Attempting token refresh for 401 error");
 
       try {
-        // Call refresh token callback if available
-        if (refreshTokenCallback) {
-          const refreshed = await refreshTokenCallback();
-          if (refreshed) {
-            console.log("[API Interceptor] Token refreshed successfully, retrying original request");
-            // Retry the original request with new token
-            const token = localStorage.getItem("access_token");
-            if (token) {
-              originalRequest.headers.Authorization = `Bearer ${token}`;
-              return apiClientWithAuth(originalRequest);
-            }
-          } else {
-            console.log("[API Interceptor] Token refresh failed, user will be logged out");
-            await forceLogoutRedirect();
-            return Promise.reject(error);
-          }
-        } else {
-          console.warn("[API Interceptor] No refresh callback available");
+        const refreshRes = await fetch("/api/auth/refresh", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        });
+
+        if (!refreshRes.ok) {
+          console.log("[API Interceptor] Token refresh failed, user will be logged out");
           await forceLogoutRedirect();
           return Promise.reject(error);
         }
+
+        console.log("[API Interceptor] Token refreshed successfully, retrying original request");
+        return apiClientWithAuth(originalRequest);
       } catch (refreshError) {
         console.error("[API Interceptor] Token refresh error:", refreshError);
         await forceLogoutRedirect();

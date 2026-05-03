@@ -20,11 +20,21 @@ export default function DeleteUserModal({
 }: DeleteUserModalProps) {
   const { removeUser, loading } = useUser();
   const { addToast } = useToast();
+  const isAdminUser = user.role === "admin";
 
   const handleDelete = async () => {
     try {
-      await removeUser(user.id);
-      addToast("success", "User deleted successfully", "Success");
+      if (isAdminUser) {
+        addToast(
+          "error",
+          "Admin user tidak dapat dihapus sesuai aturan sistem.",
+          "Error"
+        );
+        return;
+      }
+
+      const result = await removeUser(user.id);
+      addToast("success", result.message || "User deleted successfully", "Success");
       onClose();
       onSuccess?.();
     } catch (error) {
@@ -71,6 +81,11 @@ export default function DeleteUserModal({
             <p className="text-sm text-yellow-800 dark:text-yellow-300">
               ⚠️ This action cannot be undone.
             </p>
+            {isAdminUser && (
+              <p className="mt-2 text-sm text-yellow-800 dark:text-yellow-300">
+                Admin user tidak bisa dihapus dari sistem.
+              </p>
+            )}
           </div>
 
           <div className="flex gap-2">
@@ -85,8 +100,8 @@ export default function DeleteUserModal({
             <button
               type="button"
               onClick={handleDelete}
-              disabled={loading}
-              className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              disabled={loading || isAdminUser}
+              className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading && (
                 <span className="animate-spin">

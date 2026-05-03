@@ -30,5 +30,15 @@ export async function POST(req: NextRequest) {
     maxAge: data.expires_in ?? 3600,
   })
 
+  if (data.refresh_token) {
+    res.cookies.set("refresh_token", data.refresh_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: data.refresh_expires_in ?? 60 * 60 * 24 * 7,
+    })
+  }
+
   return res
 }

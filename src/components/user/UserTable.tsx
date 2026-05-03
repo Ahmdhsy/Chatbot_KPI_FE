@@ -134,7 +134,17 @@ export default function UserTable({
                   </button>
                   <button
                     onClick={() => onDelete(user)}
-                    className="px-3 py-1 bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300 rounded text-sm font-medium hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
+                    disabled={user.role === "admin"}
+                    title={
+                      user.role === "admin"
+                        ? "Admin user tidak bisa dihapus"
+                        : "Delete user"
+                    }
+                    className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                      user.role === "admin"
+                        ? "bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500 cursor-not-allowed"
+                        : "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-800"
+                    }`}
                   >
                     Delete
                   </button>

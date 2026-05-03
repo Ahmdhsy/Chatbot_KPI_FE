@@ -1,33 +1,14 @@
 "use client";
 import Image from "next/image";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Dropdown } from "../ui/dropdown/Dropdown";
-import { getCurrentUser, User } from "@/services/userService";
 import { useAuth } from "@/context/AuthContext";
 
 export default function UserDropdown() {
   const router = useRouter();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchCurrentUser = async () => {
-      try {
-        setLoading(true);
-        const user = await getCurrentUser();
-        setCurrentUser(user);
-      } catch (error) {
-        console.error("Failed to fetch current user:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCurrentUser();
-  }, []);
 
 function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
   e.stopPropagation();
@@ -40,6 +21,9 @@ function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
 
   const handleSignOut = async () => {
     closeDropdown();
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem("logout_perf_start_ms", String(Date.now()));
+    }
     await logout();
     router.replace("/signin");
   };
@@ -60,11 +44,9 @@ function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
         className="flex items-center text-gray-700 dark:text-gray-400 dropdown-toggle"
       >
         <span className="mr-3 overflow-hidden rounded-full h-11 w-11 bg-brand-500 flex items-center justify-center">
-          {loading ? (
-            <span className="text-white text-sm font-semibold">U</span>
-          ) : currentUser?.full_name || currentUser?.username ? (
+          {user?.full_name || user?.username ? (
             <span className="text-white text-sm font-semibold">
-              {getInitials(currentUser?.full_name, currentUser?.username)}
+              {getInitials(user?.full_name, user?.username)}
             </span>
           ) : (
             <Image
@@ -77,7 +59,7 @@ function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
         </span>
 
         <span className="block mr-1 font-medium text-theme-sm">
-          {loading ? "Loading..." : currentUser?.username || "User"}
+          {user?.username || "User"}
         </span>
 
         <svg
@@ -107,10 +89,10 @@ function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
       >
         <div>
           <span className="block font-medium text-gray-700 text-theme-sm dark:text-gray-400">
-            {loading ? "Loading..." : currentUser?.full_name || currentUser?.username || "User"}
+            {user?.full_name || user?.username || "User"}
           </span>
           <span className="mt-0.5 block text-theme-xs text-gray-500 dark:text-gray-400">
-            {loading ? "Loading..." : currentUser?.email || "user@example.com"}
+            {user?.email || "user@example.com"}
           </span>
         </div>
 

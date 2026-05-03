@@ -30,6 +30,25 @@ export default function SignInForm() {
     }
   }, [isAuthLoading, isAuthenticated, router]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const startRaw = window.sessionStorage.getItem("logout_perf_start_ms");
+    if (!startRaw) return;
+
+    const startMs = Number(startRaw);
+    if (!Number.isFinite(startMs)) {
+      window.sessionStorage.removeItem("logout_perf_start_ms");
+      return;
+    }
+
+    const durationMs = Date.now() - startMs;
+    const durationSec = (durationMs / 1000).toFixed(2);
+    console.log(
+      `[Signout Perf] Sign out -> signin loaded: ${durationSec}s (${durationMs}ms)`
+    );
+    window.sessionStorage.removeItem("logout_perf_start_ms");
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIdentifierError("");
@@ -49,6 +68,10 @@ export default function SignInForm() {
     }
     if (hasError) {
       return;
+    }
+
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem("login_perf_start_ms", String(Date.now()));
     }
 
     setIsLoading(true);
@@ -97,12 +120,7 @@ export default function SignInForm() {
 
       // Login successful - cookie is set by /api/auth/session
       // Also store in AuthContext for client-side state
-      login(
-        response.access_token,
-        response.refresh_token,
-        response.expires_in,
-        response.user
-      );
+      login(response.user);
       addToast("success", "Login successful! Redirecting...", "Welcome");
 
       // Redirect to dashboard after 1 second

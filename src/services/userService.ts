@@ -122,8 +122,16 @@ export const getUserById = async (userId: string): Promise<User> => {
 
 export const getCurrentUser = async (): Promise<User> => {
   try {
-    const response = await apiClientWithAuth.get<User>("/api/v1/users/me");
-    return response.data;
+    const res = await fetch("/api/auth/me", {
+      headers: { "Content-Type": "application/json" },
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      throw new Error(`Failed to fetch current user: ${res.status}`);
+    }
+
+    return (await res.json()) as User;
   } catch (error) {
     throw new Error(extractErrorMessage(error, "Failed to fetch current user"));
   }
@@ -158,12 +166,26 @@ export const updateUser = async (
   }
 };
 
-export const deleteUser = async (userId: string): Promise<{ message: string }> => {
+export type DeleteUserResult = {
+  message: string;
+};
+
+function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value
+  );
+}
+
+export const deleteUser = async (userId: string): Promise<DeleteUserResult> => {
+  if (!isUuid(userId)) {
+    throw new Error("Invalid user_id format. Expected UUID.");
+  }
+
   try {
     const response = await apiClientWithAuth.delete<{ message: string }>(
       `/api/v1/users/${userId}`
     );
-    return response.data;
+    return { message: response.data.message };
   } catch (error) {
     throw new Error(extractErrorMessage(error, "Failed to delete user"));
   }

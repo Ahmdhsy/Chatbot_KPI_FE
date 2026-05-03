@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useRef, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { EyeCloseIcon, EyeIcon } from "@/icons"
@@ -32,7 +32,10 @@ function StepEmail({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!email.trim()) return
+    if (!email.trim()) {
+      setError("Field email tidak boleh kosong.")
+      return
+    }
     setLoading(true)
     setError(null)
     try {
@@ -45,14 +48,26 @@ function StepEmail({
       if (!res.ok) throw data
       onNext(email.trim())
     } catch (err) {
-      setError(getMsg(err, "Gagal mengirim PIN reset. Coba lagi."))
+      const msg = getMsg(err, "Gagal mengirim PIN reset. Coba lagi.")
+      const normalizedMsg = msg.toLowerCase()
+      const isEmailNotRegistered =
+        normalizedMsg.includes("tidak terdaftar") ||
+        normalizedMsg.includes("not found") ||
+        normalizedMsg.includes("tidak ditemukan") ||
+        normalizedMsg.includes("email not found")
+
+      if (isEmailNotRegistered) {
+        setError("Email tidak terdaftar, hubungi admin terkait.")
+      } else {
+        setError(msg)
+      }
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} noValidate className="space-y-6">
       <div>
         <Label htmlFor="fp-email">
           Email <span className="text-error-500">*</span>
@@ -62,9 +77,11 @@ function StepEmail({
           type="email"
           placeholder="you@example.com"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => {
+            setEmail(e.target.value)
+            if (error) setError(null)
+          }}
           disabled={loading}
-          required
           className="h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-brand-500/10 dark:border-gray-700 dark:focus:border-brand-800 disabled:opacity-50 disabled:cursor-not-allowed"
         />
       </div>
@@ -99,8 +116,65 @@ function StepPin({
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [failedAttempts, setFailedAttempts] = useState(0)
+  const [lockedUntilMs, setLockedUntilMs] = useState<number | null>(null)
+  const [remainingSec, setRemainingSec] = useState(0)
+
+  const lockStorageKey = `reset_pin_lock_until_${email.toLowerCase()}`
+  const attemptStorageKey = `reset_pin_failed_attempts_${email.toLowerCase()}`
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+
+    const storedAttempts = Number(window.sessionStorage.getItem(attemptStorageKey) || "0")
+    if (Number.isFinite(storedAttempts) && storedAttempts > 0) {
+      setFailedAttempts(storedAttempts)
+    }
+
+    const storedLockUntil = Number(window.sessionStorage.getItem(lockStorageKey) || "0")
+    if (Number.isFinite(storedLockUntil) && storedLockUntil > Date.now()) {
+      setLockedUntilMs(storedLockUntil)
+      setRemainingSec(Math.ceil((storedLockUntil - Date.now()) / 1000))
+    } else {
+      window.sessionStorage.removeItem(lockStorageKey)
+    }
+  }, [attemptStorageKey, lockStorageKey])
+
+  useEffect(() => {
+    if (!lockedUntilMs) return
+
+    const tick = () => {
+      const secs = Math.ceil((lockedUntilMs - Date.now()) / 1000)
+      if (secs <= 0) {
+        setLockedUntilMs(null)
+        setRemainingSec(0)
+        setFailedAttempts(0)
+        if (typeof window !== "undefined") {
+          window.sessionStorage.removeItem(lockStorageKey)
+          window.sessionStorage.removeItem(attemptStorageKey)
+        }
+        return
+      }
+      setRemainingSec(secs)
+    }
+
+    tick()
+    const timer = window.setInterval(tick, 1000)
+    return () => window.clearInterval(timer)
+  }, [lockedUntilMs, lockStorageKey, attemptStorageKey])
+
+  const isLocked = lockedUntilMs !== null && remainingSec > 0
+  const lockForFiveMinutes = () => {
+    const until = Date.now() + 5 * 60 * 1000
+    setLockedUntilMs(until)
+    setRemainingSec(5 * 60)
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem(lockStorageKey, String(until))
+    }
+  }
 
   const handleChange = (idx: number, value: string) => {
+    if (isLocked) return
     if (!/^\d*$/.test(value)) return
     const next = [...pin]
     next[idx] = value.slice(-1)
@@ -111,12 +185,14 @@ function StepPin({
   }
 
   const handleKeyDown = (idx: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (isLocked) return
     if (e.key === "Backspace" && !pin[idx] && idx > 0) {
       inputRefs.current[idx - 1]?.focus()
     }
   }
 
   const handlePaste = (e: React.ClipboardEvent) => {
+    if (isLocked) return
     const text = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6)
     if (!text) return
     e.preventDefault()
@@ -128,6 +204,10 @@ function StepPin({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (isLocked) {
+      setError("Terlalu banyak percobaan salah. Silakan coba lagi setelah timer selesai.")
+      return
+    }
     const pinStr = pin.join("")
     if (pinStr.length < 6) {
       setError("Masukkan 6 digit PIN.")
@@ -143,9 +223,24 @@ function StepPin({
       })
       const data = await res.json()
       if (!res.ok) throw data
+      if (typeof window !== "undefined") {
+        window.sessionStorage.removeItem(lockStorageKey)
+        window.sessionStorage.removeItem(attemptStorageKey)
+      }
       onNext(data.reset_token as string)
     } catch (err) {
-      setError(getMsg(err, "PIN tidak valid atau sudah kadaluarsa."))
+      const nextFailedAttempts = failedAttempts + 1
+      setFailedAttempts(nextFailedAttempts)
+      if (typeof window !== "undefined") {
+        window.sessionStorage.setItem(attemptStorageKey, String(nextFailedAttempts))
+      }
+
+      if (nextFailedAttempts >= 3) {
+        lockForFiveMinutes()
+        setError("PIN salah 3 kali. Akses OTP diblokir selama 5 menit.")
+      } else {
+        setError(getMsg(err, "PIN tidak valid atau sudah kadaluarsa."))
+      }
     } finally {
       setLoading(false)
     }
@@ -170,12 +265,18 @@ function StepPin({
               value={digit}
               onChange={(e) => handleChange(idx, e.target.value)}
               onKeyDown={(e) => handleKeyDown(idx, e)}
-              disabled={loading}
+              disabled={loading || isLocked}
               className="h-12 w-12 rounded-lg border text-center text-lg font-semibold shadow-theme-xs focus:outline-none focus:ring-3 dark:bg-gray-900 dark:text-white/90 bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-brand-500/10 dark:border-gray-700 dark:focus:border-brand-800 disabled:opacity-50 disabled:cursor-not-allowed"
             />
           ))}
         </div>
       </div>
+
+      {isLocked && (
+        <p className="rounded-lg bg-amber-50 px-4 py-2.5 text-sm text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
+          OTP diblokir sementara. Coba lagi dalam {String(Math.floor(remainingSec / 60)).padStart(2, "0")}:{String(remainingSec % 60).padStart(2, "0")}.
+        </p>
+      )}
 
       {error && (
         <p className="rounded-lg bg-error-50 px-4 py-2.5 text-sm text-error-600 dark:bg-error-500/10 dark:text-error-400">
@@ -185,10 +286,10 @@ function StepPin({
 
       <button
         type="submit"
-        disabled={loading || pin.join("").length < 6}
+        disabled={loading || isLocked || pin.join("").length < 6}
         className="inline-flex w-full items-center justify-center rounded-lg bg-brand-500 px-4 py-3 text-sm font-medium text-white transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {loading ? "Memverifikasi..." : "Verifikasi PIN"}
+        {loading ? "Memverifikasi..." : isLocked ? "OTP Diblokir Sementara" : "Verifikasi PIN"}
       </button>
     </form>
   )
@@ -212,6 +313,22 @@ function StepNewPassword({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!password.trim()) {
+      setError("Field password baru tidak boleh kosong.")
+      return
+    }
+    if (password.length < 8) {
+      setError("Password baru minimal 8 karakter dan wajib mengandung minimal 1 huruf besar.")
+      return
+    }
+    if (!/[A-Z]/.test(password)) {
+      setError("Password baru harus mengandung minimal 1 huruf besar.")
+      return
+    }
+    if (!confirm.trim()) {
+      setError("Field konfirmasi password tidak boleh kosong.")
+      return
+    }
     if (password !== confirm) {
       setError("Konfirmasi password tidak cocok.")
       return
@@ -235,7 +352,7 @@ function StepNewPassword({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} noValidate className="space-y-6">
       <div className="space-y-4">
         <div>
           <Label htmlFor="np-password">
@@ -247,10 +364,11 @@ function StepNewPassword({
               type={showPw ? "text" : "password"}
               placeholder="Min. 8 karakter, 1 huruf kapital, 1 angka"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                setPassword(e.target.value)
+                if (error) setError(null)
+              }}
               disabled={loading}
-              required
-              minLength={8}
               className="h-11 w-full rounded-lg border appearance-none px-4 py-2.5 pr-11 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-brand-500/10 dark:border-gray-700 dark:focus:border-brand-800 disabled:opacity-50 disabled:cursor-not-allowed"
             />
             <button
@@ -273,9 +391,11 @@ function StepNewPassword({
               type={showConfirm ? "text" : "password"}
               placeholder="Ulangi password baru"
               value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
+              onChange={(e) => {
+                setConfirm(e.target.value)
+                if (error) setError(null)
+              }}
               disabled={loading}
-              required
               className="h-11 w-full rounded-lg border appearance-none px-4 py-2.5 pr-11 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-brand-500/10 dark:border-gray-700 dark:focus:border-brand-800 disabled:opacity-50 disabled:cursor-not-allowed"
             />
             <button

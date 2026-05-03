@@ -161,6 +161,15 @@ export default function UsersClient({ initialData }: Props) {
               setIsEditModalOpen(true)
             }}
             onDelete={(user) => {
+              if (user.role === "admin") {
+                addToast(
+                  "error",
+                  "Admin user tidak dapat dihapus sesuai aturan sistem.",
+                  "Error"
+                )
+                return
+              }
+
               setSelectedUser(user)
               setIsDeleteModalOpen(true)
             }}

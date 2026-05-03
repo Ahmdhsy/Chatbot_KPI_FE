@@ -81,8 +81,8 @@ export default function CreateUserModal({
       setTimeout(() => setPasswordShake(false), 500);
       setTimeout(() => setPasswordAlert(null), 4000);
       return false;
-    } else if (formData.password.length < 6) {
-      const msg = "Password must be at least 6 characters";
+    } else if (formData.password.length < 8) {
+      const msg = "Password must be at least 8 characters";
       setPasswordAlert(msg);
       setPasswordShake(true);
       setTimeout(() => setPasswordShake(false), 500);
@@ -259,7 +259,7 @@ export default function CreateUserModal({
           {/* Password */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Password * <span className="text-xs text-gray-500 dark:text-gray-400 font-normal">(min 6 chars, must include uppercase)</span>
+              Password * <span className="text-xs text-gray-500 dark:text-gray-400 font-normal">(min 8 chars, must include uppercase)</span>
             </label>
             <div className="relative">
               <input
@@ -314,7 +314,6 @@ export default function CreateUserModal({
               }`}
             >
               <option value="karyawan">Karyawan</option>
-              <option value="kepala_divisi">Kepala Divisi</option>
               <option value="kepala_divisi">Kepala Divisi</option>
               <option value="admin">Admin</option>
             </select>

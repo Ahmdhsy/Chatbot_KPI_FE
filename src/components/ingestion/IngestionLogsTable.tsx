@@ -15,11 +15,6 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"
 type FilterType = "all" | "kpi_tracker" | "kpi_master"
 type StatusFilter = "all" | "success" | "failed"
 
-function getAuthHeader(): Record<string, string> {
-  const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null
-  return token ? { Authorization: `Bearer ${token}` } : {}
-}
-
 // ── Compact date picker pakai flatpickr ──────────────────────────────────────
 function DatePickerInput({
   value,
@@ -124,7 +119,7 @@ export default function IngestionLogsTable({
 
   const fetchLogs = (offset: number, resetPage?: number) => {
     setLoading(true)
-    fetch(buildQuery(offset), { headers: getAuthHeader() })
+  fetch(buildQuery(offset), { headers: { "Content-Type": "application/json" } })
       .then((r) => r.json())
       .then((data: { total?: number; logs?: LogEntry[] }) => {
         setLogs(data.logs ?? [])

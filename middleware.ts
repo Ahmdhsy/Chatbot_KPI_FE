@@ -75,6 +75,10 @@ function redirectToSigninAndClearCookie(req: NextRequest) {
   return res
 }
 
+function redirectToNotFound(req: NextRequest) {
+  return NextResponse.redirect(new URL("/error-404", req.url))
+}
+
 export function middleware(req: NextRequest) {
   const token = req.cookies.get("access_token")?.value
   const { pathname } = req.nextUrl
@@ -110,7 +114,7 @@ export function middleware(req: NextRequest) {
   }
 
   if (isProtected && tokenState === "valid" && !isPathAllowedForRole(pathname, role)) {
-    return NextResponse.redirect(new URL(getHomePathByRole(role), req.url))
+    return redirectToNotFound(req)
   }
 
   if (isAuthPath && tokenState === "valid") {

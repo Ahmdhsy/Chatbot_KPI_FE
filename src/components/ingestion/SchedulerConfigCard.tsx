@@ -13,11 +13,6 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"
 const WIB_OFFSET_HOURS = 7
 const WIB_OFFSET_MS = WIB_OFFSET_HOURS * 60 * 60 * 1000
 
-function getAuthHeader(): Record<string, string> {
-  const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null
-  return token ? { Authorization: `Bearer ${token}` } : {}
-}
-
 interface Props {
   initialConfig: SchedulerConfig | null
 }
@@ -76,7 +71,7 @@ export default function SchedulerConfigCard({ initialConfig }: Props) {
     try {
       const res = await fetch(`${API_BASE}/api/v1/scheduler`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", ...getAuthHeader() },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           interval_value: buildIntervalValue(day, hour),
           is_enabled: enabled,
@@ -99,7 +94,7 @@ export default function SchedulerConfigCard({ initialConfig }: Props) {
     try {
       const res = await fetch(`${API_BASE}/api/v1/scheduler/trigger`, {
         method: "POST",
-        headers: { ...getAuthHeader() },
+        headers: { "Content-Type": "application/json" },
       })
       if (!res.ok) throw new Error((await res.json()).detail ?? "Trigger failed")
       const data = await res.json()

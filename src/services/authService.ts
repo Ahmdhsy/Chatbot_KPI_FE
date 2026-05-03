@@ -40,7 +40,7 @@ export interface RefreshTokenResponse {
   expires_in: number;
   refresh_token: string;
   refresh_expires_in: number;
-  user: {
+  user?: {
     id: string;
     username: string;
     email: string;

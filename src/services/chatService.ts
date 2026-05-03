@@ -3,11 +3,6 @@ import type { Session, ChatStreamMetadata } from '@/types/chat'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
-function getAuthToken(): string | null {
-  if (typeof window === 'undefined') return null
-  return localStorage.getItem('access_token')
-}
-
 interface SSECallbacks {
   onMetadata?: (meta: ChatStreamMetadata) => void
   onChunk?: (chunk: string) => void
@@ -72,12 +67,10 @@ export const chatService = {
     text: string,
     callbacks: SSECallbacks = {},
   ): Promise<{ metadata: ChatStreamMetadata; message: string }> {
-    const token = getAuthToken()
     const response = await fetch(`${API_BASE}/api/v1/chat`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: JSON.stringify({ session_id: sessionId, message: text }),
     })
@@ -91,12 +84,10 @@ export const chatService = {
     clarificationAnswer: string,
     callbacks: SSECallbacks = {},
   ): Promise<{ metadata: ChatStreamMetadata; message: string }> {
-    const token = getAuthToken()
     const response = await fetch(`${API_BASE}/api/v1/chat/clarification`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: JSON.stringify({
         session_id: sessionId,
