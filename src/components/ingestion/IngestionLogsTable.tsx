@@ -9,8 +9,7 @@ import {
 import Pagination from "@/components/tables/Pagination"
 import { LogEntry } from "@/hooks/useIngestion"
 import { INGEST_LOG_PAGE_SIZE } from "@/lib/ingestionConstants"
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"
+import { apiClientWithAuth } from "@/services/apiClientWithAuth"
 
 type FilterType = "all" | "kpi_tracker" | "kpi_master"
 type StatusFilter = "all" | "success" | "failed"
@@ -108,20 +107,20 @@ export default function IngestionLogsTable({
   const [loading, setLoading] = useState(false)
   const isFirstRender = useRef(true)
 
-  const buildQuery = (offset: number) => {
+  const buildParams = (offset: number) => {
     const params = new URLSearchParams({ limit: String(INGEST_LOG_PAGE_SIZE), offset: String(offset) })
     if (filter !== "all") params.set("group_type", filter === "kpi_master" ? "master" : "tracker")
     if (statusFilter !== "all") params.set("status", statusFilter)
     if (startDate) params.set("start_date", startDate)
     if (endDate) params.set("end_date", endDate)
-    return `${API_BASE}/api/v1/ingest/logs?${params.toString()}`
+    return params.toString()
   }
 
   const fetchLogs = (offset: number, resetPage?: number) => {
     setLoading(true)
-  fetch(buildQuery(offset), { headers: { "Content-Type": "application/json" } })
-      .then((r) => r.json())
-      .then((data: { total?: number; logs?: LogEntry[] }) => {
+    apiClientWithAuth.get(`/api/v1/ingest/logs?${buildParams(offset)}`)
+      .then((r) => r.data as { total?: number; logs?: LogEntry[] })
+      .then((data) => {
         setLogs(data.logs ?? [])
         setTotal(data.total ?? 0)
         if (resetPage !== undefined) setPage(resetPage)

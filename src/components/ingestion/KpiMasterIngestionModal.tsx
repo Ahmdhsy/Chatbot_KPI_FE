@@ -6,8 +6,7 @@ import Input from "@/components/form/input/InputField"
 import Label from "@/components/form/Label"
 import { Modal } from "@/components/ui/modal"
 import { useToast } from "@/context/ToastContext"
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"
+import { apiClientWithAuth } from "@/services/apiClientWithAuth"
 const INVITE_HELP_MESSAGE =
   "Pastikan email Google Sheets sudah di-invite ke spreadsheet ini, lalu coba lagi."
 
@@ -68,18 +67,16 @@ export default function KpiMasterIngestionModal({ onSuccess }: Props) {
     setResult(null)
     setError(null)
     try {
-      const res = await fetch(
-        `${API_BASE}/api/v1/ingest/kpi-master?sheet_url=${encodeURIComponent(url)}&tahun=${tahunNum}`,
-        { method: "POST", headers: { "Content-Type": "application/json" } },
+      const { data } = await apiClientWithAuth.post(
+        `/api/v1/ingest/kpi-master?sheet_url=${encodeURIComponent(url)}&tahun=${tahunNum}`,
       )
-      if (!res.ok) throw new Error(await getIngestionErrorMessage(res))
-      const data = await res.json()
       setResult({ status: data.status, ingested: data.ingested, failed: data.failed, errors: data.errors })
       addToast("success", `KPI Master berhasil diingest: ${data.ingested} records.`, "Success")
       handleClose()
       await onSuccess?.()
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Unknown error"
+      const axiosDetail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+      const msg = axiosDetail ?? (e instanceof Error ? e.message : "Unknown error")
       setError(msg)
       addToast("error", msg, "Error")
     } finally {

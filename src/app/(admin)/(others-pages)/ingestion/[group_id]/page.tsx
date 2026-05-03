@@ -7,6 +7,11 @@ import { serverFetch } from "@/lib/server-api"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+interface PICUser {
+  id: string
+  full_name: string
+}
+
 interface MasterRecord {
   id: string
   tahun: number
@@ -17,7 +22,7 @@ interface MasterRecord {
   achieve: string | null
   partial: string | null
   fail: string | null
-  responsibility_persons: string | null
+  responsibility_persons: PICUser[]
   created_at: string
 }
 
@@ -25,7 +30,7 @@ interface TrackerRecord {
   id: string
   tahun: number
   realisasi: string | null
-  nama_orang: string | null
+  responsibility_person: PICUser | null
   keterangan: string | null
   created_at: string
   updated_at: string
@@ -37,7 +42,6 @@ interface KPIGroupDetail {
   group_type: "master" | "tracker"
   sheet_url: string
   sheet_id: string | null
-  sheet_name: string | null
   tahun: number | null
   is_scheduled: boolean
   is_active: boolean
@@ -140,7 +144,7 @@ function MasterRecordsTable({ records }: { records: MasterRecord[] }) {
                 <td className="px-6 py-3 text-gray-500">{r.achieve ?? "—"}</td>
                 <td className="px-6 py-3 text-gray-500">{r.partial ?? "—"}</td>
                 <td className="px-6 py-3 text-gray-500">{r.fail ?? "—"}</td>
-                <td className="px-6 py-3 text-xs text-gray-400">{r.responsibility_persons ?? "—"}</td>
+                <td className="px-6 py-3 text-xs text-gray-400">{r.responsibility_persons.length ? r.responsibility_persons.map(u => u.full_name).join(", ") : "—"}</td>
               </tr>
             ))}
           </tbody>
@@ -173,7 +177,7 @@ function TrackerRecordsTable({ records }: { records: TrackerRecord[] }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100 text-left text-xs uppercase tracking-wider text-gray-400 dark:border-white/5 dark:text-gray-500">
-              <th className="px-6 py-3 font-medium">Nama Orang</th>
+              <th className="px-6 py-3 font-medium">PIC</th>
               <th className="px-6 py-3 font-medium">Tahun</th>
               <th className="px-6 py-3 font-medium">Realisasi</th>
               <th className="px-6 py-3 font-medium">Keterangan</th>
@@ -183,7 +187,7 @@ function TrackerRecordsTable({ records }: { records: TrackerRecord[] }) {
           <tbody className="divide-y divide-gray-50 dark:divide-white/5">
             {records.map((r) => (
               <tr key={r.id} className="text-gray-700 hover:bg-gray-50 dark:text-white/80 dark:hover:bg-white/[0.02]">
-                <td className="px-6 py-3 font-medium">{r.nama_orang ?? "—"}</td>
+                <td className="px-6 py-3 font-medium">{r.responsibility_person?.full_name ?? "—"}</td>
                 <td className="px-6 py-3 text-gray-500">{r.tahun}</td>
                 <td className="px-6 py-3 text-gray-500">{r.realisasi ?? "—"}</td>
                 <td className="max-w-xs px-6 py-3 text-xs text-gray-400 truncate" title={r.keterangan ?? undefined}>
@@ -274,14 +278,6 @@ export default async function IngestionDetailPage({
               </p>
               <p className="mt-1 text-sm font-medium text-gray-800 dark:text-white/90">
                 {group.nama_grup}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">
-                Sheet Name
-              </p>
-              <p className="mt-1 text-sm text-gray-700 dark:text-white/80">
-                {group.sheet_name ?? "—"}
               </p>
             </div>
             <div className="sm:col-span-2">
