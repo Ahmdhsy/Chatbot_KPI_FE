@@ -35,51 +35,75 @@ const forceLogoutRedirect = async () => {
   isForcingLogout = false;
 };
 
+// Request interceptor — attach access_token from cookie to every request
+apiClientWithAuth.interceptors.request.use((config) => {
+  if (typeof document !== "undefined") {
+    const token = document.cookie
+      .split("; ")
+      .find((c) => c.startsWith("access_token="))
+      ?.split("=")[1];
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  }
+  return config;
+});
+
+// Queue for requests that arrive while a refresh is already in flight
+let isRefreshing = false;
+type QueueEntry = { resolve: (value: unknown) => void; reject: (reason?: unknown) => void };
+let refreshQueue: QueueEntry[] = [];
+
+const processQueue = (error: unknown) => {
+  refreshQueue.forEach(({ resolve, reject }) => {
+    if (error) reject(error);
+    else resolve(null);
+  });
+  refreshQueue = [];
+};
+
 // Response interceptor to handle token refresh
 apiClientWithAuth.interceptors.response.use(
-  (response) => {
-    console.log("[API Response]", {
-      url: response.config.url,
-      status: response.status,
-    });
-    return response;
-  },
+  (response) => response,
   async (error) => {
-    console.error("[API Error]", {
-      url: error.config?.url,
-      status: error.response?.status,
-      data: error.response?.data,
-    });
-    
     const originalRequest = error.config;
 
-    // If error is 401 and we haven't already tried to refresh
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      console.log("[API Interceptor] Attempting token refresh for 401 error");
-
-      try {
-        const refreshRes = await fetch("/api/auth/refresh", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-        });
-
-        if (!refreshRes.ok) {
-          console.log("[API Interceptor] Token refresh failed, user will be logged out");
-          await forceLogoutRedirect();
-          return Promise.reject(error);
-        }
-
-        console.log("[API Interceptor] Token refreshed successfully, retrying original request");
-        return apiClientWithAuth(originalRequest);
-      } catch (refreshError) {
-        console.error("[API Interceptor] Token refresh error:", refreshError);
-        await forceLogoutRedirect();
-        return Promise.reject(refreshError);
-      }
+    if (error.response?.status !== 401 || originalRequest._retry) {
+      return Promise.reject(error);
     }
 
-    return Promise.reject(error);
+    // Another refresh is already in flight — queue this request
+    if (isRefreshing) {
+      return new Promise((resolve, reject) => {
+        refreshQueue.push({ resolve, reject });
+      }).then(() => apiClientWithAuth(originalRequest))
+        .catch(() => Promise.reject(error));
+    }
+
+    originalRequest._retry = true;
+    isRefreshing = true;
+
+    try {
+      const refreshRes = await fetch("/api/auth/refresh", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!refreshRes.ok) {
+        processQueue(error);
+        await forceLogoutRedirect();
+        return Promise.reject(error);
+      }
+
+      processQueue(null);
+      return apiClientWithAuth(originalRequest);
+    } catch (refreshError) {
+      processQueue(refreshError);
+      await forceLogoutRedirect();
+      return Promise.reject(refreshError);
+    } finally {
+      isRefreshing = false;
+    }
   }
 );
 
