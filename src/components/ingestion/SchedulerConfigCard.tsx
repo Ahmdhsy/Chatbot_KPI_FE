@@ -8,8 +8,8 @@ import Label from "@/components/form/Label"
 import Switch from "@/components/form/switch/Switch"
 import { SchedulerConfig } from "@/hooks/useScheduler"
 import { useToast } from "@/context/ToastContext"
+import { apiClientWithAuth } from "@/services/apiClientWithAuth"
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"
 const WIB_OFFSET_HOURS = 7
 const WIB_OFFSET_MS = WIB_OFFSET_HOURS * 60 * 60 * 1000
 
@@ -69,19 +69,15 @@ export default function SchedulerConfigCard({ initialConfig }: Props) {
       return
     }
     try {
-      const res = await fetch(`${API_BASE}/api/v1/scheduler`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          interval_value: buildIntervalValue(day, hour),
-          is_enabled: enabled,
-        }),
+      await apiClientWithAuth.patch("/api/v1/scheduler", {
+        interval_value: buildIntervalValue(day, hour),
+        is_enabled: enabled,
       })
-      if (!res.ok) throw new Error((await res.json()).detail ?? "Save failed")
       addToast("success", "Konfigurasi scheduler berhasil disimpan.", "Success")
       router.refresh()
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Unknown error")
+      const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+      setError(detail ?? (e instanceof Error ? e.message : "Unknown error"))
     } finally {
       setLoading(false)
     }
@@ -92,18 +88,14 @@ export default function SchedulerConfigCard({ initialConfig }: Props) {
     setTriggerMsg(null)
     setError(null)
     try {
-      const res = await fetch(`${API_BASE}/api/v1/scheduler/trigger`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      })
-      if (!res.ok) throw new Error((await res.json()).detail ?? "Trigger failed")
-      const data = await res.json()
+      const { data } = await apiClientWithAuth.post<{ message?: string }>("/api/v1/scheduler/trigger")
       const msg = data.message ?? "Triggered successfully"
       setTriggerMsg(msg)
       addToast("success", msg, "Scheduler")
       router.refresh()
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Unknown error")
+      const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+      setError(detail ?? (e instanceof Error ? e.message : "Unknown error"))
     } finally {
       setLoading(false)
     }
