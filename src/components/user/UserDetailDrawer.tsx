@@ -135,7 +135,7 @@ export default function UserDetailDrawer({
       <div
         aria-hidden="true"
         onClick={onClose}
-        className={`absolute inset-0 bg-black/50 backdrop-blur-[2px] transition-opacity duration-300 ${
+        className={`absolute inset-0 backdrop-blur-sm transition-opacity duration-300 ${
           visible ? "opacity-100" : "opacity-0"
         }`}
       />

@@ -169,11 +169,11 @@ export default function CreateUserModal({
     <>
       {/* Backdrop dengan blur effect */}
       <div
-        className="fixed inset-0 backdrop-blur-sm z-40"
+        className="fixed inset-0 backdrop-blur-sm z-[100000]"
         onClick={onClose}
       />
       {/* Modal */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+  <div className="fixed inset-0 z-[100001] flex items-center justify-center p-4 pointer-events-none">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-md w-full max-h-[90vh] overflow-y-auto pointer-events-auto">
           <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -189,28 +189,28 @@ export default function CreateUserModal({
           </div>
 
           <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {/* Username */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Username *
-            </label>
-            <input
-              type="text"
-              name="username"
-              value={formData.username}
-              onChange={handleChange}
-              disabled={loading}
-              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 dark:bg-gray-700 dark:text-white dark:border-gray-600 ${
-                errors.username
-                  ? "border-red-500"
-                  : "border-gray-300 dark:border-gray-600"
-              }`}
-              placeholder="Enter username"
-            />
-            {errors.username && (
-              <p className="text-red-500 text-sm mt-1">{errors.username}</p>
-            )}
-          </div>
+            {/* Username */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Username *
+              </label>
+              <input
+                type="text"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                disabled={loading}
+                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 dark:bg-gray-700 dark:text-white dark:border-gray-600 ${
+                  errors.username
+                    ? "border-red-500"
+                    : "border-gray-300 dark:border-gray-600"
+                }`}
+                placeholder="Enter username"
+              />
+              {errors.username && (
+                <p className="text-red-500 text-sm mt-1">{errors.username}</p>
+              )}
+            </div>
 
           {/* Email */}
           <div>

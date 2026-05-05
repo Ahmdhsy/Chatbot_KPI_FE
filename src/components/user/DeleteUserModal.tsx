@@ -50,11 +50,11 @@ export default function DeleteUserModal({
     <>
       {/* Backdrop dengan blur effect */}
       <div
-        className="fixed inset-0 backdrop-blur-sm z-40"
+        className="fixed inset-0 backdrop-blur-sm z-[100000]"
         onClick={onClose}
       />
       {/* Modal */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+    <div className="fixed inset-0 z-[100001] flex items-center justify-center p-4 pointer-events-none">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-md w-full pointer-events-auto">
           <div className="bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-900 px-6 py-4">
             <h2 className="text-lg font-semibold text-red-800 dark:text-red-300">

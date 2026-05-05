@@ -106,8 +106,8 @@ export default function EditChatbotModal({
 
   return (
     <>
-      <div className="fixed inset-0 backdrop-blur-sm z-40" onClick={onClose} />
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+  <div className="fixed inset-0 backdrop-blur-sm z-[100000]" onClick={onClose} />
+  <div className="fixed inset-0 z-[100001] flex items-center justify-center p-4 pointer-events-none">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-xl w-full max-h-[90vh] overflow-y-auto pointer-events-auto">
           <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
