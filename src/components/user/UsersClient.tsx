@@ -51,7 +51,7 @@ export default function UsersClient({ initialData }: Props) {
       try {
         const response = await getUsers({
           limit: PAGE_SIZE,
-          offset: (currentPage - 1) * PAGE_SIZE,
+          page: currentPage,
           ...(normalizedQuery ? { search: normalizedQuery } : {}),
           ...(roleFilter ? { role: roleFilter } : {}),
           ...(statusFilter ? { status: statusFilter } : {}),
@@ -87,7 +87,7 @@ export default function UsersClient({ initialData }: Props) {
     try {
       const response = await getUsers({
         limit: PAGE_SIZE,
-        offset: (targetPage - 1) * PAGE_SIZE,
+        page: targetPage,
         ...(normalizedQuery ? { search: normalizedQuery } : {}),
         ...(roleFilter ? { role: roleFilter } : {}),
         ...(statusFilter ? { status: statusFilter } : {}),

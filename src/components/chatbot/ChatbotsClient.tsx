@@ -96,8 +96,8 @@ export default function ChatbotsClient({ initialData }: ChatbotsClientProps) {
             className="h-11 rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-700 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:text-gray-300"
           >
             <option value="">Semua Otoritas</option>
-            <option value="HRD">HRD</option>
-            <option value="Karyawan">Karyawan</option>
+            <option value="kepala_divisi">Kepala Divisi</option>
+            <option value="karyawan">Karyawan</option>
           </select>
         </div>
 

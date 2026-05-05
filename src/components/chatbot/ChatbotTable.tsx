@@ -31,9 +31,9 @@ export default function ChatbotTable({
 
   const getAuthorityBadgeColor = (authority: Chatbot["otoritas"]) => {
     switch (authority) {
-      case "HRD":
+      case "kepala_divisi":
         return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
-      case "Karyawan":
+      case "karyawan":
         return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200";
       default:
         return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200";
@@ -98,7 +98,7 @@ export default function ChatbotTable({
                     chatbot.otoritas
                   )}`}
                 >
-                  {chatbot.otoritas}
+                  {chatbot.otoritas === "kepala_divisi" ? "Kepala Divisi" : "Karyawan"}
                 </span>
               </td>
               <td className="px-6 py-4">

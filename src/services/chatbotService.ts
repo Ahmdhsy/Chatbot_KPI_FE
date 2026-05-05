@@ -1,6 +1,6 @@
 import apiClientWithAuth from "./apiClientWithAuth";
 
-export type ChatbotAuthority = "HRD" | "Karyawan";
+export type ChatbotAuthority = "kepala_divisi" | "karyawan";
 
 export interface Chatbot {
   id: string;

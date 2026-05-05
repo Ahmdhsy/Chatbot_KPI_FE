@@ -27,7 +27,7 @@ export default function EditChatbotModal({
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<UpdateChatbotRequest>({
     nama_chatbot: "",
-    otoritas: "HRD",
+    otoritas: "kepala_divisi",
     addon_prompt: "",
     is_active: true,
   });
@@ -159,8 +159,8 @@ export default function EditChatbotModal({
                     : "border-gray-300 dark:border-gray-600"
                 }`}
               >
-                <option value="HRD">HRD</option>
-                <option value="Karyawan">Karyawan</option>
+                <option value="kepala_divisi">Kepala Divisi</option>
+                <option value="karyawan">Karyawan</option>
               </select>
               {errors.otoritas && (
                 <p className="text-red-500 text-sm mt-1">{errors.otoritas}</p>

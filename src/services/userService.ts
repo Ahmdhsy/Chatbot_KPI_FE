@@ -28,7 +28,7 @@ export interface UpdateUserRequest {
 
 export interface GetUsersParams {
   limit?: number;
-  offset?: number;
+  page?: number;
   search?: string;
   role?: User["role"];
   status?: "active" | "inactive";
@@ -36,8 +36,8 @@ export interface GetUsersParams {
 
 export interface GetUsersResponse {
   total: number;
+  page: number;
   limit: number;
-  offset: number;
   users: User[];
 }
 
@@ -98,7 +98,7 @@ export const getUsers = async (
     const response = await apiClientWithAuth.get<GetUsersResponse>("/api/v1/users", {
       params: {
         limit: params.limit ?? 20,
-        offset: params.offset ?? 0,
+        page: params.page ?? 1,
         ...(params.search?.trim() ? { search: params.search.trim() } : {}),
         ...(params.role ? { role: params.role } : {}),
         ...(params.status ? { status: params.status } : {}),

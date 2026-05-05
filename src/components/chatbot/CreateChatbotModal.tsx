@@ -24,7 +24,7 @@ export default function CreateChatbotModal({
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<CreateChatbotRequest>({
     nama_chatbot: "",
-    otoritas: "HRD",
+    otoritas: "kepala_divisi",
     addon_prompt: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -75,7 +75,7 @@ export default function CreateChatbotModal({
       onSuccess?.();
       setFormData({
         nama_chatbot: "",
-        otoritas: "HRD",
+        otoritas: "kepala_divisi",
         addon_prompt: "",
       });
     } catch (error) {
@@ -145,8 +145,8 @@ export default function CreateChatbotModal({
                     : "border-gray-300 dark:border-gray-600"
                 }`}
               >
-                <option value="HRD">HRD</option>
-                <option value="Karyawan">Karyawan</option>
+                <option value="kepala_divisi">Kepala Divisi</option>
+                <option value="karyawan">Karyawan</option>
               </select>
               {errors.otoritas && (
                 <p className="text-red-500 text-sm mt-1">{errors.otoritas}</p>

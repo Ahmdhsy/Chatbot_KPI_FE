@@ -34,7 +34,7 @@ export default function DeleteUserModal({
       }
 
       const result = await removeUser(user.id);
-      addToast("success", result.message || "User deleted successfully", "Success");
+      addToast("success", `User "${user.full_name}" berhasil dihapus.`, "Success");
       onClose();
       onSuccess?.();
     } catch (error) {

@@ -16,7 +16,7 @@ export interface UserContextType {
   users: User[];
   loading: boolean;
   error: string | null;
-  fetchUsers: (limit?: number, offset?: number) => Promise<void>;
+  fetchUsers: (limit?: number, page?: number) => Promise<void>;
   addUser: (userData: CreateUserRequest) => Promise<User>;
   editUser: (userId: string, userData: UpdateUserRequest) => Promise<User>;
   removeUser: (userId: string) => Promise<DeleteUserResult>;
@@ -35,11 +35,11 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchUsers = useCallback(
-    async (limit: number = 20, offset: number = 0) => {
+    async (limit: number = 20, page: number = 1) => {
       setLoading(true);
       setError(null);
       try {
-        const result = await getUsers({ limit, offset });
+        const result = await getUsers({ limit, page });
         setUsers(result.users);
       } catch (err) {
         const errorMessage =

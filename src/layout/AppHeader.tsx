@@ -65,23 +65,17 @@ const AppHeader: React.FC = () => {
             {/* Cross Icon */}
           </button>
 
-          <Link href="/" className="lg:hidden">
+          <Link href="/" className="lg:hidden flex items-center gap-2">
             <Image
-              width={154}
+              width={32}
               height={32}
-              className="dark:hidden"
-              src="/images/logo/logo.svg"
-              alt="Logo"
+              src="/images/logo/logo-kpi.png"
+              alt="Chatbot KPI Logo"
               style={{ width: "auto", height: "auto" }}
             />
-            <Image
-              width={154}
-              height={32}
-              className="hidden dark:block"
-              src="/images/logo/logo-dark.svg"
-              alt="Logo"
-              style={{ width: "auto", height: "auto" }}
-            />
+            <span className="text-base font-semibold text-gray-800 dark:text-white/90">
+              Chatbot KPI
+            </span>
           </Link>
 
           <button
