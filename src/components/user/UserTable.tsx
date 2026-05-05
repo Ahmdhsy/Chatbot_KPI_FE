@@ -6,12 +6,14 @@ import { UserCircleIcon } from "@/icons";
 
 interface UserTableProps {
   users: User[];
+  onViewDetail: (user: User) => void;
   onEdit: (user: User) => void;
   onDelete: (user: User) => void;
 }
 
 export default function UserTable({
   users,
+  onViewDetail,
   onEdit,
   onDelete,
 }: UserTableProps) {
@@ -126,6 +128,13 @@ export default function UserTable({
               </td>
               <td className="px-6 py-4">
                 <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => onViewDetail(user)}
+                    title="View detail"
+                    className="px-3 py-1 bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 rounded text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                  >
+                    Detail
+                  </button>
                   <button
                     onClick={() => onEdit(user)}
                     className="px-3 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 rounded text-sm font-medium hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"

@@ -6,6 +6,7 @@ import { ChatIcon } from "@/icons";
 
 interface ChatbotTableProps {
   chatbots: Chatbot[];
+  onViewDetail: (chatbot: Chatbot) => void;
   onEdit: (chatbot: Chatbot) => void;
   onDelete: (chatbot: Chatbot) => void;
 }
@@ -18,6 +19,7 @@ function truncateText(value: string | null, max: number = 72): string {
 
 export default function ChatbotTable({
   chatbots,
+  onViewDetail,
   onEdit,
   onDelete,
 }: ChatbotTableProps) {
@@ -125,6 +127,13 @@ export default function ChatbotTable({
               </td>
               <td className="px-6 py-4">
                 <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => onViewDetail(chatbot)}
+                    title="View detail"
+                    className="px-3 py-1 bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 rounded text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                  >
+                    Detail
+                  </button>
                   <button
                     onClick={() => onEdit(chatbot)}
                     className="px-3 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 rounded text-sm font-medium hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"

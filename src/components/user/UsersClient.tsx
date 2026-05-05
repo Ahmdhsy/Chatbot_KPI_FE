@@ -5,6 +5,7 @@ import Pagination from "@/components/tables/Pagination"
 import CreateUserModal from "@/components/user/CreateUserModal"
 import EditUserModal from "@/components/user/EditUserModal"
 import DeleteUserModal from "@/components/user/DeleteUserModal"
+import UserDetailDrawer from "@/components/user/UserDetailDrawer"
 import UserTable from "@/components/user/UserTable"
 import Input from "@/components/form/input/InputField"
 import { GetUsersResponse, User, getUsers } from "@/services/userService"
@@ -30,6 +31,7 @@ export default function UsersClient({ initialData }: Props) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
 
   const normalizedQuery = search.trim()
@@ -156,6 +158,10 @@ export default function UsersClient({ initialData }: Props) {
         ) : (
           <UserTable
             users={users}
+            onViewDetail={(user) => {
+              setSelectedUser(user)
+              setIsDetailModalOpen(true)
+            }}
             onEdit={(user) => {
               setSelectedUser(user)
               setIsEditModalOpen(true)
@@ -223,6 +229,15 @@ export default function UsersClient({ initialData }: Props) {
           />
         </>
       )}
+
+      <UserDetailDrawer
+        isOpen={isDetailModalOpen}
+        userId={selectedUser?.id ?? null}
+        onClose={() => {
+          setIsDetailModalOpen(false)
+          setSelectedUser(null)
+        }}
+      />
     </>
   )
 }

@@ -14,6 +14,7 @@ import ChatbotTable from "@/components/chatbot/ChatbotTable";
 import CreateChatbotModal from "@/components/chatbot/CreateChatbotModal";
 import EditChatbotModal from "@/components/chatbot/EditChatbotModal";
 import DeleteChatbotModal from "@/components/chatbot/DeleteChatbotModal";
+import ChatbotDetailDrawer from "@/components/chatbot/ChatbotDetailDrawer";
 
 interface ChatbotsClientProps {
   initialData: GetChatbotsResponse;
@@ -33,6 +34,7 @@ export default function ChatbotsClient({ initialData }: ChatbotsClientProps) {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedChatbot, setSelectedChatbot] = useState<Chatbot | null>(null);
 
   const totalPages = useMemo(
@@ -114,6 +116,10 @@ export default function ChatbotsClient({ initialData }: ChatbotsClientProps) {
         ) : (
           <ChatbotTable
             chatbots={chatbots}
+            onViewDetail={(chatbot) => {
+              setSelectedChatbot(chatbot);
+              setIsDetailOpen(true);
+            }}
             onEdit={(chatbot) => {
               setSelectedChatbot(chatbot);
               setIsEditOpen(true);
@@ -166,6 +172,15 @@ export default function ChatbotsClient({ initialData }: ChatbotsClientProps) {
           />
         </>
       )}
+
+      <ChatbotDetailDrawer
+        isOpen={isDetailOpen}
+        chatbotId={selectedChatbot?.id ?? null}
+        onClose={() => {
+          setIsDetailOpen(false);
+          setSelectedChatbot(null);
+        }}
+      />
     </>
   );
 }
