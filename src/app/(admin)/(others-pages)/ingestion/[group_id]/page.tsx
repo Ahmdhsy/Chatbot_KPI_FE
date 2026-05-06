@@ -29,6 +29,7 @@ interface MasterRecord {
 interface TrackerRecord {
   id: string
   tahun: number
+  bulan_num: number | null
   realisasi: string | null
   responsibility_person: PICUser | null
   keterangan: string | null
@@ -90,6 +91,13 @@ function formatDate(value: string | null | undefined): string {
   const d = new Date(value)
   if (isNaN(d.getTime())) return "—"
   return new Intl.DateTimeFormat("id-ID", { dateStyle: "medium", timeStyle: "short" }).format(d)
+}
+
+const BULAN = ["—", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]
+
+function getBulan(num: number | null): string {
+  if (num === null || num < 1 || num > 12) return "—"
+  return BULAN[num]
 }
 
 function truncateUrl(url: string, max = 72): string {
@@ -179,16 +187,18 @@ function TrackerRecordsTable({ records }: { records: TrackerRecord[] }) {
             <tr className="border-b border-gray-100 text-left text-xs uppercase tracking-wider text-gray-400 dark:border-white/5 dark:text-gray-500">
               <th className="px-6 py-3 font-medium">PIC</th>
               <th className="px-6 py-3 font-medium">Tahun</th>
+              <th className="px-6 py-3 font-medium">Bulan</th>
               <th className="px-6 py-3 font-medium">Realisasi</th>
               <th className="px-6 py-3 font-medium">Keterangan</th>
               <th className="px-6 py-3 font-medium">Updated At</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50 dark:divide-white/5">
-            {records.map((r) => (
+            {[...records].sort((a, b) => (a.tahun - b.tahun) || ((a.bulan_num ?? 0) - (b.bulan_num ?? 0))).map((r) => (
               <tr key={r.id} className="text-gray-700 hover:bg-gray-50 dark:text-white/80 dark:hover:bg-white/[0.02]">
                 <td className="px-6 py-3 font-medium">{r.responsibility_person?.full_name ?? "—"}</td>
                 <td className="px-6 py-3 text-gray-500">{r.tahun}</td>
+                <td className="px-6 py-3 text-gray-500">{getBulan(r.bulan_num)}</td>
                 <td className="px-6 py-3 text-gray-500">{r.realisasi ?? "—"}</td>
                 <td className="max-w-xs px-6 py-3 text-xs text-gray-400 truncate" title={r.keterangan ?? undefined}>
                   {r.keterangan ?? "—"}
