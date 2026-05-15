@@ -23,8 +23,8 @@ export default function CreateChatbotModal({
 
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<CreateChatbotRequest>({
-    nama_chatbot: "",
-    otoritas: "kepala_divisi",
+    chatbot_name: "",
+    authority: "kepala_divisi",
     addon_prompt: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -46,11 +46,11 @@ export default function CreateChatbotModal({
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.nama_chatbot.trim()) {
-      newErrors.nama_chatbot = "Nama chatbot wajib diisi";
+    if (!formData.chatbot_name.trim()) {
+      newErrors.chatbot_name = "Nama chatbot wajib diisi";
     }
-    if (!formData.otoritas) {
-      newErrors.otoritas = "Otoritas wajib dipilih";
+    if (!formData.authority) {
+      newErrors.authority = "Otoritas wajib dipilih";
     }
 
     setErrors(newErrors);
@@ -65,8 +65,8 @@ export default function CreateChatbotModal({
     setLoading(true);
     try {
       await createChatbot({
-        nama_chatbot: formData.nama_chatbot.trim(),
-        otoritas: formData.otoritas as ChatbotAuthority,
+        chatbot_name: formData.chatbot_name.trim(),
+        authority: formData.authority as ChatbotAuthority,
         addon_prompt: formData.addon_prompt?.trim() || "",
       });
 
@@ -74,8 +74,8 @@ export default function CreateChatbotModal({
       onClose();
       onSuccess?.();
       setFormData({
-        nama_chatbot: "",
-        otoritas: "kepala_divisi",
+        chatbot_name: "",
+        authority: "kepala_divisi",
         addon_prompt: "",
       });
     } catch (error) {
@@ -114,19 +114,19 @@ export default function CreateChatbotModal({
               </label>
               <input
                 type="text"
-                name="nama_chatbot"
-                value={formData.nama_chatbot}
+                name="chatbot_name"
+                value={formData.chatbot_name}
                 onChange={handleChange}
                 disabled={loading}
                 placeholder="Contoh: HR Assistant"
                 className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 dark:bg-gray-700 dark:text-white dark:border-gray-600 ${
-                  errors.nama_chatbot
+                  errors.chatbot_name
                     ? "border-red-500"
                     : "border-gray-300 dark:border-gray-600"
                 }`}
               />
-              {errors.nama_chatbot && (
-                <p className="text-red-500 text-sm mt-1">{errors.nama_chatbot}</p>
+              {errors.chatbot_name && (
+                <p className="text-red-500 text-sm mt-1">{errors.chatbot_name}</p>
               )}
             </div>
 
@@ -135,12 +135,12 @@ export default function CreateChatbotModal({
                 Otoritas *
               </label>
               <select
-                name="otoritas"
-                value={formData.otoritas}
+                name="authority"
+                value={formData.authority}
                 onChange={handleChange}
                 disabled={loading}
                 className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 dark:bg-gray-700 dark:text-white dark:border-gray-600 ${
-                  errors.otoritas
+                  errors.authority
                     ? "border-red-500"
                     : "border-gray-300 dark:border-gray-600"
                 }`}
@@ -148,8 +148,8 @@ export default function CreateChatbotModal({
                 <option value="kepala_divisi">Kepala Divisi</option>
                 <option value="karyawan">Karyawan</option>
               </select>
-              {errors.otoritas && (
-                <p className="text-red-500 text-sm mt-1">{errors.otoritas}</p>
+              {errors.authority && (
+                <p className="text-red-500 text-sm mt-1">{errors.authority}</p>
               )}
             </div>
 

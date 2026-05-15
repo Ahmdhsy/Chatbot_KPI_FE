@@ -31,7 +31,7 @@ export default function ChatbotTable({
     });
   };
 
-  const getAuthorityBadgeColor = (authority: Chatbot["otoritas"]) => {
+  const getAuthorityBadgeColor = (authority: Chatbot["authority"]) => {
     switch (authority) {
       case "kepala_divisi":
         return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
@@ -86,7 +86,7 @@ export default function ChatbotTable({
                   </div>
                   <div>
                     <p className="font-medium text-gray-900 dark:text-white">
-                      {chatbot.nama_chatbot}
+                      {chatbot.chatbot_name}
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       {chatbot.id}
@@ -97,10 +97,10 @@ export default function ChatbotTable({
               <td className="px-6 py-4">
                 <span
                   className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getAuthorityBadgeColor(
-                    chatbot.otoritas
+                    chatbot.authority
                   )}`}
                 >
-                  {chatbot.otoritas === "kepala_divisi" ? "Kepala Divisi" : "Karyawan"}
+                  {chatbot.authority === "kepala_divisi" ? "Kepala Divisi" : "Karyawan"}
                 </span>
               </td>
               <td className="px-6 py-4">

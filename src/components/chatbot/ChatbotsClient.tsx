@@ -53,7 +53,7 @@ export default function ChatbotsClient({ initialData }: ChatbotsClientProps) {
       const response = await getChatbots({
         page,
         page_size: PAGE_SIZE,
-        ...(authorityFilter ? { otoritas: authorityFilter } : {}),
+        ...(authorityFilter ? { authority: authorityFilter } : {}),
       });
 
       setChatbots(response.data);

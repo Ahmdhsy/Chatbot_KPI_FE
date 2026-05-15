@@ -4,8 +4,8 @@ export type ChatbotAuthority = "kepala_divisi" | "karyawan";
 
 export interface Chatbot {
   id: string;
-  nama_chatbot: string;
-  otoritas: ChatbotAuthority;
+  chatbot_name: string;
+  authority: ChatbotAuthority;
   addon_prompt: string | null;
   is_active: boolean;
   created_at: string;
@@ -15,7 +15,7 @@ export interface Chatbot {
 export interface GetChatbotsParams {
   page?: number;
   page_size?: number;
-  otoritas?: ChatbotAuthority;
+  authority?: ChatbotAuthority;
   search?: string;
 }
 
@@ -28,14 +28,14 @@ export interface GetChatbotsResponse {
 }
 
 export interface CreateChatbotRequest {
-  nama_chatbot: string;
-  otoritas: ChatbotAuthority;
+  chatbot_name: string;
+  authority: ChatbotAuthority;
   addon_prompt?: string;
 }
 
 export interface UpdateChatbotRequest {
-  nama_chatbot?: string;
-  otoritas?: ChatbotAuthority;
+  chatbot_name?: string;
+  authority?: ChatbotAuthority;
   addon_prompt?: string;
   is_active?: boolean;
 }
@@ -94,7 +94,7 @@ export async function getChatbots(
         params: {
           page: params.page ?? 1,
           page_size: params.page_size ?? 10,
-          ...(params.otoritas ? { otoritas: params.otoritas } : {}),
+          ...(params.authority ? { authority: params.authority } : {}),
           ...(params.search?.trim() ? { search: params.search.trim() } : {}),
         },
       }
