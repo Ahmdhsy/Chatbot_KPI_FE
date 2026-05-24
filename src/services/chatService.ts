@@ -1,5 +1,5 @@
 import { apiClientWithAuth } from '@/services/apiClientWithAuth'
-import type { Session, ChatStreamMetadata } from '@/types/chat'
+import type { Session, Message, ChatStreamMetadata, ClarificationAnswer } from '@/types/chat'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
@@ -52,14 +52,54 @@ async function consumeSSE(
   return { metadata, message }
 }
 
+function getAuthToken(): string | null {
+  if (typeof window === 'undefined') return null
+  return localStorage.getItem('access_token')
+}
+
 export const chatService = {
   async getSessions(): Promise<Session[]> {
     const { data } = await apiClientWithAuth.get<Session[]>('/api/v1/chat/sessions')
     return data
   },
 
-  async getHistory(_sessionId: string): Promise<[]> {
-    return []
+  async getHistory(sessionId: string): Promise<Message[]> {
+    const { data } = await apiClientWithAuth.get<{
+      messages: Array<{
+        message_id: string
+        message: string
+        is_sender_chatbot: boolean
+        send_at: string
+        clarification_questions: Array<{
+          id: string
+          ambiguity_type: string | null
+          question: string
+          options: string[]
+          selected_answer: string | null
+          free_text_answer: string | null
+        }>
+      }>
+    }>(`/api/v1/chat/sessions/${sessionId}`)
+
+    return data.messages.map((m) => {
+      const ts = new Date(m.send_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      const hasClarify = m.is_sender_chatbot && m.clarification_questions.length > 0
+      return {
+        id: m.message_id,
+        role: m.is_sender_chatbot ? 'bot' : 'user',
+        content: m.message,
+        ts,
+        type: hasClarify ? 'clarify' : 'text',
+        clarification_questions: hasClarify
+          ? m.clarification_questions.map((q) => ({
+              id: q.id,
+              ambiguity_type: q.ambiguity_type ?? '',
+              question: q.question,
+              options: q.options,
+            }))
+          : undefined,
+      } satisfies Message
+    })
   },
 
   async sendMessage(
@@ -67,10 +107,12 @@ export const chatService = {
     text: string,
     callbacks: SSECallbacks = {},
   ): Promise<{ metadata: ChatStreamMetadata; message: string }> {
+    const token = getAuthToken()
     const response = await fetch(`${API_BASE}/api/v1/chat`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: JSON.stringify({ session_id: sessionId, message: text }),
     })
@@ -80,19 +122,23 @@ export const chatService = {
 
   async sendClarification(
     sessionId: string,
-    message: string,
-    clarificationAnswer: string,
+    originalQuery: string,
+    clarificationAnswers: ClarificationAnswer[],
+    additionalConstraints?: string,
     callbacks: SSECallbacks = {},
   ): Promise<{ metadata: ChatStreamMetadata; message: string }> {
+    const token = getAuthToken()
     const response = await fetch(`${API_BASE}/api/v1/chat/clarification`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: JSON.stringify({
         session_id: sessionId,
-        message,
-        clarification_answer: clarificationAnswer,
+        message: originalQuery,
+        clarification_answers: clarificationAnswers,
+        ...(additionalConstraints ? { additional_constraints: additionalConstraints } : {}),
       }),
     })
     if (!response.ok) throw new Error(`HTTP ${response.status}`)

@@ -15,12 +15,6 @@ const UsersIcon = () => (
   </svg>
 )
 
-const ClockIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-  </svg>
-)
-
 const BoltIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
     <path strokeLinecap="round" strokeLinejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
@@ -77,7 +71,6 @@ export default async function KpiTrackerIngestionPage() {
     initialTotal = 0
   }
 
-  const scheduledCount = initialSources.filter((s) => s.is_scheduled).length
   const schedulerEnabled = config?.is_enabled
 
   return (
@@ -91,11 +84,6 @@ export default async function KpiTrackerIngestionPage() {
             title="Total Sources"
             value={initialSources.length}
             icon={<UsersIcon />}
-          />
-          <SummaryCard
-            title="Scheduled Sources"
-            value={scheduledCount}
-            icon={<ClockIcon />}
           />
           <SummaryCard
             title="Scheduler Status"

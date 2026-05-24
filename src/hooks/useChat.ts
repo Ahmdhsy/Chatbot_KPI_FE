@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { chatService } from '@/services/chatService'
 import { useToast } from '@/context/ToastContext'
-import type { Session, Message } from '@/types/chat'
+import type { Session, Message, ClarificationAnswer } from '@/types/chat'
 
 function makeTs() {
   return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -66,9 +66,9 @@ export function useChat() {
             id: botId,
             role: 'bot',
             ts: makeTs(),
-            type: meta.clarification_message_answer_options?.length ? 'clarify' : 'text',
+            type: meta.clarification_questions?.length ? 'clarify' : 'text',
             content: '',
-            clarification_options: meta.clarification_message_answer_options,
+            clarification_questions: meta.clarification_questions,
             graphic_image_base64: meta.graphic_image_base64,
           }
           setIsTyping(false)
@@ -119,13 +119,19 @@ export function useChat() {
     }
   }, [activeSessionId, addToast])
 
-  const selectClarification = useCallback(async (option: string) => {
+  const selectClarification = useCallback(async (answers: ClarificationAnswer[], additionalConstraints?: string) => {
     if (!activeSessionId) return
     const botId = `bot-${Date.now()}`
+
+    const msgs = messages[activeSessionId] ?? []
+    const lastUserMsg = [...msgs].reverse().find((m) => m.role === 'user')
+    const originalQuery = lastUserMsg?.content ?? ''
+
+    const answerText = answers.map((a) => a.free_text || a.selected_option).join(' · ')
     const userMsg: Message = {
       id: `user-${Date.now()}`,
       role: 'user',
-      content: option,
+      content: answerText,
       ts: makeTs(),
       type: 'text',
     }
@@ -133,15 +139,15 @@ export function useChat() {
     setIsTyping(true)
 
     try {
-      await chatService.sendClarification(activeSessionId, option, option, {
+      await chatService.sendClarification(activeSessionId, originalQuery, answers, additionalConstraints, {
         onMetadata: (meta) => {
           const botMsg: Message = {
             id: botId,
             role: 'bot',
             ts: makeTs(),
-            type: meta.clarification_message_answer_options?.length ? 'clarify' : 'text',
+            type: meta.clarification_questions?.length ? 'clarify' : 'text',
             content: '',
-            clarification_options: meta.clarification_message_answer_options,
+            clarification_questions: meta.clarification_questions,
             graphic_image_base64: meta.graphic_image_base64,
           }
           setIsTyping(false)
@@ -166,7 +172,7 @@ export function useChat() {
     } finally {
       setIsTyping(false)
     }
-  }, [activeSessionId, addToast])
+  }, [activeSessionId, messages, addToast])
 
   const editMessage = useCallback((msgId: string, newText: string) => {
     if (!activeSessionId) return

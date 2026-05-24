@@ -5,7 +5,7 @@ import { ChatBubble } from './ChatBubble'
 import { ClarifyCard } from './ClarifyCard'
 import { TypingIndicator } from './TypingIndicator'
 import { EmptyState } from './EmptyState'
-import type { Message } from '@/types/chat'
+import type { Message, ClarificationAnswer } from '@/types/chat'
 
 interface ChatMessageListProps {
   messages: Message[]
@@ -13,7 +13,7 @@ interface ChatMessageListProps {
   onSuggest: (text: string) => void
   onEditSave: (id: string, text: string) => void
   onRetry: (msgId: string) => void
-  onClarifySelect: (option: string) => void
+  onClarifySelect: (answers: ClarificationAnswer[], additionalConstraints?: string) => void
 }
 
 export function ChatMessageList({
@@ -51,7 +51,7 @@ export function ChatMessageList({
               <ClarifyCard
                 key={m.id}
                 msg={m}
-                onSelect={onClarifySelect}
+                onSelect={(answers, ac) => onClarifySelect(answers, ac)}
                 isLast={i === messages.length - 1}
               />
             )
