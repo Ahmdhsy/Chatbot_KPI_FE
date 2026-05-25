@@ -1,9 +1,35 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { chatService } from '@/services/chatService'
+import { chatService, ApiError } from '@/services/chatService'
 import { useToast } from '@/context/ToastContext'
 import type { Session, Message, ClarificationAnswer } from '@/types/chat'
+
+interface ErrorModal {
+  title: string
+  message: string
+  status?: number
+}
+
+function httpStatusTitle(status: number): string {
+  if (status === 503) return 'Layanan Tidak Tersedia'
+  if (status === 500) return 'Kesalahan Server'
+  if (status === 408) return 'Request Timeout'
+  if (status === 429) return 'Terlalu Banyak Permintaan'
+  if (status === 422) return 'Permintaan Tidak Valid'
+  if (status === 401) return 'Sesi Berakhir'
+  if (status === 403) return 'Akses Ditolak'
+  if (status === 404) return 'Tidak Ditemukan'
+  return 'Terjadi Kesalahan'
+}
+
+function parseError(err: unknown): ErrorModal {
+  if (err instanceof ApiError) {
+    return { title: httpStatusTitle(err.status), message: err.message, status: err.status }
+  }
+  const msg = err instanceof Error ? err.message : 'Silakan coba lagi.'
+  return { title: 'Terjadi Kesalahan', message: msg }
+}
 
 function makeTs() {
   return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -20,6 +46,7 @@ export function useChat() {
   const [dark, setDark] = useState(false)
   const [deleteModal, setDeleteModal] = useState<{ id: string; title: string } | null>(null)
   const [logoutModal, setLogoutModal] = useState(false)
+  const [errorModal, setErrorModal] = useState<ErrorModal | null>(null)
   const pendingSessionKey = 'pending-new'
 
   useEffect(() => {
@@ -111,9 +138,8 @@ export function useChat() {
           })
         },
       })
-    } catch {
-      setMessages((p) => ({ ...p, [key]: (p[key] ?? []).filter((m) => m.id !== tempId) }))
-      addToast('error', 'Failed to send message. Please try again.')
+    } catch (err) {
+      setErrorModal(parseError(err))
     } finally {
       setIsTyping(false)
     }
@@ -127,7 +153,14 @@ export function useChat() {
     const lastUserMsg = [...msgs].reverse().find((m) => m.role === 'user')
     const originalQuery = lastUserMsg?.content ?? ''
 
-    const answerText = answers.map((a) => a.free_text || a.selected_option).join(' · ')
+    const lastClarifyMsg = [...msgs].reverse().find((m) => m.type === 'clarify')
+    const questions = lastClarifyMsg?.clarification_questions ?? []
+    const answerText = answers.map((a, i) => {
+      const q = questions.find((q) => q.id === a.question_id)
+      const aText = a.free_text || a.selected_option
+      return q ? `**Q${i + 1}. ${q.question}**\n${aText}` : aText
+    }).join('\n\n')
+
     const userMsg: Message = {
       id: `user-${Date.now()}`,
       role: 'user',
@@ -167,8 +200,8 @@ export function useChat() {
           })
         },
       })
-    } catch {
-      addToast('error', 'Failed to send clarification.')
+    } catch (err) {
+      setErrorModal(parseError(err))
     } finally {
       setIsTyping(false)
     }
@@ -264,6 +297,7 @@ export function useChat() {
     dark,
     deleteModal,
     logoutModal,
+    errorModal,
     sendMessage,
     selectClarification,
     editMessage,
@@ -277,5 +311,6 @@ export function useChat() {
     toggleSidebar,
     toggleDark,
     setLogoutModal,
+    setErrorModal,
   }
 }

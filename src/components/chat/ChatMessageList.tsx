@@ -2,10 +2,9 @@
 
 import { useRef, useEffect } from 'react'
 import { ChatBubble } from './ChatBubble'
-import { ClarifyCard } from './ClarifyCard'
 import { TypingIndicator } from './TypingIndicator'
 import { EmptyState } from './EmptyState'
-import type { Message, ClarificationAnswer } from '@/types/chat'
+import type { Message } from '@/types/chat'
 
 interface ChatMessageListProps {
   messages: Message[]
@@ -13,7 +12,6 @@ interface ChatMessageListProps {
   onSuggest: (text: string) => void
   onEditSave: (id: string, text: string) => void
   onRetry: (msgId: string) => void
-  onClarifySelect: (answers: ClarificationAnswer[], additionalConstraints?: string) => void
 }
 
 export function ChatMessageList({
@@ -22,7 +20,6 @@ export function ChatMessageList({
   onSuggest,
   onEditSave,
   onRetry,
-  onClarifySelect,
 }: ChatMessageListProps) {
   const listRef = useRef<HTMLDivElement>(null)
 
@@ -45,26 +42,14 @@ export function ChatMessageList({
       {messages.length === 0 ? (
         <EmptyState onSuggest={onSuggest} />
       ) : (
-        messages.map((m, i) => {
-          if (m.role === 'bot' && m.type === 'clarify') {
-            return (
-              <ClarifyCard
-                key={m.id}
-                msg={m}
-                onSelect={(answers, ac) => onClarifySelect(answers, ac)}
-                isLast={i === messages.length - 1}
-              />
-            )
-          }
-          return (
-            <ChatBubble
-              key={m.id}
-              msg={m}
-              onEditSave={onEditSave}
-              onRetry={onRetry}
-            />
-          )
-        })
+        messages.map((m) => (
+          <ChatBubble
+            key={m.id}
+            msg={m}
+            onEditSave={onEditSave}
+            onRetry={onRetry}
+          />
+        ))
       )}
       {isTyping && <TypingIndicator />}
     </div>

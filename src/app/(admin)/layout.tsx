@@ -46,6 +46,12 @@ export default function AdminLayout({
     }
 
     const role = String(user?.role ?? "").toLowerCase();
+
+    if (role === "karyawan") {
+      router.replace("/chat");
+      return;
+    }
+
     const isIngestionRoute = pathname.startsWith("/ingestion");
     const isAdminOnlyRoute = pathname.startsWith("/users") || pathname.startsWith("/chatbots");
 

@@ -17,7 +17,7 @@ export default function SignInForm() {
   const [identifierError, setIdentifierError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const router = useRouter();
-  const { login, isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const { login, isAuthenticated, isLoading: isAuthLoading, user } = useAuth();
   const { addToast } = useToast();
 
   const validateEmail = (value: string): boolean => {
@@ -26,9 +26,10 @@ export default function SignInForm() {
 
   useEffect(() => {
     if (!isAuthLoading && isAuthenticated) {
-      router.replace("/");
+      const role = String(user?.role ?? "").toLowerCase();
+      router.replace(role === "karyawan" ? "/chat" : "/");
     }
-  }, [isAuthLoading, isAuthenticated, router]);
+  }, [isAuthLoading, isAuthenticated, router, user?.role]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -124,9 +125,9 @@ export default function SignInForm() {
       login(response.user);
       addToast("success", "Login successful! Redirecting...", "Welcome");
 
-      // Redirect to dashboard after 1 second
+      const redirectTo = normalizedRole === "karyawan" ? "/chat" : "/";
       setTimeout(() => {
-        router.replace("/");
+        router.replace(redirectTo);
       }, 1000);
     } catch (error: unknown) {
       const errorMessage =

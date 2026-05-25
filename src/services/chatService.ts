@@ -1,6 +1,23 @@
 import { apiClientWithAuth } from '@/services/apiClientWithAuth'
 import type { Session, Message, ChatStreamMetadata, ClarificationAnswer } from '@/types/chat'
 
+export class ApiError extends Error {
+  constructor(public readonly status: number, message: string) {
+    super(message)
+    this.name = 'ApiError'
+  }
+}
+
+async function throwIfNotOk(response: Response): Promise<void> {
+  if (response.ok) return
+  let detail = `HTTP ${response.status}`
+  try {
+    const body = await response.clone().json()
+    if (body?.detail) detail = String(body.detail)
+  } catch {}
+  throw new ApiError(response.status, detail)
+}
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
 interface SSECallbacks {
@@ -116,7 +133,7 @@ export const chatService = {
       },
       body: JSON.stringify({ session_id: sessionId, message: text }),
     })
-    if (!response.ok) throw new Error(`HTTP ${response.status}`)
+    await throwIfNotOk(response)
     return consumeSSE(response, callbacks)
   },
 
@@ -141,7 +158,7 @@ export const chatService = {
         ...(additionalConstraints ? { additional_constraints: additionalConstraints } : {}),
       }),
     })
-    if (!response.ok) throw new Error(`HTTP ${response.status}`)
+    await throwIfNotOk(response)
     return consumeSSE(response, callbacks)
   },
 
