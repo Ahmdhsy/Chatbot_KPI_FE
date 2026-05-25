@@ -5,33 +5,197 @@ import Image from 'next/image'
 import { BotIcon, UserIcon, CopyIcon, CheckIcon, EditIcon, RetryIcon } from './icons'
 import type { Message } from '@/types/chat'
 
-function parseLine(line: string) {
-  return line.split(/(\*\*[^*]+\*\*)/g).map((p, j) =>
-    p.startsWith('**')
-      ? <strong key={j}>{p.slice(2, -2)}</strong>
-      : p
+function parseInline(text: string): React.ReactNode[] {
+  const parts: React.ReactNode[] = []
+  const regex = /(\*\*\*[^*]+\*\*\*|\*\*[^*]+\*\*|\*[^*\n]+\*|`[^`\n]+`|~~[^~\n]+~~|\[[^\]]+\]\([^)]+\)|_[^_\n]+_)/g
+  let last = 0
+  let m: RegExpExecArray | null
+  while ((m = regex.exec(text)) !== null) {
+    if (m.index > last) parts.push(text.slice(last, m.index))
+    const tok = m[0]
+    if (tok.startsWith('***'))
+      parts.push(<strong key={m.index}><em>{tok.slice(3, -3)}</em></strong>)
+    else if (tok.startsWith('**'))
+      parts.push(<strong key={m.index}>{tok.slice(2, -2)}</strong>)
+    else if (tok.startsWith('*') || tok.startsWith('_'))
+      parts.push(<em key={m.index}>{tok.slice(1, -1)}</em>)
+    else if (tok.startsWith('`'))
+      parts.push(
+        <code key={m.index} className="bg-[#f0f4ff] dark:bg-[#1f2937] text-[#4f46e5] dark:text-[#818cf8] px-1 py-0.5 rounded text-[0.85em] font-mono">
+          {tok.slice(1, -1)}
+        </code>
+      )
+    else if (tok.startsWith('~~'))
+      parts.push(<del key={m.index}>{tok.slice(2, -2)}</del>)
+    else {
+      const lm = tok.match(/\[([^\]]+)\]\(([^)]+)\)/)
+      if (lm)
+        parts.push(
+          <a key={m.index} href={lm[2]} target="_blank" rel="noreferrer"
+            className="text-brand-500 underline hover:opacity-80 break-all">
+            {lm[1]}
+          </a>
+        )
+    }
+    last = m.index + tok.length
+  }
+  if (last < text.length) parts.push(text.slice(last))
+  return parts.length ? parts : [text]
+}
+
+function parseTableLine(line: string): string[] {
+  return line.split('|').slice(1, -1).map((c) => c.trim())
+}
+
+function isSeparatorRow(line: string): boolean {
+  return /^\|[\s|:-]+\|$/.test(line.trim())
+}
+
+function MarkdownTable({ lines }: { lines: string[] }) {
+  const dataLines = lines.filter((l) => !isSeparatorRow(l))
+  if (dataLines.length === 0) return null
+  const [header, ...body] = dataLines
+  const headers = parseTableLine(header)
+  return (
+    <div className="overflow-x-auto my-3 rounded-lg border border-[#e4e7ec] dark:border-[#2d3748]">
+      <table className="min-w-full text-sm border-collapse">
+        <thead>
+          <tr className="bg-[#f3f4f6] dark:bg-[#1f2937]">
+            {headers.map((h, i) => (
+              <th key={i} className="px-3 py-2 text-left font-semibold text-[#374151] dark:text-[#d1d5db] border-b border-[#e4e7ec] dark:border-[#2d3748] whitespace-nowrap">
+                {parseInline(h)}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {body.map((row, ri) => (
+            <tr key={ri} className="even:bg-[#f9fafb] dark:even:bg-[#161f2e] hover:bg-[#f0f4ff] dark:hover:bg-[#1e2d45] transition-colors">
+              {parseTableLine(row).map((cell, ci) => (
+                <td key={ci} className="px-3 py-2 text-[#101828] dark:text-[#e4e7ec] border-b border-[#e4e7ec] dark:border-[#2d3748] last:border-b-0 align-top">
+                  {parseInline(cell)}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   )
 }
 
 function RichText({ text }: { text: string }) {
-  return (
-    <div>
-      {text.split('\n').map((line, i) => {
-        if (line.startsWith('- '))
-          return (
-            <div key={i} className="flex gap-1.5 mt-1 items-start">
-              <span className="flex-shrink-0 mt-0.5 text-[15px] leading-none">•</span>
-              <span className="flex-1 leading-relaxed">{parseLine(line.slice(2))}</span>
+  const lines = text.split('\n')
+  const blocks: React.ReactNode[] = []
+  let i = 0
+
+  while (i < lines.length) {
+    const line = lines[i]
+
+    // Fenced code block
+    if (line.startsWith('```')) {
+      const lang = line.slice(3).trim()
+      const codeLines: string[] = []
+      i++
+      while (i < lines.length && !lines[i].startsWith('```')) {
+        codeLines.push(lines[i])
+        i++
+      }
+      if (i < lines.length) i++
+      blocks.push(
+        <div key={`code-${i}`} className="my-2 rounded-lg overflow-hidden border border-[#e4e7ec] dark:border-[#2d3748]">
+          {lang && (
+            <div className="px-3 py-1 bg-[#f3f4f6] dark:bg-[#1f2937] text-xs text-[#6b7280] dark:text-[#9ca3af] font-mono border-b border-[#e4e7ec] dark:border-[#2d3748]">
+              {lang}
             </div>
-          )
-        if (/^\d+\./.test(line))
-          return <div key={i} className="mt-1 leading-relaxed">{parseLine(line)}</div>
-        if (line === '')
-          return <div key={i} className="h-2" />
-        return <div key={i} className="mt-0.5 leading-relaxed">{parseLine(line)}</div>
-      })}
-    </div>
-  )
+          )}
+          <pre className="px-3 py-2.5 bg-[#f9fafb] dark:bg-[#0d1117] text-[#101828] dark:text-[#e4e7ec] text-xs font-mono overflow-x-auto whitespace-pre leading-relaxed m-0">
+            <code>{codeLines.join('\n')}</code>
+          </pre>
+        </div>
+      )
+      continue
+    }
+
+    // Markdown table
+    if (line.trimStart().startsWith('|')) {
+      const tableLines: string[] = []
+      while (i < lines.length && lines[i].trimStart().startsWith('|')) {
+        tableLines.push(lines[i])
+        i++
+      }
+      blocks.push(<MarkdownTable key={`tbl-${i}`} lines={tableLines} />)
+      continue
+    }
+
+    // Headings
+    if (line.startsWith('#### '))  { blocks.push(<div key={i} className="font-semibold text-[14px] mt-2 mb-0.5 text-[#101828] dark:text-[#e4e7ec]">{parseInline(line.slice(5))}</div>); i++; continue }
+    if (line.startsWith('### '))   { blocks.push(<div key={i} className="font-semibold text-[15px] mt-3 mb-1 text-[#101828] dark:text-[#e4e7ec]">{parseInline(line.slice(4))}</div>); i++; continue }
+    if (line.startsWith('## '))    { blocks.push(<div key={i} className="font-bold text-base mt-3 mb-1 text-[#101828] dark:text-[#e4e7ec]">{parseInline(line.slice(3))}</div>); i++; continue }
+    if (line.startsWith('# '))     { blocks.push(<div key={i} className="font-bold text-lg mt-3 mb-1 text-[#101828] dark:text-[#e4e7ec]">{parseInline(line.slice(2))}</div>); i++; continue }
+
+    // Horizontal rule
+    if (/^[-*_]{3,}$/.test(line.trim())) {
+      blocks.push(<hr key={i} className="my-2 border-[#e4e7ec] dark:border-[#2d3748]" />)
+      i++; continue
+    }
+
+    // Blockquote
+    if (line.startsWith('> ')) {
+      blocks.push(
+        <div key={i} className="border-l-4 border-brand-500 pl-3 py-0.5 my-1 text-[#6b7280] dark:text-[#9ca3af] italic">
+          {parseInline(line.slice(2))}
+        </div>
+      )
+      i++; continue
+    }
+
+    // Indented bullet (2+ spaces or tab before - * +)
+    const indented = line.match(/^(\s{2,}|\t+)([-*+]) (.*)/)
+    if (indented) {
+      const level = indented[1].replace(/\t/g, '  ').length / 2
+      blocks.push(
+        <div key={i} className="flex gap-1.5 mt-0.5 items-start" style={{ paddingLeft: `${Math.min(level, 4) * 14}px` }}>
+          <span className="flex-shrink-0 mt-0.5 text-[13px] leading-none opacity-60">◦</span>
+          <span className="flex-1 leading-relaxed">{parseInline(indented[3])}</span>
+        </div>
+      )
+      i++; continue
+    }
+
+    // Bullet list (-, *, +)
+    if (/^[-*+] /.test(line)) {
+      blocks.push(
+        <div key={i} className="flex gap-1.5 mt-1 items-start">
+          <span className="flex-shrink-0 mt-0.5 text-[15px] leading-none">•</span>
+          <span className="flex-1 leading-relaxed">{parseInline(line.slice(2))}</span>
+        </div>
+      )
+      i++; continue
+    }
+
+    // Numbered list
+    if (/^\d+[.)]\s/.test(line)) {
+      blocks.push(
+        <div key={i} className="mt-1 leading-relaxed">{parseInline(line)}</div>
+      )
+      i++; continue
+    }
+
+    // Empty line
+    if (line.trim() === '') {
+      blocks.push(<div key={i} className="h-2" />)
+      i++; continue
+    }
+
+    // Default paragraph
+    blocks.push(
+      <div key={i} className="mt-0.5 leading-relaxed">{parseInline(line)}</div>
+    )
+    i++
+  }
+
+  return <div>{blocks}</div>
 }
 
 function InlineEdit({

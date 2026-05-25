@@ -37,21 +37,23 @@ export function ChatMessageList({
   return (
     <div
       ref={listRef}
-      className="flex-1 overflow-y-auto overflow-x-hidden px-7 pt-6 pb-2 flex flex-col chat-scroll"
+      className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden flex flex-col chat-scroll"
     >
-      {messages.length === 0 ? (
-        <EmptyState onSuggest={onSuggest} />
-      ) : (
-        messages.map((m) => (
-          <ChatBubble
-            key={m.id}
-            msg={m}
-            onEditSave={onEditSave}
-            onRetry={onRetry}
-          />
-        ))
-      )}
-      {isTyping && <TypingIndicator />}
+      <div className="w-full max-w-[720px] mx-auto px-7 pt-6 pb-2 flex flex-col flex-1">
+        {messages.length === 0 ? (
+          <EmptyState onSuggest={onSuggest} />
+        ) : (
+          messages.map((m) => (
+            <ChatBubble
+              key={m.id}
+              msg={m}
+              onEditSave={onEditSave}
+              onRetry={onRetry}
+            />
+          ))
+        )}
+        {isTyping && <TypingIndicator />}
+      </div>
     </div>
   )
 }

@@ -62,7 +62,7 @@ export function ChatPage() {
 
       <div
         className="flex-shrink-0 overflow-hidden transition-[width] duration-300 ease-[cubic-bezier(.4,0,.2,1)] h-full"
-        style={{ width: sidebarOpen ? 260 : 0 }}
+        style={{ width: sidebarOpen ? 350 : 0 }}
       >
         <ChatSidebar
           sessions={sessions}
@@ -101,25 +101,26 @@ export function ChatPage() {
           </button>
         </div>
 
-        <div className="flex flex-col flex-1 min-w-0">
-          <div className="w-[70%] mx-auto flex flex-col flex-1 min-w-0">
-            <ChatMessageList
-              messages={currentMessages}
-              isTyping={isTyping}
-              onSuggest={sendMessage}
-              onEditSave={editMessage}
-              onRetry={retryMessage}
-            />
+        <div className="flex flex-col flex-1 min-w-0 min-h-0">
+          {/* ChatMessageList spans full width so scrollbar sits at the right edge of the screen */}
+          <ChatMessageList
+            messages={currentMessages}
+            isTyping={isTyping}
+            onSuggest={sendMessage}
+            onEditSave={editMessage}
+            onRetry={retryMessage}
+          />
 
+          {/* Bottom controls stay centered */}
+          <div className="w-full max-w-[720px] mx-auto shrink-0">
             {pendingClarify && (
-              <div className="shrink-0 pb-2 border-t" style={{ borderColor: borderC, paddingTop: '10px' }}>
+              <div className="pb-2 border-t" style={{ borderColor: borderC, paddingTop: '10px' }}>
                 <ClarifyCard
                   msg={pendingClarify}
                   onSelect={(answers, ac) => selectClarification(answers, ac)}
                 />
               </div>
             )}
-
             <ChatInputBar onSend={sendMessage} disabled={isTyping} />
           </div>
         </div>

@@ -65,7 +65,7 @@ export function ChatSidebar({
   const initial = userName.charAt(0).toUpperCase()
 
   return (
-    <div className="w-[260px] h-full flex flex-col bg-white dark:bg-[#0d1117] border-r border-[#e4e7ec] dark:border-[#1f2937]">
+    <div className="w-[350px] h-full flex flex-col bg-white dark:bg-[#0d1117] border-r border-[#e4e7ec] dark:border-[#1f2937]">
       <div className="px-3.5 pt-5 pb-3 flex items-center gap-2.5">
         <div
           className="w-8 h-8 rounded-[9px] bg-brand-500 flex items-center justify-center text-white"
