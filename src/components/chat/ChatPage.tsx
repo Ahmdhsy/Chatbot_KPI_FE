@@ -4,8 +4,10 @@ import { useChat } from '@/hooks/useChat'
 import { ChatSidebar } from './ChatSidebar'
 import { ChatMessageList } from './ChatMessageList'
 import { ChatInputBar } from './ChatInputBar'
+import { ClarifyCard } from './ClarifyCard'
 import { DeleteModal } from './modals/DeleteModal'
 import { LogoutModal } from './modals/LogoutModal'
+import { ErrorModal } from './modals/ErrorModal'
 import { MenuIcon, SunIcon, MoonIcon } from './icons'
 import { useAuth } from '@/context/AuthContext'
 
@@ -16,15 +18,18 @@ export function ChatPage() {
 
   const {
     sessions, activeSessionId, currentMessages, isTyping,
-    sidebarOpen, dark, deleteModal, logoutModal,
+    sidebarOpen, dark, deleteModal, logoutModal, errorModal,
     sendMessage, selectClarification, editMessage, retryMessage,
     selectSession, createSession, requestDelete, confirmDelete, cancelDelete,
-    renameSession, toggleSidebar, toggleDark, setLogoutModal,
+    renameSession, toggleSidebar, toggleDark, setLogoutModal, setErrorModal,
   } = useChat()
 
   const borderC = dark ? '#1f2937' : '#e4e7ec'
   const panelBg = dark ? '#0d1117' : '#ffffff'
   const activeTitle = sessions.find((s) => s.id === activeSessionId)?.title ?? 'New Chat'
+
+  const lastMsg = currentMessages[currentMessages.length - 1]
+  const pendingClarify = (lastMsg?.role === 'bot' && lastMsg?.type === 'clarify') ? lastMsg : null
 
   return (
     <div className={`h-screen flex flex-1 overflow-hidden font-outfit ${dark ? 'dark' : ''}`}
@@ -35,6 +40,15 @@ export function ChatPage() {
           title={deleteModal.title}
           onConfirm={confirmDelete}
           onCancel={cancelDelete}
+        />
+      )}
+
+      {errorModal && (
+        <ErrorModal
+          title={errorModal.title}
+          message={errorModal.message}
+          status={errorModal.status}
+          onClose={() => setErrorModal(null)}
         />
       )}
 
@@ -95,8 +109,16 @@ export function ChatPage() {
               onSuggest={sendMessage}
               onEditSave={editMessage}
               onRetry={retryMessage}
-              onClarifySelect={selectClarification}
             />
+
+            {pendingClarify && (
+              <div className="shrink-0 pb-2 border-t" style={{ borderColor: borderC, paddingTop: '10px' }}>
+                <ClarifyCard
+                  msg={pendingClarify}
+                  onSelect={(answers, ac) => selectClarification(answers, ac)}
+                />
+              </div>
+            )}
 
             <ChatInputBar onSend={sendMessage} disabled={isTyping} />
           </div>
