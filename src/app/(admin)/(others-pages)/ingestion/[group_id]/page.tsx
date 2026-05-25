@@ -2,7 +2,6 @@ import { notFound } from "next/navigation"
 import Link from "next/link"
 import PageBreadCrumb from "@/components/common/PageBreadCrumb"
 import SummaryCard from "@/components/ingestion/SummaryCard"
-import Badge from "@/components/ui/badge/Badge"
 import { serverFetch } from "@/lib/server-api"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -44,7 +43,6 @@ interface KPIGroupDetail {
   sheet_url: string
   sheet_id: string | null
   tahun: number | null
-  is_scheduled: boolean
   is_active: boolean
   created_at: string
   updated_at: string
@@ -320,19 +318,6 @@ export default async function IngestionDetailPage({
                 {formatDate(group.updated_at)}
               </p>
             </div>
-            {!isMaster && (
-              <div>
-                <p className="text-xs font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">
-                  Scheduled
-                </p>
-                <Badge
-                  size="sm"
-                  color={group.is_scheduled ? "success" : "warning"}
-                >
-                  {group.is_scheduled ? "Yes" : "No"}
-                </Badge>
-              </div>
-            )}
           </div>
         </div>
 

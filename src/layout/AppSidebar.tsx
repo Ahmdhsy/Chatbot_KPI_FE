@@ -12,9 +12,10 @@ import {
   UserCircleIcon,
   PlugInIcon,
   ChatIcon,
+  PaperPlaneIcon,
 } from "../icons/index";
 
-type AppRole = "admin" | "kepala_divisi" | "karyawan";
+type AppRole = "admin" | "kepala_divisi" | "karyawan" | "unknown";
 type NavItem = {
   name: string;
   icon: React.ReactNode;
@@ -44,6 +45,12 @@ const navItems: NavItem[] = [
       { name: "KPI Master", path: "/ingestion/kpi-master", visibleRoles: ["kepala_divisi"] },
       { name: "KPI Tracker", path: "/ingestion/kpi-tracker", visibleRoles: ["kepala_divisi"] },
     ],
+  },
+  {
+    icon: <PaperPlaneIcon />,
+    name: "Chat",
+    path: "/chat",
+    visibleRoles: ["kepala_divisi"],
   },
 ];
 

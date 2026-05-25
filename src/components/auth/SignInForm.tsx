@@ -107,11 +107,11 @@ export default function SignInForm() {
       }
 
       const normalizedRole = String(response?.user?.role ?? "").toLowerCase();
-      const allowedRoles = ["admin", "kepala_divisi"];
+      const allowedRoles = ["admin", "kepala_divisi", "karyawan"];
       if (!allowedRoles.includes(normalizedRole)) {
         addToast(
           "error",
-          "Role akun Anda belum memiliki akses ke dashboard KMS",
+          "Role akun Anda belum memiliki akses ke sistem ini",
           "Access Denied"
         );
         setIsLoading(false);
@@ -120,6 +120,7 @@ export default function SignInForm() {
 
       // Login successful - cookie is set by /api/auth/session
       // Also store in AuthContext for client-side state
+      localStorage.setItem('access_token', response.access_token)
       login(response.user);
       addToast("success", "Login successful! Redirecting...", "Welcome");
 
