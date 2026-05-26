@@ -253,8 +253,8 @@ function ActionBtn({ onClick, title, children }: { onClick: () => void; title: s
 
 interface ChatBubbleProps {
   msg: Message
-  onEditSave: (id: string, text: string) => void
-  onRetry: (msgId: string) => void
+  onEditSave?: (id: string, text: string) => void
+  onRetry?: (msgId: string) => void
 }
 
 export function ChatBubble({ msg, onEditSave, onRetry }: ChatBubbleProps) {
@@ -263,10 +263,24 @@ export function ChatBubble({ msg, onEditSave, onRetry }: ChatBubbleProps) {
   const [editing, setEditing] = useState(false)
   const isUser = msg.role === 'user'
 
-  const copy = () => {
-    navigator.clipboard?.writeText(msg.content ?? '')
-    setCopied(true)
-    setTimeout(() => setCopied(false), 1500)
+  const copy = async () => {
+    const text = msg.content ?? ''
+    try {
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(text)
+      } else {
+        const ta = document.createElement('textarea')
+        ta.value = text
+        ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0'
+        document.body.appendChild(ta)
+        ta.focus()
+        ta.select()
+        document.execCommand('copy')
+        document.body.removeChild(ta)
+      }
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    } catch {}
   }
 
   return (
@@ -299,7 +313,7 @@ export function ChatBubble({ msg, onEditSave, onRetry }: ChatBubbleProps) {
               : undefined
           }
         >
-          {editing ? (
+          {editing && onEditSave ? (
             <InlineEdit
               msg={msg}
               onSave={(v) => { onEditSave(msg.id, v); setEditing(false) }}
@@ -332,8 +346,8 @@ export function ChatBubble({ msg, onEditSave, onRetry }: ChatBubbleProps) {
               style={{ opacity: hovered ? 1 : 0, pointerEvents: hovered ? 'auto' : 'none' }}
             >
               <ActionBtn title="Copy" onClick={copy}>{copied ? <CheckIcon /> : <CopyIcon />}</ActionBtn>
-              {isUser && <ActionBtn title="Edit message" onClick={() => setEditing(true)}><EditIcon /></ActionBtn>}
-              <ActionBtn title="Regenerate" onClick={() => onRetry(msg.id)}><RetryIcon /></ActionBtn>
+              {isUser && onEditSave && <ActionBtn title="Edit message" onClick={() => setEditing(true)}><EditIcon /></ActionBtn>}
+              {!isUser && onRetry && <ActionBtn title="Regenerate" onClick={() => onRetry(msg.id)}><RetryIcon /></ActionBtn>}
             </div>
           </div>
         )}

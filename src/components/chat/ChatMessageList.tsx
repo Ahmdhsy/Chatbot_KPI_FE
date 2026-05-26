@@ -23,6 +23,9 @@ export function ChatMessageList({
 }: ChatMessageListProps) {
   const listRef = useRef<HTMLDivElement>(null)
 
+  const lastUserIdx = messages.reduce((last, m, i) => m.role === 'user' ? i : last, -1)
+  const lastBotIdx = messages.reduce((last, m, i) => m.role === 'bot' ? i : last, -1)
+
   const scrollToBottom = () => {
     const el = listRef.current
     if (el) el.scrollTop = el.scrollHeight
@@ -43,12 +46,12 @@ export function ChatMessageList({
         {messages.length === 0 ? (
           <EmptyState onSuggest={onSuggest} />
         ) : (
-          messages.map((m) => (
+          messages.map((m, i) => (
             <ChatBubble
               key={m.id}
               msg={m}
-              onEditSave={onEditSave}
-              onRetry={onRetry}
+              onEditSave={!isTyping && i === lastUserIdx ? onEditSave : undefined}
+              onRetry={!isTyping && i === lastBotIdx ? onRetry : undefined}
             />
           ))
         )}

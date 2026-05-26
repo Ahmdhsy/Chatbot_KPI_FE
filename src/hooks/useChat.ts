@@ -79,6 +79,7 @@ export function useChat() {
   const sendMessage = useCallback(async (text: string) => {
     const tempId = `temp-${Date.now()}`
     const botId = `bot-${Date.now() + 1}`
+    let realUserId = tempId
     const userMsg: Message = { id: tempId, role: 'user', content: text, ts: makeTs(), type: 'text' }
     const key = activeSessionId ?? pendingSessionKey
 
@@ -89,6 +90,8 @@ export function useChat() {
       await chatService.sendMessage(activeSessionId, text, {
         onMetadata: (meta) => {
           const sid = meta.session_id
+          const newUserId = `user-${Date.now()}`
+          realUserId = newUserId
           const botMsg: Message = {
             id: botId,
             role: 'bot',
@@ -105,7 +108,7 @@ export function useChat() {
             setMessages((p) => {
               const prev = p[key] ?? []
               const fixed = prev.map((m) =>
-                m.id === tempId ? { ...m, id: `user-${Date.now()}` } : m
+                m.id === tempId ? { ...m, id: newUserId } : m
               )
               const { [key]: _dropped, ...rest } = p
               return { ...rest, [sid]: [...fixed, botMsg] }
@@ -116,7 +119,7 @@ export function useChat() {
               ...p,
               [key]: [
                 ...(p[key] ?? []).map((m) =>
-                  m.id === tempId ? { ...m, id: `user-${Date.now()}` } : m
+                  m.id === tempId ? { ...m, id: newUserId } : m
                 ),
                 botMsg,
               ],
@@ -139,6 +142,16 @@ export function useChat() {
         },
       })
     } catch (err) {
+      const idsToRemove = new Set([tempId, realUserId, botId])
+      setMessages((p) => {
+        for (const k of Object.keys(p)) {
+          const list = p[k]
+          if (list.some((m) => idsToRemove.has(m.id))) {
+            return { ...p, [k]: list.filter((m) => !idsToRemove.has(m.id)) }
+          }
+        }
+        return p
+      })
       setErrorModal(parseError(err))
     } finally {
       setIsTyping(false)
@@ -210,30 +223,28 @@ export function useChat() {
   const editMessage = useCallback((msgId: string, newText: string) => {
     if (!activeSessionId) return
     setMessages((p) => {
-      const list = [...(p[activeSessionId] ?? [])]
+      const list = p[activeSessionId] ?? []
       const idx = list.findIndex((m) => m.id === msgId)
       if (idx === -1) return p
-      list[idx] = { ...list[idx], content: newText, ts: makeTs() }
-      if (idx + 1 < list.length && list[idx + 1].role === 'bot') {
-        list.splice(idx + 1, 1)
-      }
-      return { ...p, [activeSessionId]: list }
+      return { ...p, [activeSessionId]: list.slice(0, idx) }
     })
     sendMessage(newText)
   }, [activeSessionId, sendMessage])
 
   const retryMessage = useCallback((msgId: string) => {
     if (!activeSessionId) return
-    setMessages((p) => {
-      const list = p[activeSessionId] ?? []
-      const idx = list.findIndex((m) => m.id === msgId)
-      const prevUser = idx > 0 ? list[idx - 1] : null
-      const text = prevUser?.content ?? ''
-      const next = list.filter((m) => m.id !== msgId)
-      setTimeout(() => sendMessage(text), 0)
-      return { ...p, [activeSessionId]: next }
-    })
-  }, [activeSessionId, sendMessage])
+    const list = messages[activeSessionId] ?? []
+    const idx = list.findIndex((m) => m.id === msgId)
+    if (idx === -1) return
+    const prevUserIdx = idx > 0 && list[idx - 1]?.role === 'user' ? idx - 1 : -1
+    const text = prevUserIdx >= 0 ? (list[prevUserIdx].content ?? '') : ''
+    if (!text) return
+    setMessages((p) => ({
+      ...p,
+      [activeSessionId]: (p[activeSessionId] ?? []).slice(0, prevUserIdx >= 0 ? prevUserIdx : idx),
+    }))
+    sendMessage(text)
+  }, [activeSessionId, messages, sendMessage])
 
   const selectSession = useCallback((id: string) => {
     setActiveSessionId(id)

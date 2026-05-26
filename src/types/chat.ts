@@ -10,6 +10,8 @@ export interface ClarificationQuestion {
   ambiguity_type: string
   question: string
   options: string[]
+  selected_answer?: string | null
+  free_text_answer?: string | null
   metadata?: Record<string, unknown>
 }
 

@@ -98,9 +98,25 @@ export const chatService = {
       }>
     }>(`/api/v1/chat/sessions/${sessionId}`)
 
-    return data.messages.map((m) => {
+    // Clarification questions di DB di-link ke user message (bukan bot message).
+    // Saat mapping, bot message yang langsung mengikuti user message dengan questions
+    // harus di-treat sebagai tipe 'clarify' dengan questions dari user message sebelumnya.
+    const raw = data.messages
+    const mapped: Message[] = raw.map((m, idx) => {
       const ts = new Date(m.send_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      const hasClarify = m.is_sender_chatbot && m.clarification_questions.length > 0
+
+      // Cek apakah bot message ini langsung mengikuti user message yang punya questions
+      const prevRaw = idx > 0 ? raw[idx - 1] : null
+      const inheritedQuestions =
+        m.is_sender_chatbot &&
+        prevRaw &&
+        !prevRaw.is_sender_chatbot &&
+        prevRaw.clarification_questions.length > 0
+          ? prevRaw.clarification_questions
+          : null
+
+      const hasClarify = inheritedQuestions !== null
+
       return {
         id: m.message_id,
         role: m.is_sender_chatbot ? 'bot' : 'user',
@@ -108,15 +124,39 @@ export const chatService = {
         ts,
         type: hasClarify ? 'clarify' : 'text',
         clarification_questions: hasClarify
-          ? m.clarification_questions.map((q) => ({
+          ? inheritedQuestions!.map((q) => ({
               id: q.id,
               ambiguity_type: q.ambiguity_type ?? '',
               question: q.question,
               options: q.options,
+              selected_answer: q.selected_answer,
+              free_text_answer: q.free_text_answer,
             }))
           : undefined,
       } satisfies Message
     })
+
+    // Sisipkan synthetic user message setelah clarify bot message yang sudah dijawab
+    const result: Message[] = []
+    for (const msg of mapped) {
+      result.push(msg)
+      if (msg.type === 'clarify' && msg.clarification_questions) {
+        const answered = msg.clarification_questions.filter((q) => q.selected_answer)
+        if (answered.length > 0) {
+          const answerText = answered
+            .map((q, i) => `**Q${i + 1}. ${q.question}**\n${q.free_text_answer || q.selected_answer}`)
+            .join('\n\n')
+          result.push({
+            id: `answer-${msg.id}`,
+            role: 'user',
+            content: answerText,
+            ts: msg.ts,
+            type: 'text',
+          })
+        }
+      }
+    }
+    return result
   },
 
   async sendMessage(
