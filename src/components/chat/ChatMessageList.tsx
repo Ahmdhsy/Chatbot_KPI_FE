@@ -39,7 +39,7 @@ export function ChatMessageList({
       ref={listRef}
       className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden flex flex-col chat-scroll"
     >
-      <div className="w-full max-w-[720px] mx-auto px-7 pt-6 pb-2 flex flex-col flex-1">
+      <div className="w-full max-w-[900px] mx-auto px-7 pt-6 pb-2 flex flex-col flex-1">
         {messages.length === 0 ? (
           <EmptyState onSuggest={onSuggest} />
         ) : (

@@ -112,7 +112,7 @@ export function ChatPage() {
           />
 
           {/* Bottom controls stay centered */}
-          <div className="w-full max-w-[720px] mx-auto shrink-0">
+          <div className="w-full max-w-[900px] mx-auto shrink-0">
             {pendingClarify && (
               <div className="pb-2 border-t" style={{ borderColor: borderC, paddingTop: '10px' }}>
                 <ClarifyCard
