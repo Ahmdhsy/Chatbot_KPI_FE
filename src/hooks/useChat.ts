@@ -99,7 +99,7 @@ export function useChat() {
             type: meta.clarification_questions?.length ? 'clarify' : 'text',
             content: '',
             clarification_questions: meta.clarification_questions,
-            graphic_image_base64: meta.graphic_image_base64,
+            graphics: meta.graphics,
           }
           setIsTyping(false)
 
@@ -194,7 +194,7 @@ export function useChat() {
             type: meta.clarification_questions?.length ? 'clarify' : 'text',
             content: '',
             clarification_questions: meta.clarification_questions,
-            graphic_image_base64: meta.graphic_image_base64,
+            graphics: meta.graphics,
           }
           setIsTyping(false)
           setMessages((p) => ({

@@ -62,7 +62,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // Ignore logout errors; clear local state regardless.
     } finally {
-      localStorage.removeItem('access_token')
       setUser(null);
       setIsAuthenticated(false);
     }

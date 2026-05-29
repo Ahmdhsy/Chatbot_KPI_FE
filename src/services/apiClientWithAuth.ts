@@ -95,11 +95,6 @@ apiClientWithAuth.interceptors.response.use(
         return Promise.reject(error);
       }
 
-      const refreshData = await refreshRes.json()
-      if (refreshData.access_token) {
-        localStorage.setItem('access_token', refreshData.access_token)
-      }
-
       processQueue(null);
       return apiClientWithAuth(originalRequest);
     } catch (refreshError) {

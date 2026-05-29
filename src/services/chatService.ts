@@ -71,7 +71,10 @@ async function consumeSSE(
 
 function getAuthToken(): string | null {
   if (typeof window === 'undefined') return null
-  return localStorage.getItem('access_token')
+  return document.cookie
+    .split('; ')
+    .find((c) => c.startsWith('access_token='))
+    ?.split('=')[1] ?? null
 }
 
 export const chatService = {

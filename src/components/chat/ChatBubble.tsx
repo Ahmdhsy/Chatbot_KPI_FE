@@ -322,15 +322,26 @@ export function ChatBubble({ msg, onEditSave, onRetry }: ChatBubbleProps) {
           ) : (
             <>
               {msg.content && <RichText text={msg.content} />}
-              {msg.graphic_image_base64 && (
-                <Image
-                  src={`data:image/png;base64,${msg.graphic_image_base64}`}
-                  alt="Chart visualization"
-                  width={960}
-                  height={540}
-                  unoptimized
-                  className="mt-2.5 rounded-lg w-full max-w-[480px]"
-                />
+              {msg.graphics && msg.graphics.length > 0 && (
+                <div className="mt-2.5 flex flex-col gap-3">
+                  {msg.graphics.map((g, i) => (
+                    <div key={i}>
+                      {g.kpi_name && (
+                        <p className="text-xs font-semibold text-[#6b7280] dark:text-[#9ca3af] mb-1">
+                          {g.kpi_name}
+                        </p>
+                      )}
+                      <Image
+                        src={`data:image/png;base64,${g.image_base64}`}
+                        alt={g.kpi_name ? `Grafik ${g.kpi_name}` : 'Chart visualization'}
+                        width={960}
+                        height={540}
+                        unoptimized
+                        className="rounded-lg w-full max-w-[480px]"
+                      />
+                    </div>
+                  ))}
+                </div>
               )}
             </>
           )}

@@ -119,9 +119,7 @@ export default function SignInForm() {
         return;
       }
 
-      // Login successful - cookie is set by /api/auth/session
-      // Also store in AuthContext for client-side state
-      localStorage.setItem('access_token', response.access_token)
+      // Login successful - access_token cookie already set by /api/auth/session
       login(response.user);
       addToast("success", "Login successful! Redirecting...", "Welcome");
 

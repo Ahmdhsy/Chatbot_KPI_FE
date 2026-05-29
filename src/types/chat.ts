@@ -21,6 +21,12 @@ export interface ClarificationAnswer {
   free_text?: string
 }
 
+export interface GraphicItem {
+  kpi_name: string | null
+  chart_type: string
+  image_base64: string
+}
+
 export interface Message {
   id: string
   role: 'user' | 'bot'
@@ -28,14 +34,13 @@ export interface Message {
   ts: string
   type: 'text' | 'clarify'
   clarification_questions?: ClarificationQuestion[]
-  graphic_image_base64?: string
+  graphics?: GraphicItem[]
 }
 
 export interface ChatStreamMetadata {
   session_id: string
   clarification_questions?: ClarificationQuestion[]
-  graphic_chart_type?: string
-  graphic_image_base64?: string
+  graphics?: GraphicItem[]
   rows_returned?: number
   execution_time_ms?: number
 }
