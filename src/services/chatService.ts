@@ -1,4 +1,4 @@
-import { apiClientWithAuth } from '@/services/apiClientWithAuth'
+import { apiClientWithAuth, getAuthToken } from '@/services/apiClientWithAuth'
 import type { Session, Message, ChatStreamMetadata, ClarificationAnswer } from '@/types/chat'
 
 export class ApiError extends Error {
@@ -69,13 +69,6 @@ async function consumeSSE(
   return { metadata, message }
 }
 
-function getAuthToken(): string | null {
-  if (typeof window === 'undefined') return null
-  return document.cookie
-    .split('; ')
-    .find((c) => c.startsWith('access_token='))
-    ?.split('=')[1] ?? null
-}
 
 export const chatService = {
   async getSessions(): Promise<Session[]> {
@@ -97,6 +90,11 @@ export const chatService = {
           options: string[]
           selected_answer: string | null
           free_text_answer: string | null
+        }>
+        graphics: Array<{
+          kpi_name: string | null
+          chart_type: string
+          image_url: string
         }>
       }>
     }>(`/api/v1/chat/sessions/${sessionId}`)
@@ -136,6 +134,7 @@ export const chatService = {
               free_text_answer: q.free_text_answer,
             }))
           : undefined,
+        graphics: m.graphics?.length ? m.graphics : undefined,
       } satisfies Message
     })
 

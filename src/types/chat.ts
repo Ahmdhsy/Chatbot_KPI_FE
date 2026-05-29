@@ -24,7 +24,7 @@ export interface ClarificationAnswer {
 export interface GraphicItem {
   kpi_name: string | null
   chart_type: string
-  image_base64: string
+  image_url: string
 }
 
 export interface Message {

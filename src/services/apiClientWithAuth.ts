@@ -35,17 +35,20 @@ const forceLogoutRedirect = async () => {
   isForcingLogout = false;
 };
 
-// Request interceptor — attach access_token from cookie to every request
-apiClientWithAuth.interceptors.request.use((config) => {
-  if (typeof document !== "undefined") {
-    const token = document.cookie
+export function getAuthToken(): string | null {
+  if (typeof document === "undefined") return null;
+  return (
+    document.cookie
       .split("; ")
       .find((c) => c.startsWith("access_token="))
-      ?.split("=")[1];
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-  }
+      ?.split("=")[1] ?? null
+  );
+}
+
+// Request interceptor — attach access_token from cookie to every request
+apiClientWithAuth.interceptors.request.use((config) => {
+  const token = getAuthToken();
+  if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 

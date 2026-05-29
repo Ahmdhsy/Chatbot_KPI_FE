@@ -332,7 +332,7 @@ export function ChatBubble({ msg, onEditSave, onRetry }: ChatBubbleProps) {
                         </p>
                       )}
                       <Image
-                        src={`data:image/png;base64,${g.image_base64}`}
+                        src={`${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'}${g.image_url}`}
                         alt={g.kpi_name ? `Grafik ${g.kpi_name}` : 'Chart visualization'}
                         width={960}
                         height={540}
