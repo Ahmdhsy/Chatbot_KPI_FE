@@ -163,8 +163,10 @@ export function useChat() {
     const botId = `bot-${Date.now()}`
 
     const msgs = messages[activeSessionId] ?? []
-    const lastUserMsg = [...msgs].reverse().find((m) => m.role === 'user')
-    const originalQuery = lastUserMsg?.content ?? ''
+    const lastTextBotIdx = msgs.reduce((acc, m, i) =>
+      m.role === 'bot' && m.type === 'text' ? i : acc, -1)
+    const originalMsg = msgs.slice(lastTextBotIdx + 1).find((m) => m.role === 'user')
+    const originalQuery = originalMsg?.content ?? ''
 
     const lastClarifyMsg = [...msgs].reverse().find((m) => m.type === 'clarify')
     const questions = lastClarifyMsg?.clarification_questions ?? []
@@ -174,8 +176,9 @@ export function useChat() {
       return q ? `**Q${i + 1}. ${q.question}**\n${aText}` : aText
     }).join('\n\n')
 
+    const userMsgId = `user-${Date.now()}`
     const userMsg: Message = {
-      id: `user-${Date.now()}`,
+      id: userMsgId,
       role: 'user',
       content: answerText,
       ts: makeTs(),
@@ -214,6 +217,10 @@ export function useChat() {
         },
       })
     } catch (err) {
+      setMessages((p) => ({
+        ...p,
+        [activeSessionId]: (p[activeSessionId] ?? []).filter((m) => m.id !== userMsgId),
+      }))
       setErrorModal(parseError(err))
     } finally {
       setIsTyping(false)
