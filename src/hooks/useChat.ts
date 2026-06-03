@@ -81,9 +81,10 @@ export function useChat() {
     const botId = `bot-${Date.now() + 1}`
     let realUserId = tempId
     const userMsg: Message = { id: tempId, role: 'user', content: text, ts: makeTs(), type: 'text' }
+    const botPlaceholder: Message = { id: botId, role: 'bot', content: '', ts: makeTs(), type: 'text' }
     const key = activeSessionId ?? pendingSessionKey
 
-    setMessages((p) => ({ ...p, [key]: [...(p[key] ?? []), userMsg] }))
+    setMessages((p) => ({ ...p, [key]: [...(p[key] ?? []), userMsg, botPlaceholder] }))
     setIsTyping(true)
 
     try {
@@ -92,40 +93,43 @@ export function useChat() {
           const sid = meta.session_id
           const newUserId = `user-${Date.now()}`
           realUserId = newUserId
-          const botMsg: Message = {
-            id: botId,
-            role: 'bot',
-            ts: makeTs(),
-            type: meta.clarification_questions?.length ? 'clarify' : 'text',
-            content: '',
-            clarification_questions: meta.clarification_questions,
-            graphics: meta.graphics,
-          }
 
           if (sid && sid !== activeSessionId) {
             chatService.getSessions().then((updated) => setSessions(updated)).catch(() => {})
             setMessages((p) => {
               const prev = p[key] ?? []
-              const fixed = prev.map((m) =>
-                m.id === tempId ? { ...m, id: newUserId } : m
-              )
+              const fixed = prev.map((m) => {
+                if (m.id === tempId) return { ...m, id: newUserId }
+                if (m.id === botId) return {
+                  ...m,
+                  type: meta.clarification_questions?.length ? 'clarify' : 'text',
+                  clarification_questions: meta.clarification_questions,
+                  graphics: meta.graphics,
+                }
+                return m
+              })
               const { [key]: _dropped, ...rest } = p
-              return { ...rest, [sid]: [...fixed, botMsg] }
+              return { ...rest, [sid]: fixed }
             })
             setActiveSessionId(sid)
           } else {
             setMessages((p) => ({
               ...p,
-              [key]: [
-                ...(p[key] ?? []).map((m) =>
-                  m.id === tempId ? { ...m, id: newUserId } : m
-                ),
-                botMsg,
-              ],
+              [key]: (p[key] ?? []).map((m) => {
+                if (m.id === tempId) return { ...m, id: newUserId }
+                if (m.id === botId) return {
+                  ...m,
+                  type: meta.clarification_questions?.length ? 'clarify' : 'text',
+                  clarification_questions: meta.clarification_questions,
+                  graphics: meta.graphics,
+                }
+                return m
+              })
             }))
           }
         },
         onChunk: (chunk) => {
+          if (!chunk) return
           setMessages((p) => {
             for (const k of Object.keys(p)) {
               const list = p[k]
@@ -183,34 +187,40 @@ export function useChat() {
       ts: makeTs(),
       type: 'text',
     }
-    setMessages((p) => ({ ...p, [activeSessionId]: [...(p[activeSessionId] ?? []), userMsg] }))
+    const botPlaceholder: Message = { id: botId, role: 'bot', content: '', ts: makeTs(), type: 'text' }
+    
+    setMessages((p) => ({ ...p, [activeSessionId]: [...(p[activeSessionId] ?? []), userMsg, botPlaceholder] }))
     setIsTyping(true)
 
     try {
       await chatService.sendClarification(activeSessionId, originalQuery, answers, additionalConstraints, {
         onMetadata: (meta) => {
-          const botMsg: Message = {
-            id: botId,
-            role: 'bot',
-            ts: makeTs(),
-            type: meta.clarification_questions?.length ? 'clarify' : 'text',
-            content: '',
-            clarification_questions: meta.clarification_questions,
-            graphics: meta.graphics,
-          }
           setMessages((p) => ({
             ...p,
-            [activeSessionId]: [...(p[activeSessionId] ?? []), botMsg],
+            [activeSessionId]: (p[activeSessionId] ?? []).map((m) => {
+              if (m.id === botId) return {
+                ...m,
+                type: meta.clarification_questions?.length ? 'clarify' : 'text',
+                clarification_questions: meta.clarification_questions,
+                graphics: meta.graphics,
+              }
+              return m
+            })
           }))
         },
         onChunk: (chunk) => {
+          if (!chunk) return
           setMessages((p) => {
-            const list = p[activeSessionId] ?? []
-            const idx = list.findIndex((m) => m.id === botId)
-            if (idx === -1) return p
-            const updated = [...list]
-            updated[idx] = { ...updated[idx], content: (updated[idx].content ?? '') + chunk }
-            return { ...p, [activeSessionId]: updated }
+            for (const k of Object.keys(p)) {
+              const list = p[k]
+              const idx = list.findIndex((m) => m.id === botId)
+              if (idx !== -1) {
+                const updated = [...list]
+                updated[idx] = { ...updated[idx], content: (updated[idx].content ?? '') + chunk }
+                return { ...p, [k]: updated }
+              }
+            }
+            return p
           })
         },
       })

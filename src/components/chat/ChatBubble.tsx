@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { BotIcon, UserIcon, CopyIcon, CheckIcon, EditIcon, RetryIcon } from './icons'
 import type { Message } from '@/types/chat'
 
@@ -254,13 +255,29 @@ interface ChatBubbleProps {
   msg: Message
   onEditSave?: (id: string, text: string) => void
   onRetry?: (msgId: string) => void
+  /** True while the LLM is still streaming tokens into this bubble */
+  isStreaming?: boolean
 }
 
-export function ChatBubble({ msg, onEditSave, onRetry }: ChatBubbleProps) {
+export function ChatBubble({ msg, onEditSave, onRetry, isStreaming = false }: ChatBubbleProps) {
   const [hovered, setHovered] = useState(false)
   const [copied, setCopied] = useState(false)
   const [editing, setEditing] = useState(false)
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
   const isUser = msg.role === 'user'
+  const graphics = msg.graphics ?? []
+  // Only show graphics once streaming is complete so the text appears first.
+  const hasGraphics = graphics.length > 0 && !isStreaming
+
+  const closeLightbox = () => setLightboxIndex(null)
+  const showPrev = () => {
+    if (lightboxIndex === null) return
+    setLightboxIndex((lightboxIndex + graphics.length - 1) % graphics.length)
+  }
+  const showNext = () => {
+    if (lightboxIndex === null) return
+    setLightboxIndex((lightboxIndex + 1) % graphics.length)
+  }
 
   const copy = async () => {
     const text = msg.content ?? ''
@@ -320,10 +337,29 @@ export function ChatBubble({ msg, onEditSave, onRetry }: ChatBubbleProps) {
             />
           ) : (
             <>
-              {msg.content && <RichText text={msg.content} />}
-              {msg.graphics && msg.graphics.length > 0 && (
-                <div className="mt-2.5 flex flex-col gap-3">
-                  {msg.graphics.map((g, i) => (
+              {isStreaming && !msg.content ? (
+                <div className="flex items-center gap-1 h-5 px-0.5">
+                  {[0, 1, 2].map((i) => (
+                    <span
+                      key={i}
+                      className="inline-block w-[7px] h-[7px] rounded-full bg-brand-500"
+                      style={{
+                        animation: `typingBounce 1.2s infinite`,
+                        animationDelay: `${i * 0.18}s`,
+                        opacity: 0.6,
+                      }}
+                    />
+                  ))}
+                </div>
+              ) : (
+                msg.content && <RichText text={msg.content} />
+              )}
+              {hasGraphics && (
+                <div
+                  className="mt-2.5 flex flex-col gap-3"
+                  style={{ animation: 'msgIn 0.3s ease forwards' }}
+                >
+                  {graphics.map((g, i) => (
                     <div key={i}>
                       {g.kpi_name && (
                         <p className="text-xs font-semibold text-[#6b7280] dark:text-[#9ca3af] mb-1">
@@ -334,8 +370,9 @@ export function ChatBubble({ msg, onEditSave, onRetry }: ChatBubbleProps) {
                       <img
                         src={`${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'}${g.image_url}`}
                         alt={g.kpi_name ? `Grafik ${g.kpi_name}` : 'Chart visualization'}
-                        className="rounded-lg w-full max-w-[480px] block"
+                        className="rounded-lg w-full max-w-[480px] block cursor-zoom-in"
                         onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
+                        onClick={() => setLightboxIndex(i)}
                       />
                     </div>
                   ))}
@@ -344,6 +381,53 @@ export function ChatBubble({ msg, onEditSave, onRetry }: ChatBubbleProps) {
             </>
           )}
         </div>
+
+        {lightboxIndex !== null && typeof window !== 'undefined' && createPortal(
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+            onClick={closeLightbox}
+          >
+            <div
+              className="relative max-w-[90vw] max-h-[85vh]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'}${graphics[lightboxIndex].image_url}`}
+                alt={graphics[lightboxIndex].kpi_name ? `Grafik ${graphics[lightboxIndex].kpi_name}` : 'Chart visualization'}
+                className="max-w-[90vw] max-h-[85vh] rounded-lg shadow-2xl block"
+              />
+
+              {graphics.length > 1 && (
+                <>
+                  <button
+                    className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 text-[#111827] font-semibold"
+                    onClick={showPrev}
+                    aria-label="Previous image"
+                  >
+                    ‹
+                  </button>
+                  <button
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 text-[#111827] font-semibold"
+                    onClick={showNext}
+                    aria-label="Next image"
+                  >
+                    ›
+                  </button>
+                </>
+              )}
+
+              <button
+                className="absolute right-2 -top-11 w-9 h-9 rounded-full bg-white/90 text-[#111827] font-semibold"
+                onClick={closeLightbox}
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+          </div>,
+          document.body,
+        )}
 
         {!editing && (
           <div

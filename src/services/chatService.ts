@@ -35,6 +35,37 @@ async function consumeSSE(
   let metadata: ChatStreamMetadata = { session_id: '' }
   let message = ''
 
+  // Queue of parsed SSE events to dispatch one-by-one asynchronously.
+  // This prevents React 18 auto-batching from collapsing multiple
+  // setMessages() calls (fired from onChunk) into a single render.
+  const eventQueue: Array<{ type: string; data: string }> = []
+  let draining = false
+
+  async function drainQueue() {
+    if (draining) return
+    draining = true
+    while (eventQueue.length > 0) {
+      const event = eventQueue.shift()!
+      if (event.type === 'metadata') {
+        try {
+          metadata = JSON.parse(event.data)
+          callbacks.onMetadata?.(metadata)
+        } catch {}
+      } else if (event.type === 'message') {
+        try {
+          const { chunk } = JSON.parse(event.data)
+          if (chunk) {
+            message += chunk
+            callbacks.onChunk?.(chunk)
+          }
+        } catch {}
+      }
+      // Yield to the event loop between each chunk so React can re-render.
+      await new Promise<void>((resolve) => setTimeout(resolve, 0))
+    }
+    draining = false
+  }
+
   while (true) {
     const { done, value } = await reader.read()
     if (done) break
@@ -51,23 +82,22 @@ async function consumeSSE(
         if (line.startsWith('event: ')) eventType = line.slice(7).trim()
         else if (line.startsWith('data: ')) dataStr = line.slice(6)
       }
-      if (!dataStr) continue
-      if (eventType === 'metadata') {
-        try {
-          metadata = JSON.parse(dataStr)
-          callbacks.onMetadata?.(metadata)
-        } catch {}
-      } else if (eventType === 'message') {
-        try {
-          const { chunk } = JSON.parse(dataStr)
-          if (chunk) { message += chunk; callbacks.onChunk?.(chunk) }
-        } catch {}
-      }
+      if (!dataStr || !eventType) continue
+      eventQueue.push({ type: eventType, data: dataStr })
     }
+
+    // Start draining without blocking the reader loop.
+    drainQueue()
+  }
+
+  // Wait for any remaining items in the queue to be dispatched.
+  while (eventQueue.length > 0 || draining) {
+    await new Promise<void>((resolve) => setTimeout(resolve, 10))
   }
 
   return { metadata, message }
 }
+
 
 
 export const chatService = {

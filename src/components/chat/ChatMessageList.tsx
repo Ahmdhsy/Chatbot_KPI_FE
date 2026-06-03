@@ -46,16 +46,22 @@ export function ChatMessageList({
         {messages.length === 0 ? (
           <EmptyState onSuggest={onSuggest} />
         ) : (
-          messages.map((m, i) => (
-            <ChatBubble
-              key={m.id}
-              msg={m}
-              onEditSave={!isTyping && i === lastUserIdx ? onEditSave : undefined}
-              onRetry={!isTyping && i === lastBotIdx ? onRetry : undefined}
-            />
-          ))
+          messages.map((m, i) => {
+            // The last bot message is still being streamed while isTyping is true
+            const isStreamingThisBubble =
+              isTyping && m.role === 'bot' && i === lastBotIdx
+            return (
+              <ChatBubble
+                key={m.id}
+                msg={m}
+                onEditSave={!isTyping && i === lastUserIdx ? onEditSave : undefined}
+                onRetry={!isTyping && i === lastBotIdx ? onRetry : undefined}
+                isStreaming={isStreamingThisBubble}
+              />
+            )
+          })
         )}
-        {isTyping && <TypingIndicator />}
+        {isTyping && (messages.length === 0 || messages[messages.length - 1].role !== 'bot') && <TypingIndicator />}
       </div>
     </div>
   )
