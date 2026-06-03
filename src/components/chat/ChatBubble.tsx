@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import Image from 'next/image'
 import { BotIcon, UserIcon, CopyIcon, CheckIcon, EditIcon, RetryIcon } from './icons'
 import type { Message } from '@/types/chat'
 
@@ -331,13 +330,12 @@ export function ChatBubble({ msg, onEditSave, onRetry }: ChatBubbleProps) {
                           {g.kpi_name}
                         </p>
                       )}
-                      <Image
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
                         src={`${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'}${g.image_url}`}
                         alt={g.kpi_name ? `Grafik ${g.kpi_name}` : 'Chart visualization'}
-                        width={960}
-                        height={540}
-                        unoptimized
-                        className="rounded-lg w-full max-w-[480px]"
+                        className="rounded-lg w-full max-w-[480px] block"
+                        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
                       />
                     </div>
                   ))}

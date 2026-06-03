@@ -16,6 +16,12 @@ export function ChatPage() {
   const userName = user?.full_name ?? 'KPI Analyst'
   const userEmail = user?.email ?? ''
 
+  // Admin → /users, kepala_divisi → /ingestion, karyawan → null (no manage link)
+  const managementPath =
+    user?.role === 'admin' ? '/users' :
+    user?.role === 'kepala_divisi' ? '/ingestion' :
+    null
+
   const {
     sessions, activeSessionId, currentMessages, isTyping,
     sidebarOpen, dark, deleteModal, logoutModal, errorModal,
@@ -74,6 +80,7 @@ export function ChatPage() {
           onLogoutRequest={() => setLogoutModal(true)}
           userName={userName}
           userEmail={userEmail}
+          managementPath={managementPath}
         />
       </div>
 
@@ -102,7 +109,6 @@ export function ChatPage() {
         </div>
 
         <div className="flex flex-col flex-1 min-w-0 min-h-0">
-          {/* ChatMessageList spans full width so scrollbar sits at the right edge of the screen */}
           <ChatMessageList
             messages={currentMessages}
             isTyping={isTyping}
@@ -111,7 +117,6 @@ export function ChatPage() {
             onRetry={retryMessage}
           />
 
-          {/* Bottom controls stay centered */}
           <div className="w-full max-w-[900px] mx-auto shrink-0">
             {pendingClarify && (
               <div className="pb-2 border-t" style={{ borderColor: borderC, paddingTop: '10px' }}>

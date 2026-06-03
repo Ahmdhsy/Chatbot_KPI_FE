@@ -16,10 +16,11 @@ interface ChatSidebarProps {
   onLogoutRequest: () => void
   userName: string
   userEmail: string
+  managementPath: string | null
 }
 
 export function ChatSidebar({
-  sessions, activeSessionId, onSelect, onNew, onDelete, onRename, onLogoutRequest, userName, userEmail,
+  sessions, activeSessionId, onSelect, onNew, onDelete, onRename, onLogoutRequest, userName, userEmail, managementPath,
 }: ChatSidebarProps) {
   const [profileOpen, setProfileOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -117,6 +118,7 @@ export function ChatSidebar({
           <ProfileMenu
             userName={userName}
             userEmail={userEmail}
+            managementPath={managementPath}
             onLogoutRequest={onLogoutRequest}
             onClose={() => setProfileOpen(false)}
           />

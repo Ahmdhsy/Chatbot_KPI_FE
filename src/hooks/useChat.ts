@@ -101,7 +101,6 @@ export function useChat() {
             clarification_questions: meta.clarification_questions,
             graphics: meta.graphics,
           }
-          setIsTyping(false)
 
           if (sid && sid !== activeSessionId) {
             chatService.getSessions().then((updated) => setSessions(updated)).catch(() => {})
@@ -199,7 +198,6 @@ export function useChat() {
             clarification_questions: meta.clarification_questions,
             graphics: meta.graphics,
           }
-          setIsTyping(false)
           setMessages((p) => ({
             ...p,
             [activeSessionId]: [...(p[activeSessionId] ?? []), botMsg],
