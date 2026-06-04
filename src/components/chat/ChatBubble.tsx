@@ -356,11 +356,11 @@ export function ChatBubble({ msg, onEditSave, onRetry, isStreaming = false }: Ch
               )}
               {hasGraphics && (
                 <div
-                  className="mt-2.5 flex flex-col gap-3"
+                  className="mt-2.5 flex flex-row flex-wrap gap-3"
                   style={{ animation: 'msgIn 0.3s ease forwards' }}
                 >
                   {graphics.map((g, i) => (
-                    <div key={i}>
+                    <div key={i} className="flex-[1_1_240px] max-w-[480px]">
                       {g.kpi_name && (
                         <p className="text-xs font-semibold text-[#6b7280] dark:text-[#9ca3af] mb-1">
                           {g.kpi_name}
