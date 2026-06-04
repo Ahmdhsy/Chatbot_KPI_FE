@@ -3,7 +3,8 @@
 import React, { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { EyeCloseIcon, EyeIcon } from "@/icons"
+import EyeCloseIcon from "@/icons/eye-close.svg";
+import EyeIcon from "@/icons/eye.svg";
 import Label from "@/components/form/Label"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"

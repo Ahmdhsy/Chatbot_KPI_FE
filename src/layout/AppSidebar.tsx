@@ -5,15 +5,13 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
 import { useAuth } from "@/context/AuthContext";
-import {
-  GridIcon,
-  HorizontaLDots,
-  ChevronDownIcon,
-  UserCircleIcon,
-  PlugInIcon,
-  ChatIcon,
-  PaperPlaneIcon,
-} from "../icons/index";
+import GridIcon from "../icons/grid.svg";
+import HorizontaLDots from "../icons/horizontal-dots.svg";
+import ChevronDownIcon from "../icons/chevron-down.svg";
+import UserCircleIcon from "../icons/user-circle.svg";
+import PlugInIcon from "../icons/plug-in.svg";
+import ChatIcon from "../icons/chat.svg";
+import PaperPlaneIcon from "../icons/paper-plane.svg";
 
 type AppRole = "admin" | "kepala_divisi" | "karyawan" | "unknown";
 type NavItem = {

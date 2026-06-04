@@ -138,12 +138,16 @@ export const chatService = {
 
       // Cek apakah bot message ini langsung mengikuti user message yang punya questions
       const prevRaw = idx > 0 ? raw[idx - 1] : null
+      const activeQuestions =
+        prevRaw?.clarification_questions.filter(
+          (q) => q.ambiguity_type && q.ambiguity_type !== 'none',
+        ) || []
       const inheritedQuestions =
         m.is_sender_chatbot &&
         prevRaw &&
         !prevRaw.is_sender_chatbot &&
-        prevRaw.clarification_questions.length > 0
-          ? prevRaw.clarification_questions
+        activeQuestions.length > 0
+          ? activeQuestions
           : null
 
       const hasClarify = inheritedQuestions !== null

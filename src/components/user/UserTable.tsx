@@ -2,7 +2,7 @@
 
 import React from "react";
 import { User } from "@/services/userService";
-import { UserCircleIcon } from "@/icons";
+import UserCircleIcon from "@/icons/user-circle.svg";
 
 interface UserTableProps {
   users: User[];

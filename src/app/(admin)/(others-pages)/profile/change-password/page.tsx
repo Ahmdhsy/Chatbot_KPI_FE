@@ -3,7 +3,8 @@
 import React, { useState } from "react"
 import Link from "next/link"
 import axios from "axios"
-import { EyeCloseIcon, EyeIcon } from "@/icons"
+import EyeCloseIcon from "@/icons/eye-close.svg";
+import EyeIcon from "@/icons/eye.svg";
 import Label from "@/components/form/Label"
 import PageBreadCrumb from "@/components/common/PageBreadCrumb"
 import apiClientWithAuth from "@/services/apiClientWithAuth"

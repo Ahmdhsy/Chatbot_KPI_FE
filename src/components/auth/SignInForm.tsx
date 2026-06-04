@@ -1,7 +1,9 @@
 "use client";
 import Checkbox from "@/components/form/input/Checkbox";
 import Label from "@/components/form/Label";
-import { AlertIcon, EyeCloseIcon, EyeIcon } from "@/icons";
+import AlertIcon from "@/icons/alert.svg";
+import EyeCloseIcon from "@/icons/eye-close.svg";
+import EyeIcon from "@/icons/eye.svg";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";

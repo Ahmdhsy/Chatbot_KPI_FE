@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Chatbot } from "@/services/chatbotService";
-import { ChatIcon } from "@/icons";
+import ChatIcon from "@/icons/chat.svg";
 
 interface ChatbotTableProps {
   chatbots: Chatbot[];

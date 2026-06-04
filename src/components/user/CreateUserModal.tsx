@@ -4,7 +4,8 @@ import React, { useState } from "react";
 import { useUser } from "@/context/UserContext";
 import { useToast } from "@/context/ToastContext";
 import { CreateUserRequest } from "@/services/userService";
-import { EyeIcon, EyeCloseIcon } from "@/icons";
+import EyeIcon from "@/icons/eye.svg";
+import EyeCloseIcon from "@/icons/eye-close.svg";
 
 interface CreateUserModalProps {
   isOpen: boolean;
