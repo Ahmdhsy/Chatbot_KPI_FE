@@ -1,4 +1,4 @@
-import { apiClientWithAuth, getAuthToken } from '@/services/apiClientWithAuth'
+import { apiClientWithAuth, getAuthToken, fetchWithAuth } from '@/services/apiClientWithAuth'
 import type { Session, Message, ChatStreamMetadata, ClarificationAnswer } from '@/types/chat'
 
 export class ApiError extends Error {
@@ -200,12 +200,10 @@ export const chatService = {
     text: string,
     callbacks: SSECallbacks = {},
   ): Promise<{ metadata: ChatStreamMetadata; message: string }> {
-    const token = getAuthToken()
-    const response = await fetch(`${API_BASE}/api/v1/chat`, {
+    const response = await fetchWithAuth(`${API_BASE}/api/v1/chat`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: JSON.stringify({ session_id: sessionId, message: text }),
     })
@@ -220,12 +218,10 @@ export const chatService = {
     additionalConstraints?: string,
     callbacks: SSECallbacks = {},
   ): Promise<{ metadata: ChatStreamMetadata; message: string }> {
-    const token = getAuthToken()
-    const response = await fetch(`${API_BASE}/api/v1/chat/clarification`, {
+    const response = await fetchWithAuth(`${API_BASE}/api/v1/chat/clarification`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: JSON.stringify({
         session_id: sessionId,

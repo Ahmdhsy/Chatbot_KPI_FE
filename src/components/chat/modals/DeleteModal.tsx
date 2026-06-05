@@ -22,22 +22,22 @@ export function DeleteModal({ title, onConfirm, onCancel }: DeleteModalProps) {
         <div className="w-11 h-11 rounded-xl bg-[rgba(240,68,56,.12)] flex items-center justify-center mb-4 text-[#f04438]">
           <TrashIcon />
         </div>
-        <h3 className="text-base font-bold text-[#101828] dark:text-[#e5e7eb] mb-2">Delete this chat?</h3>
-        <p className="text-[13px] text-[#6b7280] leading-relaxed mb-[22px]">
-          &quot;<span className="font-medium text-[#374151] dark:text-[#9ca3af]">{title}</span>&quot; will be permanently deleted. This action cannot be undone.
+        <h3 className="text-[17px] font-bold text-[#101828] dark:text-[#e5e7eb] mb-2">Hapus percakapan ini?</h3>
+        <p className="text-[14px] text-[#6b7280] leading-relaxed mb-[22px]">
+          &quot;<span className="font-medium text-[#374151] dark:text-[#9ca3af]">{title}</span>&quot; akan dihapus secara permanen. Tindakan ini tidak dapat dibatalkan.
         </p>
         <div className="flex gap-2.5 justify-end">
           <button
             onClick={onCancel}
-            className="px-[18px] py-2 rounded-[9px] border border-[#d1d5db] dark:border-[#374151] bg-transparent text-[#374151] dark:text-[#9ca3af] text-[13px] font-medium cursor-pointer hover:bg-[#f9fafb] dark:hover:bg-white/[0.04] transition-colors"
+            className="px-[18px] py-2 rounded-[9px] border border-[#d1d5db] dark:border-[#374151] bg-transparent text-[#374151] dark:text-[#9ca3af] text-[14px] font-medium cursor-pointer hover:bg-[#f9fafb] dark:hover:bg-white/[0.04] transition-colors"
           >
-            Cancel
+            Batal
           </button>
           <button
             onClick={onConfirm}
-            className="px-[18px] py-2 rounded-[9px] border-none bg-[#f04438] text-white text-[13px] font-semibold cursor-pointer hover:opacity-90 transition-opacity"
+            className="px-[18px] py-2 rounded-[9px] border-none bg-[#f04438] text-white text-[14px] font-semibold cursor-pointer hover:opacity-90 transition-opacity"
           >
-            Delete
+            Hapus
           </button>
         </div>
       </div>
