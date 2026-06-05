@@ -1,10 +1,10 @@
 'use client'
 
 const SUGGESTIONS = [
-  'Urutkan priority level dari fokus industri perusahaan ini di tahun ini',
-  'Apa saja KPI dari tiap pegawai?',
-  'Berapa persen capaian KPI pegawai saat ini?',
-  'Siapa pegawai yang sudah mencapai target dan yang belum?',
+  'Tampilkan daftar kategori KPI (sebagai fokus industri) pada tahun 2025, diurutkan berdasarkan jumlah KPI terbanyak di setiap kategorinya.',
+  'Tampilkan daftar nama lengkap pegawai beserta nama KPI yang ditugaskan kepada mereka pada tahun 2025.',
+  'Tampilkan nama lengkap pegawai, nama KPI, target, realisasi, dan persentase capaian target untuk karyawan bernama Adiansyah pada tahun 2025.',
+  'Tampilkan daftar nama lengkap pegawai, nama KPI, target, dan realisasi pada tahun 2025, serta bandingkan apakah nilai realisasi tersebut sudah mencapai atau melebihi target.',
 ]
 
 const ORBS = [
