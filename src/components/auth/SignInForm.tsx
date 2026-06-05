@@ -52,6 +52,21 @@ export default function SignInForm() {
     window.sessionStorage.removeItem("logout_perf_start_ms");
   }, []);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("expired") === "true") {
+      addToast(
+        "warning",
+        "Sesi Anda telah berakhir. Silakan login kembali.",
+        "Sesi Berakhir"
+      );
+      // Clean up search parameters without triggering a full page refresh
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+    }
+  }, [addToast]);
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIdentifierError("");

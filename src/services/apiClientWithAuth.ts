@@ -28,7 +28,7 @@ const forceLogoutRedirect = async () => {
   await clearClientAuthState();
 
   if (!window.location.pathname.startsWith("/signin")) {
-    window.location.replace("/signin");
+    window.location.replace("/signin?expired=true");
     return;
   }
 
