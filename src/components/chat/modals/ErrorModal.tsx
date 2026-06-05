@@ -9,9 +9,7 @@ interface ErrorModalProps {
 
 const AlertCircleIcon = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="10" />
-    <line x1="12" y1="8" x2="12" y2="12" />
-    <line x1="12" y1="16" x2="12.01" y2="16" />
+    <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
   </svg>
 )
 
@@ -32,14 +30,14 @@ export function ErrorModal({ title, message, status, onClose }: ErrorModalProps)
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-base font-bold text-[#101828] dark:text-[#e5e7eb]">{title}</h3>
+              <h3 className="text-[17px] font-bold text-[#101828] dark:text-[#e5e7eb]">{title}</h3>
               {status && (
-                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[rgba(240,68,56,.1)] text-[#f04438]">
+                <span className="text-[12px] font-semibold px-2 py-0.5 rounded-full bg-[rgba(240,68,56,.1)] text-[#f04438]">
                   {status}
                 </span>
               )}
             </div>
-            <p className="text-[13px] text-[#6b7280] dark:text-[#9ca3af] leading-relaxed break-words">
+            <p className="text-[14px] text-[#6b7280] dark:text-[#9ca3af] leading-relaxed break-words">
               {message}
             </p>
           </div>
@@ -47,7 +45,7 @@ export function ErrorModal({ title, message, status, onClose }: ErrorModalProps)
         <div className="flex justify-end">
           <button
             onClick={onClose}
-            className="px-5 py-2 rounded-[9px] border-none bg-[#f04438] text-white text-[13px] font-semibold cursor-pointer hover:opacity-90 transition-opacity"
+            className="px-5 py-2 rounded-[9px] border-none bg-[#f04438] text-white text-[14px] font-semibold cursor-pointer hover:opacity-90 transition-opacity"
           >
             Tutup
           </button>

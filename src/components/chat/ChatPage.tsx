@@ -32,7 +32,7 @@ export function ChatPage() {
 
   const borderC = dark ? '#1f2937' : '#e4e7ec'
   const panelBg = dark ? '#0d1117' : '#ffffff'
-  const activeTitle = sessions.find((s) => s.id === activeSessionId)?.title ?? 'New Chat'
+  const activeTitle = sessions.find((s) => s.id === activeSessionId)?.title ?? 'Obrolan Baru'
 
   const lastMsg = currentMessages[currentMessages.length - 1]
   const pendingClarify = (lastMsg?.role === 'bot' && lastMsg?.type === 'clarify') ? lastMsg : null
@@ -90,19 +90,30 @@ export function ChatPage() {
           style={{ borderColor: borderC, background: panelBg }}
         >
           <div className="flex items-center gap-2.5">
-            <button onClick={toggleSidebar} className="p-1.5 ...">
+            <button
+              onClick={toggleSidebar}
+              className="p-1.5 rounded-[8px] border-none cursor-pointer transition-colors"
+              style={{
+                background: 'transparent',
+                color: dark ? '#9ca3af' : '#6b7280',
+              }}
+            >
               <MenuIcon />
             </button>
-            <p className="text-sm font-semibold text-[#344054] dark:text-[#e5e7eb]">
+            <p style={{ fontSize: 15, fontWeight: 600, color: dark ? '#e5e7eb' : '#344054' }}>
               {activeTitle}
             </p>
           </div>
 
           <button
             onClick={toggleDark}
-            title={dark ? 'Light mode' : 'Dark mode'}
-            className="w-9 h-9 ..."
-            style={{ borderColor: borderC }}
+            title={dark ? 'Mode terang' : 'Mode gelap'}
+            className="w-9 h-9 rounded-[9px] flex items-center justify-center border cursor-pointer transition-colors"
+            style={{
+              borderColor: borderC,
+              background: 'transparent',
+              color: dark ? '#facc15' : '#6b7280',
+            }}
           >
             {dark ? <SunIcon /> : <MoonIcon />}
           </button>

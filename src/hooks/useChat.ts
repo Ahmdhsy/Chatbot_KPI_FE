@@ -50,11 +50,20 @@ export function useChat() {
   const pendingSessionKey = 'pending-new'
 
   useEffect(() => {
-    try { setDark(localStorage.getItem('ck-dark') === 'true') } catch {}
+    try {
+      const saved = localStorage.getItem('ck-dark') === 'true'
+      setDark(saved)
+      if (saved) document.documentElement.classList.add('dark')
+      else document.documentElement.classList.remove('dark')
+    } catch {}
   }, [])
 
   useEffect(() => {
-    try { localStorage.setItem('ck-dark', String(dark)) } catch {}
+    try {
+      localStorage.setItem('ck-dark', String(dark))
+      if (dark) document.documentElement.classList.add('dark')
+      else document.documentElement.classList.remove('dark')
+    } catch {}
   }, [dark])
 
   useEffect(() => {

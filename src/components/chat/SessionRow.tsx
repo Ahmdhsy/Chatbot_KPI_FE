@@ -58,19 +58,19 @@ export function SessionRow({
           }}
           onBlur={() => onRenameSave()}
           onClick={(e) => e.stopPropagation()}
-          className="flex-1 text-[13px] border border-brand-500 rounded-[6px] px-1.5 py-0.5 bg-white dark:bg-[#0d1117] text-[#101828] dark:text-[#e5e7eb] outline-none"
+          className="flex-1 text-[14px] border border-brand-500 rounded-[6px] px-1.5 py-0.5 bg-white dark:bg-[#0d1117] text-[#101828] dark:text-[#e5e7eb] outline-none"
         />
       ) : (
         <div className="min-w-0 flex-1" onClick={onSelect}>
           <p
-            className={`text-[13px] whitespace-nowrap overflow-hidden text-ellipsis ${
+            className={`text-[14px] whitespace-nowrap overflow-hidden text-ellipsis ${
               isActive ? 'font-semibold text-brand-700 dark:text-[#818cf8]' : 'font-normal text-[#374151] dark:text-[#d1d5db]'
             }`}
           >
             {session.title}
           </p>
-          <p className="text-[11px] text-[#9ca3af] dark:text-[#4b5563] mt-px">
-            {new Date(session.created_at).toLocaleDateString()}
+          <p className="text-[12px] text-[#9ca3af] dark:text-[#4b5563] mt-px">
+            {new Date(session.created_at).toLocaleDateString('id-ID')}
           </p>
         </div>
       )}
@@ -79,14 +79,14 @@ export function SessionRow({
         <div className="flex gap-0.5 flex-shrink-0">
           <button
             onClick={(e) => { e.stopPropagation(); onRenameStart(session.id, session.title) }}
-            title="Rename"
+            title="Ganti nama"
             className="p-1 rounded bg-none border-none cursor-pointer text-[#9ca3af] dark:text-[#4b5563] hover:text-brand-500 transition-colors"
           >
             <PenIcon />
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(session.id, session.title) }}
-            title="Delete"
+            title="Hapus"
             className="p-1 rounded bg-none border-none cursor-pointer text-[#9ca3af] dark:text-[#4b5563] hover:text-[#f04438] transition-colors"
           >
             <TrashIcon />

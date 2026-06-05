@@ -1,10 +1,10 @@
 'use client'
 
 const SUGGESTIONS = [
-  'Summarize Q1 KPIs',
-  'Compare revenue by region',
-  'Show HR turnover trends',
-  'Budget vs Actuals Q4',
+  'Tampilkan daftar kategori KPI (sebagai fokus industri) pada tahun 2025, diurutkan berdasarkan jumlah KPI terbanyak di setiap kategorinya.',
+  'Tampilkan daftar nama lengkap pegawai beserta nama KPI yang ditugaskan kepada mereka pada tahun 2025.',
+  'Tampilkan nama lengkap pegawai, nama KPI, target, realisasi, dan persentase capaian target untuk karyawan bernama Adiansyah pada tahun 2025.',
+  'Tampilkan daftar nama lengkap pegawai, nama KPI, target, dan realisasi pada tahun 2025, serta bandingkan apakah nilai realisasi tersebut sudah mencapai atau melebihi target.',
 ]
 
 const ORBS = [
@@ -52,28 +52,28 @@ export function EmptyState({ onSuggest }: EmptyStateProps) {
       </div>
 
       <h2
-        className="text-[22px] font-bold text-[#101828] dark:text-[#e5e7eb] mb-2.5 tracking-tight"
+        className="text-[24px] font-bold text-[#101828] dark:text-[#e5e7eb] mb-2.5 tracking-tight"
         style={{ animation: 'fadeSlideUp 0.5s 0.1s ease both' }}
       >
-        How can I help you?
+        Ada yang bisa saya bantu?
       </h2>
 
       <p
-        className="text-sm text-[#9ca3af] dark:text-[#6b7280] max-w-[320px] leading-[1.7] mb-8"
+        className="text-[15px] text-[#9ca3af] dark:text-[#6b7280] max-w-[340px] leading-[1.7] mb-8"
         style={{ animation: 'fadeSlideUp 0.5s 0.2s ease both' }}
       >
-        Ask me anything about your KPI data — analyze metrics, surface trends, and explain performance across all business areas.
+        Tanyakan apa saja tentang data KPI
       </p>
 
       <div
-        className="flex flex-wrap gap-2 justify-center max-w-[500px]"
+        className="flex flex-wrap gap-2 justify-center max-w-[520px]"
         style={{ animation: 'fadeSlideUp 0.5s 0.3s ease both' }}
       >
         {SUGGESTIONS.map((s) => (
           <button
             key={s}
             onClick={() => onSuggest(s)}
-            className="px-4 py-2.5 rounded-full border border-[#e4e7ec] dark:border-[#2d3748] bg-transparent text-[#475467] dark:text-[#9ca3af] text-[13px] cursor-pointer transition-all hover:bg-[#ecf3ff] dark:hover:bg-[rgba(70,95,255,0.18)] hover:text-brand-500 hover:border-brand-500 hover:-translate-y-0.5"
+            className="px-4 py-2.5 rounded-full border border-[#e4e7ec] dark:border-[#2d3748] bg-transparent text-[#475467] dark:text-[#9ca3af] text-[14px] cursor-pointer transition-all hover:bg-[#ecf3ff] dark:hover:bg-[rgba(70,95,255,0.18)] hover:text-brand-500 hover:border-brand-500 hover:-translate-y-0.5"
           >
             {s}
           </button>

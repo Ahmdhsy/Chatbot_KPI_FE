@@ -44,8 +44,8 @@ export function ChatInputBar({ onSend, disabled }: ChatInputBarProps) {
           value={text}
           onChange={(e) => { setText(e.target.value); resize() }}
           onKeyDown={onKey}
-          placeholder="Ask anything about your KPIs…"
-          className="flex-1 border-none outline-none bg-transparent text-[#101828] dark:text-[#e5e7eb] text-sm leading-[1.55] max-h-[150px] overflow-y-auto resize-none placeholder:text-[#9ca3af] self-start mt-[8px]"
+          placeholder="Tanyakan apa saja tentang KPI Anda…"
+          className="flex-1 border-none outline-none bg-transparent text-[#101828] dark:text-[#e5e7eb] text-[15px] leading-[1.55] max-h-[150px] overflow-y-auto resize-none placeholder:text-[#9ca3af] self-start mt-[8px]"
         />
         <button
           onClick={send}
@@ -55,15 +55,15 @@ export function ChatInputBar({ onSend, disabled }: ChatInputBarProps) {
             background: canSend ? '#465fff' : undefined,
             boxShadow: canSend ? '0 2px 8px #465fff55' : undefined,
           }}
-          aria-label="Send"
+          aria-label="Kirim"
         >
           <span className={canSend ? 'text-white' : 'text-[#9ca3af] dark:text-[#4b5563]'}>
             <SendIcon />
           </span>
         </button>
       </div>
-      <p className="text-center text-[11px] text-[#c4c9d4] dark:text-[#374151] mt-1.5">
-        Chatbot KPI may make mistakes. Please verify important information.
+      <p className="text-center text-[12px] text-[#c4c9d4] dark:text-[#374151] mt-1.5">
+        Chatbot KPI dapat membuat kesalahan. Harap verifikasi informasi penting.
       </p>
     </div>
   )

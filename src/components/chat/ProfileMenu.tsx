@@ -20,26 +20,26 @@ export function ProfileMenu({ userName, userEmail, managementPath, onLogoutReque
       style={{ animation: 'menuPop 0.18s ease forwards' }}
     >
       <div className="px-2.5 py-2 pb-2.5 border-b border-[#f3f4f6] dark:border-[#2d3748] mb-1">
-        <p className="text-[13px] font-semibold text-[#101828] dark:text-[#e5e7eb]">{userName}</p>
-        <p className="text-[11px] text-[#9ca3af] dark:text-[#4b5563]">{userEmail}</p>
+        <p className="text-[14px] font-semibold text-[#101828] dark:text-[#e5e7eb]">{userName}</p>
+        <p className="text-[12px] text-[#9ca3af] dark:text-[#4b5563]">{userEmail}</p>
       </div>
 
       {managementPath && (
         <button
           onClick={() => { router.push(managementPath); onClose() }}
-          className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg border-none bg-transparent cursor-pointer text-[13px] text-[#344054] dark:text-[#d1d5db] hover:bg-[#f3f4f6] dark:hover:bg-white/[0.06] transition-colors text-left"
+          className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg border-none bg-transparent cursor-pointer text-[14px] text-[#344054] dark:text-[#d1d5db] hover:bg-[#f3f4f6] dark:hover:bg-white/[0.06] transition-colors text-left"
         >
           <ManageIcon />
-          Management
+          Manajemen
         </button>
       )}
 
       <button
         onClick={() => { onLogoutRequest(); onClose() }}
-        className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg border-none bg-transparent cursor-pointer text-[13px] text-[#f04438] hover:bg-[#fff5f5] dark:hover:bg-[rgba(240,68,56,0.08)] transition-colors text-left"
+        className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg border-none bg-transparent cursor-pointer text-[14px] text-[#f04438] hover:bg-[#fff5f5] dark:hover:bg-[rgba(240,68,56,0.08)] transition-colors text-left"
       >
         <LogoutIcon />
-        Log out
+        Keluar
       </button>
     </div>
   )

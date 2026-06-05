@@ -229,11 +229,11 @@ function InlineEdit({
           if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); save() }
           if (e.key === 'Escape') onCancel()
         }}
-        className="w-full bg-white/10 border border-brand-500 rounded-[10px] px-2.5 py-2 text-white text-sm leading-relaxed outline-none min-h-[40px] resize-none block"
+        className="w-full bg-white/10 border border-brand-500 rounded-[10px] px-2.5 py-2 text-white text-[15px] leading-relaxed outline-none min-h-[40px] resize-none block"
       />
       <div className="flex gap-1.5 mt-2 justify-end">
-        <button onClick={onCancel} className="px-3.5 py-1 rounded-[7px] border border-white/30 bg-transparent text-white/70 text-xs cursor-pointer">Cancel</button>
-        <button onClick={save} className="px-3.5 py-1 rounded-[7px] border-none bg-white text-brand-500 text-xs font-semibold cursor-pointer">Save</button>
+        <button onClick={onCancel} className="px-3.5 py-1 rounded-[7px] border border-white/30 bg-transparent text-white/70 text-[13px] cursor-pointer">Batal</button>
+        <button onClick={save} className="px-3.5 py-1 rounded-[7px] border-none bg-white text-brand-500 text-[13px] font-semibold cursor-pointer">Simpan</button>
       </div>
     </div>
   )
@@ -318,7 +318,7 @@ export function ChatBubble({ msg, onEditSave, onRetry, isStreaming = false }: Ch
 
       <div className="max-w-[72%] min-w-[60px]">
         <div
-          className={`text-sm ${
+          className={`text-[15px] ${
             isUser
               ? 'text-white rounded-[16px_16px_4px_16px]'
               : 'text-[#101828] dark:text-[#e4e7ec] bg-[#f9fafb] dark:bg-[#1a2535] border border-[#e4e7ec] dark:border-[#2d3748] rounded-[16px_16px_16px_4px] shadow-sm dark:shadow-none'
@@ -433,14 +433,14 @@ export function ChatBubble({ msg, onEditSave, onRetry, isStreaming = false }: Ch
           <div
             className={`flex items-center gap-1 mt-1.5 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
           >
-            <span className="text-[11px] text-[#9ca3af] dark:text-[#374151]">{msg.ts}</span>
+            <span className="text-[12px] text-[#9ca3af] dark:text-[#374151]">{msg.ts}</span>
             <div
               className="flex gap-0.5 transition-opacity"
               style={{ opacity: hovered ? 1 : 0, pointerEvents: hovered ? 'auto' : 'none' }}
             >
-              <ActionBtn title="Copy" onClick={copy}>{copied ? <CheckIcon /> : <CopyIcon />}</ActionBtn>
-              {isUser && onEditSave && <ActionBtn title="Edit message" onClick={() => setEditing(true)}><EditIcon /></ActionBtn>}
-              {!isUser && onRetry && <ActionBtn title="Regenerate" onClick={() => onRetry(msg.id)}><RetryIcon /></ActionBtn>}
+              <ActionBtn title="Salin" onClick={copy}>{copied ? <CheckIcon /> : <CopyIcon />}</ActionBtn>
+              {isUser && onEditSave && <ActionBtn title="Edit pesan" onClick={() => setEditing(true)}><EditIcon /></ActionBtn>}
+              {!isUser && onRetry && <ActionBtn title="Coba lagi" onClick={() => onRetry(msg.id)}><RetryIcon /></ActionBtn>}
             </div>
           </div>
         )}

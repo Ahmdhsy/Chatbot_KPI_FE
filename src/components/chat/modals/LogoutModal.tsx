@@ -22,24 +22,24 @@ export function LogoutModal({ userEmail, onConfirm, onCancel }: LogoutModalProps
         <div className="w-11 h-11 rounded-xl bg-[rgba(70,95,255,.12)] flex items-center justify-center mb-4 text-brand-500">
           <LogoutIcon />
         </div>
-        <h3 className="text-base font-bold text-[#101828] dark:text-[#e5e7eb] mb-2">Log out?</h3>
-        <p className="text-[13px] text-[#6b7280] leading-relaxed mb-[22px]">
-          You&apos;ll be signed out of{' '}
+        <h3 className="text-[17px] font-bold text-[#101828] dark:text-[#e5e7eb] mb-2">Keluar dari akun?</h3>
+        <p className="text-[14px] text-[#6b7280] leading-relaxed mb-[22px]">
+          Anda akan keluar dari{' '}
           <span className="font-semibold text-[#374151] dark:text-[#9ca3af]">{userEmail}</span>.
-          Any unsaved progress will remain in your sessions.
+          Riwayat percakapan Anda tetap tersimpan.
         </p>
         <div className="flex gap-2.5 justify-end">
           <button
             onClick={onCancel}
-            className="px-[18px] py-2 rounded-[9px] border border-[#d1d5db] dark:border-[#374151] bg-transparent text-[#374151] dark:text-[#9ca3af] text-[13px] font-medium cursor-pointer hover:bg-[#f9fafb] dark:hover:bg-white/[0.04] transition-colors"
+            className="px-[18px] py-2 rounded-[9px] border border-[#d1d5db] dark:border-[#374151] bg-transparent text-[#374151] dark:text-[#9ca3af] text-[14px] font-medium cursor-pointer hover:bg-[#f9fafb] dark:hover:bg-white/[0.04] transition-colors"
           >
-            Cancel
+            Batal
           </button>
           <button
             onClick={onConfirm}
-            className="px-[18px] py-2 rounded-[9px] border-none bg-brand-500 text-white text-[13px] font-semibold cursor-pointer hover:opacity-90 transition-opacity"
+            className="px-[18px] py-2 rounded-[9px] border-none bg-brand-500 text-white text-[14px] font-semibold cursor-pointer hover:opacity-90 transition-opacity"
           >
-            Log out
+            Keluar
           </button>
         </div>
       </div>

@@ -95,6 +95,14 @@ apiClientWithAuth.interceptors.response.use(
       if (!refreshRes.ok) {
         processQueue(error);
         await forceLogoutRedirect();
+        
+        // Ubah pesan error menjadi user-friendly sebelum di-reject agar toast yang muncul rapi
+        if (error && typeof error === "object") {
+          error.message = "Sesi Anda telah berakhir. Silakan login kembali.";
+          if (error.response?.data) {
+            error.response.data.detail = "Sesi Anda telah berakhir. Silakan login kembali.";
+          }
+        }
         return Promise.reject(error);
       }
 
@@ -103,11 +111,60 @@ apiClientWithAuth.interceptors.response.use(
     } catch (refreshError) {
       processQueue(refreshError);
       await forceLogoutRedirect();
+      if (refreshError && typeof refreshError === "object") {
+        (refreshError as any).message = "Sesi Anda telah berakhir. Silakan login kembali.";
+      }
       return Promise.reject(refreshError);
     } finally {
       isRefreshing = false;
     }
   }
 );
+
+export async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
+  const token = getAuthToken();
+  const headers = {
+    ...options.headers,
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  } as Record<string, string>;
+
+  const response = await fetch(url, { ...options, headers });
+
+  if (response.status !== 401) {
+    return response;
+  }
+
+  // Another refresh is already in flight — queue this request
+  if (isRefreshing) {
+    return new Promise((resolve, reject) => {
+      refreshQueue.push({ resolve, reject });
+    }).then(() => fetchWithAuth(url, options))
+      .catch(() => response); // Fallback to original 401 response
+  }
+
+  isRefreshing = true;
+
+  try {
+    const refreshRes = await fetch("/api/auth/refresh", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (!refreshRes.ok) {
+      processQueue(new Error("Refresh failed"));
+      await forceLogoutRedirect();
+      return response; // Return original 401 response
+    }
+
+    processQueue(null);
+    return fetchWithAuth(url, options);
+  } catch (refreshError) {
+    processQueue(refreshError);
+    await forceLogoutRedirect();
+    return response; // Return original 401 response
+  } finally {
+    isRefreshing = false;
+  }
+}
 
 export default apiClientWithAuth;
