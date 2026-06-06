@@ -86,6 +86,14 @@ export function useChat() {
   }, [activeSessionId, messages])
 
   const sendMessage = useCallback(async (text: string) => {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      setErrorModal({
+        title: 'Koneksi Terputus',
+        message: 'Koneksi terputus, silakan coba lagi',
+      })
+      return
+    }
+
     const tempId = `temp-${Date.now()}`
     const botId = `bot-${Date.now() + 1}`
     let realUserId = tempId
@@ -164,13 +172,32 @@ export function useChat() {
         }
         return p
       })
-      setErrorModal(parseError(err))
+      
+      const isNetworkError = !navigator.onLine || 
+        (err instanceof TypeError && err.message === 'Failed to fetch') ||
+        (err instanceof Error && (err.message.includes('network') || err.message.includes('Network') || err.message.includes('Failed to fetch') || err.message.includes('fetch')));
+
+      if (isNetworkError) {
+        setErrorModal({
+          title: 'Koneksi Terputus',
+          message: 'Koneksi terputus, silakan coba lagi',
+        })
+      } else {
+        setErrorModal(parseError(err))
+      }
     } finally {
       setIsTyping(false)
     }
   }, [activeSessionId, addToast])
 
   const selectClarification = useCallback(async (answers: ClarificationAnswer[], additionalConstraints?: string) => {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      setErrorModal({
+        title: 'Koneksi Terputus',
+        message: 'Koneksi terputus, silakan coba lagi',
+      })
+      return
+    }
     if (!activeSessionId) return
     const botId = `bot-${Date.now()}`
 
@@ -236,9 +263,21 @@ export function useChat() {
     } catch (err) {
       setMessages((p) => ({
         ...p,
-        [activeSessionId]: (p[activeSessionId] ?? []).filter((m) => m.id !== userMsgId),
+        [activeSessionId]: (p[activeSessionId] ?? []).filter((m) => m.id !== userMsgId && m.id !== botId),
       }))
-      setErrorModal(parseError(err))
+      
+      const isNetworkError = !navigator.onLine || 
+        (err instanceof TypeError && err.message === 'Failed to fetch') ||
+        (err instanceof Error && (err.message.includes('network') || err.message.includes('Network') || err.message.includes('Failed to fetch') || err.message.includes('fetch')));
+
+      if (isNetworkError) {
+        setErrorModal({
+          title: 'Koneksi Terputus',
+          message: 'Koneksi terputus, silakan coba lagi',
+        })
+      } else {
+        setErrorModal(parseError(err))
+      }
     } finally {
       setIsTyping(false)
     }
