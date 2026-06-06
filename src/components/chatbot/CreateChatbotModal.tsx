@@ -33,10 +33,19 @@ export default function CreateChatbotModal({
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => {
+      // Ensure authority type is correct for radio button
+      if (name === "authority" && (value === "kepala_divisi" || value === "karyawan")) {
+        return {
+          ...prev,
+          [name]: value as ChatbotAuthority,
+        };
+      }
+      return {
+        ...prev,
+        [name]: value,
+      };
+    });
 
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
@@ -134,22 +143,46 @@ export default function CreateChatbotModal({
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Otoritas *
               </label>
-              <select
-                name="authority"
-                value={formData.authority}
-                onChange={handleChange}
-                disabled={loading}
-                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 dark:bg-gray-700 dark:text-white dark:border-gray-600 ${
-                  errors.authority
-                    ? "border-red-500"
-                    : "border-gray-300 dark:border-gray-600"
-                }`}
-              >
-                <option value="kepala_divisi">Kepala Divisi</option>
-                <option value="karyawan">Karyawan</option>
-              </select>
+              <div className="space-y-2">
+                <div className="flex items-center">
+                  <input
+                    type="radio"
+                    id="authority_kepala_divisi"
+                    name="authority"
+                    value="kepala_divisi"
+                    checked={formData.authority === "kepala_divisi"}
+                    onChange={handleChange}
+                    disabled={loading}
+                    className="h-4 w-4 text-brand-500 rounded"
+                  />
+                  <label
+                    htmlFor="authority_kepala_divisi"
+                    className="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer"
+                  >
+                    Kepala Divisi
+                  </label>
+                </div>
+                <div className="flex items-center">
+                  <input
+                    type="radio"
+                    id="authority_karyawan"
+                    name="authority"
+                    value="karyawan"
+                    checked={formData.authority === "karyawan"}
+                    onChange={handleChange}
+                    disabled={loading}
+                    className="h-4 w-4 text-brand-500 rounded"
+                  />
+                  <label
+                    htmlFor="authority_karyawan"
+                    className="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer"
+                  >
+                    Karyawan
+                  </label>
+                </div>
+              </div>
               {errors.authority && (
-                <p className="text-red-500 text-sm mt-1">{errors.authority}</p>
+                <p className="text-red-500 text-sm mt-2">{errors.authority}</p>
               )}
             </div>
 

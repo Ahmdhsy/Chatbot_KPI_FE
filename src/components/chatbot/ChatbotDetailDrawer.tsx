@@ -21,7 +21,7 @@ function formatDateTime(dateString: string): string {
   });
 }
 
-function getAuthorityBadgeColor(authority: Chatbot["authority"]): string {
+function getAuthorityBadgeColor(authority: Chatbot["otoritas"]): string {
   switch (authority) {
     case "kepala_divisi":
       return "bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-200";
@@ -38,7 +38,7 @@ function getStatusBadgeColor(isActive: boolean): string {
     : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300";
 }
 
-function formatAuthorityLabel(authority: Chatbot["authority"]): string {
+function formatAuthorityLabel(authority: Chatbot["otoritas"]): string {
   if (authority === "kepala_divisi") return "Kepala Divisi";
   if (authority === "karyawan") return "Karyawan";
   return authority;
@@ -180,7 +180,7 @@ export default function ChatbotDetailDrawer({
                       Nama Chatbot
                     </p>
                     <p className="mt-1 text-lg font-semibold text-gray-900 dark:text-white">
-                      {data.chatbot_name}
+                      {data.nama_chatbot}
                     </p>
                   </div>
                   <span className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-base font-medium ${getStatusBadgeColor(data.is_active)}`}>
@@ -189,8 +189,8 @@ export default function ChatbotDetailDrawer({
                   </span>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <span className={`inline-flex items-center rounded-full px-4 py-2 text-base font-medium ${getAuthorityBadgeColor(data.authority)}`}>
-                    {formatAuthorityLabel(data.authority)}
+                  <span className={`inline-flex items-center rounded-full px-4 py-2 text-base font-medium ${getAuthorityBadgeColor(data.otoritas)}`}>
+                    {formatAuthorityLabel(data.otoritas)}
                   </span>
                 </div>
               </div>

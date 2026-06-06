@@ -24,7 +24,7 @@ export default function DeleteChatbotModal({
     setLoading(true);
     try {
       const response = await deleteChatbot(chatbot.id, false);
-      const name = chatbot.chatbot_name || "Chatbot";
+      const name = chatbot.nama_chatbot || "Chatbot";
       addToast(
         "success",
         response.message || `Chatbot \"${name}\" berhasil dinonaktifkan`,
@@ -65,10 +65,10 @@ export default function DeleteChatbotModal({
               </p>
               <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 border border-gray-200 dark:border-gray-600">
                 <p className="text-sm font-medium text-gray-900 dark:text-white">
-                  {chatbot.chatbot_name}
+                  {chatbot.nama_chatbot}
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Authority: {chatbot.authority}
+                  Authority: {chatbot.otoritas}
                 </p>
               </div>
             </div>

@@ -4,8 +4,8 @@ export type ChatbotAuthority = "kepala_divisi" | "karyawan";
 
 export interface Chatbot {
   id: string;
-  chatbot_name: string;
-  authority: ChatbotAuthority;
+  nama_chatbot: string;
+  otoritas: ChatbotAuthority;
   addon_prompt: string | null;
   is_active: boolean;
   created_at: string;

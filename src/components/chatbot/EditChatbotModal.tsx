@@ -34,28 +34,56 @@ export default function EditChatbotModal({
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    if (isOpen) {
-      setFormData({
-        chatbot_name: chatbot.chatbot_name,
-        authority: chatbot.authority,
-        addon_prompt: chatbot.addon_prompt ?? "",
-        is_active: chatbot.is_active,
-      });
-      setErrors({});
+    console.log("useEffect triggered - isOpen:", isOpen, "chatbot.id:", chatbot?.id);
+    
+    if (!isOpen) {
+      console.log("Modal is not open, returning");
+      return;
     }
-  }, [chatbot, isOpen]);
+
+    if (!chatbot) {
+      console.log("No chatbot object, returning");
+      return;
+    }
+
+    console.log("Setting form data from chatbot:", {
+      id: chatbot.id,
+      nama_chatbot: chatbot.nama_chatbot,
+      otoritas: chatbot.otoritas,
+      addon_prompt: chatbot.addon_prompt,
+      is_active: chatbot.is_active,
+    });
+
+    setFormData({
+      chatbot_name: String(chatbot.nama_chatbot || ""),
+      authority: chatbot.otoritas || "kepala_divisi",
+      addon_prompt: String(chatbot.addon_prompt || ""),
+      is_active: chatbot.is_active !== undefined ? chatbot.is_active : true,
+    });
+    setErrors({});
+  }, [chatbot.id, isOpen]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value, type } = e.target;
+    const target = e.target as HTMLInputElement;
     const nextValue =
-      type === "checkbox" ? (e.target as HTMLInputElement).checked : value;
+      type === "checkbox" ? target.checked : value;
 
-    setFormData((prev) => ({
-      ...prev,
-      [name]: nextValue,
-    }));
+    setFormData((prev) => {
+      // Ensure authority type is correct for radio button
+      if (name === "authority" && (value === "kepala_divisi" || value === "karyawan")) {
+        return {
+          ...prev,
+          [name]: value as ChatbotAuthority,
+        };
+      }
+      return {
+        ...prev,
+        [name]: nextValue,
+      };
+    });
 
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
@@ -148,22 +176,46 @@ export default function EditChatbotModal({
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Otoritas *
               </label>
-              <select
-                name="authority"
-                value={formData.authority}
-                onChange={handleChange}
-                disabled={loading}
-                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 dark:bg-gray-700 dark:text-white dark:border-gray-600 ${
-                  errors.authority
-                    ? "border-red-500"
-                    : "border-gray-300 dark:border-gray-600"
-                }`}
-              >
-                <option value="kepala_divisi">Kepala Divisi</option>
-                <option value="karyawan">Karyawan</option>
-              </select>
+              <div className="space-y-2">
+                <div className="flex items-center">
+                  <input
+                    type="radio"
+                    id="authority_kepala_divisi"
+                    name="authority"
+                    value="kepala_divisi"
+                    checked={formData.authority === "kepala_divisi"}
+                    onChange={handleChange}
+                    disabled={loading}
+                    className="h-4 w-4 text-brand-500 rounded"
+                  />
+                  <label
+                    htmlFor="authority_kepala_divisi"
+                    className="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer"
+                  >
+                    Kepala Divisi
+                  </label>
+                </div>
+                <div className="flex items-center">
+                  <input
+                    type="radio"
+                    id="authority_karyawan"
+                    name="authority"
+                    value="karyawan"
+                    checked={formData.authority === "karyawan"}
+                    onChange={handleChange}
+                    disabled={loading}
+                    className="h-4 w-4 text-brand-500 rounded"
+                  />
+                  <label
+                    htmlFor="authority_karyawan"
+                    className="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer"
+                  >
+                    Karyawan
+                  </label>
+                </div>
+              </div>
               {errors.authority && (
-                <p className="text-red-500 text-sm mt-1">{errors.authority}</p>
+                <p className="text-red-500 text-sm mt-2">{errors.authority}</p>
               )}
             </div>
 
