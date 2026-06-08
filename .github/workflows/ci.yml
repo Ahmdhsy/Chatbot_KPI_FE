@@ -20,22 +20,16 @@ jobs:
       with:
         node-version: 20
         cache: 'npm'
-        cache-dependency-path: './Chatbot_KPI_FE/package-lock.json'
+        cache-dependency-path: './package-lock.json' # Menunjuk langsung ke root
 
     - name: Install Dependencies
-      run: |
-        cd Chatbot_KPI_FE
-        npm ci
+      run: npm ci # Dijalankan langsung di root
 
     - name: Run Linter
-      run: |
-        cd Chatbot_KPI_FE
-        npm run lint
+      run: npm run lint
 
     - name: Build Next.js Application (Type Check & Compile Check)
-      run: |
-        cd Chatbot_KPI_FE
-        npm run build
+      run: npm run build
       env:
         # Mock API URL for build-time compilation
         NEXT_PUBLIC_API_URL: https://api.kpi-chatbot.com
@@ -65,8 +59,8 @@ jobs:
     - name: Build and Push Docker Image
       uses: docker/build-push-action@v5
       with:
-        context: ./Chatbot_KPI_FE
-        file: ./Chatbot_KPI_FE/Dockerfile
+        context: . # Build di root folder repositori
+        file: ./Dockerfile
         push: true
         tags: |
           ${{ secrets.DOCKERHUB_USERNAME }}/chatbot-fe:latest
