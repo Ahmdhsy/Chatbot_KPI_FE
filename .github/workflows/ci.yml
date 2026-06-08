@@ -1,0 +1,99 @@
+name: Frontend CI/CD Pipeline (AWS EC2)
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  # Job 1: Linting, Type Checking, and Testing (CI)
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: 'npm'
+        cache-dependency-path: './Chatbot_KPI_FE/package-lock.json'
+
+    - name: Install Dependencies
+      run: |
+        cd Chatbot_KPI_FE
+        npm ci
+
+    - name: Run Linter
+      run: |
+        cd Chatbot_KPI_FE
+        npm run lint
+
+    - name: Build Next.js Application (Type Check & Compile Check)
+      run: |
+        cd Chatbot_KPI_FE
+        npm run build
+      env:
+        # Mock API URL for build-time compilation
+        NEXT_PUBLIC_API_URL: https://api.kpi-chatbot.com
+
+  # Job 2: Build & Push Docker Image to Docker Hub, and Deploy to EC2 (CD)
+  build-and-deploy:
+    needs: build-and-test
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Build and Push Docker Image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./Chatbot_KPI_FE
+        file: ./Chatbot_KPI_FE/Dockerfile
+        push: true
+        tags: |
+          ${{ secrets.DOCKERHUB_USERNAME }}/chatbot-fe:latest
+          ${{ secrets.DOCKERHUB_USERNAME }}/chatbot-fe:${{ github.sha }}
+        build-args: |
+          NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Deploy to AWS EC2 via SSH
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.AWS_EC2_IP }}
+        username: ${{ secrets.AWS_EC2_USER }}
+        key: ${{ secrets.AWS_SSH_KEY }}
+        port: 22
+        script: |
+          # Pull latest Docker image
+          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/chatbot-fe:latest
+          
+          # Stop and remove existing container if running
+          docker stop chatbot-fe-container || true
+          docker rm chatbot-fe-container || true
+          
+          # Run the new container mapping Port 80 of EC2 to Port 3000 of Docker container
+          docker run -d \
+            --name chatbot-fe-container \
+            -p 80:3000 \
+            --restart always \
+            ${{ secrets.DOCKERHUB_USERNAME }}/chatbot-fe:latest
