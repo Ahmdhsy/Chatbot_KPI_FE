@@ -119,7 +119,7 @@ export function useChat() {
                 if (m.id === tempId) return { ...m, id: newUserId }
                 if (m.id === botId) return {
                   ...m,
-                  type: meta.clarification_questions?.length ? 'clarify' : 'text',
+                  type: (meta.clarification_questions?.length ? 'clarify' : 'text') as 'clarify' | 'text',
                   clarification_questions: meta.clarification_questions,
                   graphics: meta.graphics,
                 }
@@ -136,7 +136,7 @@ export function useChat() {
                 if (m.id === tempId) return { ...m, id: newUserId }
                 if (m.id === botId) return {
                   ...m,
-                  type: meta.clarification_questions?.length ? 'clarify' : 'text',
+                  type: (meta.clarification_questions?.length ? 'clarify' : 'text') as 'clarify' | 'text',
                   clarification_questions: meta.clarification_questions,
                   graphics: meta.graphics,
                 }
@@ -236,7 +236,7 @@ export function useChat() {
             [activeSessionId]: (p[activeSessionId] ?? []).map((m) => {
               if (m.id === botId) return {
                 ...m,
-                type: meta.clarification_questions?.length ? 'clarify' : 'text',
+                type: (meta.clarification_questions?.length ? 'clarify' : 'text') as 'clarify' | 'text',
                 clarification_questions: meta.clarification_questions,
                 graphics: meta.graphics,
               }
