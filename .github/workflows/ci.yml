@@ -7,6 +7,7 @@ on:
     branches: [ "main", "master" ]
 
 env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'   # Memaksa GitHub Actions menggunakan Node 24
   AWS_REGION: ap-southeast-1                   # Ganti dengan region AWS Anda (misal: ap-southeast-1)
   ECR_REPOSITORY: chatbot-kpi-fe               # Nama repository ECR Anda
   ECS_SERVICE: chatbot-kpi-fe-service           # Nama ECS service Anda

@@ -69,7 +69,8 @@ export function useChat() {
   useEffect(() => {
     chatService.getSessions().then((data) => {
       setSessions(data)
-      if (data.length > 0) setActiveSessionId(data[0].id)
+      // Do not auto-select the last session on load to default to an empty state
+      // if (data.length > 0) setActiveSessionId(data[0].id) 
     }).catch(() => {
       addToast('error', 'Failed to load chat sessions.')
     })
@@ -330,7 +331,7 @@ export function useChat() {
       setSessions((p) => {
         const next = p.filter((s) => s.id !== id)
         if (activeSessionId === id) {
-          setActiveSessionId(next.length > 0 ? next[0].id : null)
+          setActiveSessionId(null) // Default to empty state when deleted
         }
         return next
       })
