@@ -1,0 +1,34 @@
+{
+  "family": "chatbot-kpi-fe",
+  "networkMode": "awsvpc",
+  "containerDefinitions": [
+    {
+      "name": "chatbot-fe-container",
+      "image": "593402827513.dkr.ecr.ap-southeast-1.amazonaws.com/chatbot-kpi-fe:latest",
+      "portMappings": [
+        {
+          "containerPort": 3000,
+          "hostPort": 3000,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-create-group": "true",
+          "awslogs-group": "/ecs/chatbot-kpi-fe",
+          "awslogs-region": "ap-southeast-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ],
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::593402827513:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::593402827513:role/ecsTaskExecutionRole"
+}
