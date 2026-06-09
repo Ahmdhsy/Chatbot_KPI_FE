@@ -188,7 +188,7 @@ export function useChat() {
     } finally {
       setIsTyping(false)
     }
-  }, [activeSessionId, addToast])
+  }, [activeSessionId])
 
   const selectClarification = useCallback(async (answers: ClarificationAnswer[], additionalConstraints?: string) => {
     if (typeof navigator !== 'undefined' && !navigator.onLine) {
@@ -281,7 +281,7 @@ export function useChat() {
     } finally {
       setIsTyping(false)
     }
-  }, [activeSessionId, messages, addToast])
+  }, [activeSessionId, messages])
 
   const editMessage = useCallback((msgId: string, newText: string) => {
     if (!activeSessionId) return

@@ -61,7 +61,7 @@ export default function EditChatbotModal({
       is_active: chatbot.is_active !== undefined ? chatbot.is_active : true,
     });
     setErrors({});
-  }, [chatbot.id, isOpen]);
+  }, [chatbot, isOpen]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
