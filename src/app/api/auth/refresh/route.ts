@@ -11,16 +11,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ detail: "refresh_token required" }, { status: 401 })
   }
 
-  const fastapiRes = await fetch(`${FASTAPI_URL}/api/v1/users/refresh`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${refresh_token}`,
-    },
-    body: JSON.stringify({ refresh_token }),
-  })
-
-  const data = await fastapiRes.json()
+  let fastapiRes;
+  let data;
+  try {
+    fastapiRes = await fetch(`${FASTAPI_URL}/api/v1/users/refresh`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${refresh_token}`,
+      },
+      body: JSON.stringify({ refresh_token }),
+    })
+    data = await fastapiRes.json()
+  } catch (error) {
+    console.error("Auth refresh fetch error:", error)
+    return NextResponse.json({ detail: "Internal Server Error: Unable to reach auth service." }, { status: 502 })
+  }
 
   if (!fastapiRes.ok) {
     return NextResponse.json(data, { status: fastapiRes.status })

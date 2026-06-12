@@ -2,7 +2,10 @@ import "server-only"
 
 import { cookies } from "next/headers"
 
-const FASTAPI_URL = process.env.FASTAPI_INTERNAL_URL ?? "http://localhost:8000"
+/**
+ * Base URL for server-side API calls
+ */
+const FASTAPI_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"
 
 export async function serverFetch<T = unknown>(
   path: string,
