@@ -39,7 +39,7 @@ jobs:
     - name: Build Next.js Application (Type Check & Compile Check)
       run: npm run build
       env:
-        NEXT_PUBLIC_API_URL: https://api.kpi-chatbot.com
+        NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
 
   # Job 2: Build & Push Docker Image to ECR, and Deploy to ECS Fargate (CD)
   build-and-deploy:
