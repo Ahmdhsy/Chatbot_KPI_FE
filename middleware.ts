@@ -25,7 +25,15 @@ function decodeJwtPayload(token: string): JwtPayload | null {
 
     const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/")
     const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "=")
-    return JSON.parse(atob(padded)) as JwtPayload
+    
+    const binary = atob(padded)
+    const bytes = new Uint8Array(binary.length)
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i)
+    }
+    const decoded = new TextDecoder().decode(bytes)
+    
+    return JSON.parse(decoded) as JwtPayload
   } catch {
     return null
   }
@@ -36,10 +44,13 @@ function getTokenState(token: string | undefined): TokenState {
 
   const payload = decodeJwtPayload(token)
   if (!payload) return "invalid"
-  if (typeof payload.exp !== "number") return "invalid"
+  
+  if (payload.exp !== undefined && typeof payload.exp === "number") {
+    const nowSec = Math.floor(Date.now() / 1000)
+    if (payload.exp < nowSec) return "invalid"
+  }
 
-  const nowSec = Math.floor(Date.now() / 1000)
-  return payload.exp > nowSec ? "valid" : "invalid"
+  return "valid"
 }
 
 function getRoleFromToken(token: string | undefined): UserRole {

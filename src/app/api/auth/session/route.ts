@@ -28,9 +28,14 @@ export async function POST(req: NextRequest) {
   }
 
   const res = NextResponse.json(data)
+  
+  // Only set secure=true if the request is actually HTTPS.
+  // Otherwise, browsers will drop the cookie over HTTP (e.g., via ALB).
+  const isSecure = req.headers.get("x-forwarded-proto") === "https" || req.nextUrl.protocol === "https:";
+
   res.cookies.set("access_token", data.access_token, {
     httpOnly: false,
-    secure: process.env.NODE_ENV === "production",
+    secure: process.env.NODE_ENV === "production" && isSecure,
     sameSite: "lax",
     path: "/",
     maxAge: data.expires_in ?? 3600,
@@ -39,7 +44,7 @@ export async function POST(req: NextRequest) {
   if (data.refresh_token) {
     res.cookies.set("refresh_token", data.refresh_token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: process.env.NODE_ENV === "production" && isSecure,
       sameSite: "lax",
       path: "/",
       maxAge: data.refresh_expires_in ?? 60 * 60 * 24 * 7,
