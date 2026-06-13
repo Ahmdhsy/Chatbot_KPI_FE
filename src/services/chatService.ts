@@ -208,7 +208,11 @@ export const chatService = {
       body: JSON.stringify({ session_id: sessionId, message: text }),
     })
     await throwIfNotOk(response)
-    return consumeSSE(response, callbacks)
+    const result = await consumeSSE(response, callbacks)
+    if (!result.metadata.session_id && !result.message) {
+      throw new ApiError(500, "Tidak dapat memproses permintaan. Chatbot belum dikonfigurasi atau terjadi kesalahan internal.")
+    }
+    return result
   },
 
   async sendClarification(
@@ -231,7 +235,11 @@ export const chatService = {
       }),
     })
     await throwIfNotOk(response)
-    return consumeSSE(response, callbacks)
+    const result = await consumeSSE(response, callbacks)
+    if (!result.metadata.session_id && !result.message) {
+      throw new ApiError(500, "Tidak dapat memproses permintaan. Chatbot belum dikonfigurasi atau terjadi kesalahan internal.")
+    }
+    return result
   },
 
   async deleteSession(id: string): Promise<void> {

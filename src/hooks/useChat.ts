@@ -312,11 +312,13 @@ export function useChat() {
 
   const selectSession = useCallback((id: string) => {
     setActiveSessionId(id)
+    setIsTyping(false)
   }, [])
 
   const createSession = useCallback(() => {
     setActiveSessionId(null)
     setMessages((p) => ({ ...p, [pendingSessionKey]: [] }))
+    setIsTyping(false)
   }, [])
 
   const requestDelete = useCallback((id: string, title: string) => {
