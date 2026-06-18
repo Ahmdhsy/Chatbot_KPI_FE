@@ -105,7 +105,7 @@ export default function SignInForm() {
       const response = await res.json();
 
       if (!res.ok) {
-        const msg = response?.detail?.[0]?.msg ?? response?.detail ?? "Login failed";
+        const msg = response?.detail?.[0]?.msg ?? response?.detail ?? "Login gagal";
         const lowered = String(msg).toLowerCase();
 
         if (res.status === 401) {
@@ -120,7 +120,7 @@ export default function SignInForm() {
           setIdentifierError("Login gagal. Silakan coba lagi.");
         }
 
-        addToast("error", String(msg), "Login Failed");
+        addToast("error", String(msg), "Login Gagal");
         return;
       }
 
@@ -130,7 +130,7 @@ export default function SignInForm() {
         addToast(
           "error",
           "Role akun Anda belum memiliki akses ke sistem ini",
-          "Access Denied"
+          "Akses Ditolak"
         );
         setIsLoading(false);
         return;
@@ -138,7 +138,7 @@ export default function SignInForm() {
 
       // Login successful - access_token cookie already set by /api/auth/session
       login(response.user);
-      addToast("success", "Login successful! Redirecting...", "Welcome");
+      addToast("success", "Login sukses! Mengalihkan...", "Selamat Datang");
 
       const redirectTo = normalizedRole === "karyawan" ? "/chat" : "/";
       setTimeout(() => {
@@ -146,8 +146,8 @@ export default function SignInForm() {
       }, 1000);
     } catch (error: unknown) {
       const errorMessage =
-        error instanceof Error ? error.message : "Login failed. Please try again.";
-      addToast("error", errorMessage, "Login Failed");
+        error instanceof Error ? error.message : "Login gagal. Silakan coba lagi.";
+      addToast("error", errorMessage, "Login Gagal");
     } finally {
       setIsLoading(false);
     }
@@ -159,10 +159,10 @@ export default function SignInForm() {
         <div>
           <div className="mb-5 sm:mb-8">
             <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
-              Sign In
+              Masuk
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Enter your email and password to sign in!
+              Masukkan email dan password Anda untuk masuk!
             </p>
           </div>
           <div>
@@ -203,7 +203,7 @@ export default function SignInForm() {
                   <div className="relative">
                     <input
                       type={showPassword ? "text" : "password"}
-                      placeholder="Enter your password"
+                      placeholder="Masukkan password Anda"
                       value={password}
                       onChange={(e) => {
                         setPassword(e.target.value);
@@ -244,14 +244,14 @@ export default function SignInForm() {
                       disabled={isLoading}
                     />
                     <span className="block font-normal text-gray-700 text-theme-sm dark:text-gray-400">
-                      Keep me logged in
+                      Tetap masuk
                     </span>
                   </div>
                   <Link
                     href="/reset-password"
                     className="text-sm text-brand-500 hover:text-brand-600 dark:text-brand-400"
                   >
-                    Forgot password?
+                    Lupa password?
                   </Link>
                 </div>
                 <div>
@@ -260,7 +260,7 @@ export default function SignInForm() {
                     className="inline-flex items-center justify-center font-medium gap-2 rounded-lg transition w-full px-4 py-3 text-sm bg-brand-500 text-white shadow-theme-xs hover:bg-brand-600 disabled:bg-brand-300 disabled:cursor-not-allowed disabled:opacity-50"
                     disabled={isLoading}
                   >
-                    {isLoading ? "Signing in..." : "Sign in"}
+                    {isLoading ? "Masuk..." : "Masuk"}
                   </button>
                 </div>
               </div>

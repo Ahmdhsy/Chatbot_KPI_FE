@@ -113,13 +113,13 @@ export function ClarifyCard({ msg, onSelect }: ClarifyCardProps) {
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
             </svg>
-            Back
+            Kembali
           </button>
           <button onClick={goSubmit}
             className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[12.5px] font-semibold transition-all duration-150"
             style={{ background: '#465fff', color: 'white', cursor: 'pointer', border: 'none' }}
           >
-            Submit
+            Kirim
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
             </svg>
@@ -232,7 +232,7 @@ export function ClarifyCard({ msg, onSelect }: ClarifyCardProps) {
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
           </svg>
-          Back
+          Kembali
         </button>
 
         <button onClick={goNext} disabled={!currentAnswered}
@@ -244,7 +244,7 @@ export function ClarifyCard({ msg, onSelect }: ClarifyCardProps) {
             border: 'none',
           }}
         >
-          Next
+          Lanjut
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
           </svg>

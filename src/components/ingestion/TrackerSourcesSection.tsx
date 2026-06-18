@@ -17,7 +17,7 @@ function getErrorMessage(error: unknown, fallback: string): string {
     const detail = (error.response?.data as { detail?: unknown } | undefined)?.detail
     if (typeof detail === "string") return detail
     if (Array.isArray(detail) && detail[0]?.msg) return detail[0].msg
-    if (error.response?.status === 401) return "Unauthorized. Please sign in again."
+    if (error.response?.status === 401) return "Sesi telah berakhir. Silakan masuk kembali."
     return error.message || fallback
   }
   return error instanceof Error ? error.message : fallback
@@ -211,7 +211,7 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
         return
       }
 
-      addToast("success", `Sumber berhasil ditambahkan: ${nIngested} records diingest.`, "Success")
+      addToast("success", `Sumber berhasil ditambahkan: ${nIngested} data berhasil diimpor.`, "Sukses")
       handleCloseAdd()
       await fetchSources()
       router.refresh()
@@ -234,12 +234,12 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
         tahun: editTahun ? parseInt(editTahun) : null,
         is_active: editIsActive,
       })
-      addToast("success", "Sumber KPI Tracker berhasil diperbarui.", "Success")
+      addToast("success", "Sumber KPI Tracker berhasil diperbarui.", "Sukses")
       handleCloseEdit()
       await fetchSources()
       router.refresh()
     } catch (e: unknown) {
-      setError(getErrorMessage(e, "Update failed"))
+      setError(getErrorMessage(e, "Gagal memperbarui"))
     } finally { setSaving(false) }
   }
 
@@ -256,11 +256,11 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
         handleCloseEdit()
       }
       setDeleteCandidate(null)
-      addToast("success", `Sumber "${deletedName}" berhasil dihapus.`, "Success")
+      addToast("success", `Sumber "${deletedName}" berhasil dihapus.`, "Sukses")
       await fetchSources()
       router.refresh()
     } catch (e: unknown) {
-      setError(getErrorMessage(e, "Delete failed"))
+      setError(getErrorMessage(e, "Gagal menghapus"))
     } finally { setDeletingId(null) }
   }
 
@@ -274,13 +274,13 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
       const data = res.data
       const isSuccess = data.overall_status === "success"
       const marker = isSuccess ? "✓" : "✕"
-      const resultMsg = `${marker} ${source.nama_grup}: ${data.grand_ingested ?? 0} records ingested (${data.overall_status})`
+      const resultMsg = `${marker} ${source.nama_grup}: ${data.grand_ingested ?? 0} data berhasil diimpor (${data.overall_status})`
       setIngestResult(resultMsg)
-      addToast(isSuccess ? "success" : "warning", resultMsg, "Ingest")
+      addToast(isSuccess ? "success" : "warning", resultMsg, "Impor")
       await fetchSources()
       router.refresh()
     } catch (e: unknown) {
-      setError(getErrorMessage(e, "Ingest failed"))
+      setError(getErrorMessage(e, "Gagal mengimpor"))
     } finally { setIngestingId(null) }
   }
 
@@ -291,7 +291,7 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
       return
     }
     if (selectedSources.length > MAX_BATCH_SOURCES) {
-      setError(`Maksimal ${MAX_BATCH_SOURCES} sumber untuk sekali Run Selected.`)
+      setError(`Maksimal ${MAX_BATCH_SOURCES} sumber untuk sekali Jalankan Terpilih.`)
       return
     }
 
@@ -315,15 +315,15 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
 
       const isSuccess = (data.failed ?? 0) === 0
       const marker = isSuccess ? "✓" : "✕"
-      const batchMsg = `${marker} Run Selected: ${totalIngested} records dari ${data.succeeded ?? 0}/${data.total_urls ?? selectedSources.length} sumber`
+      const batchMsg = `${marker} Jalankan Terpilih: ${totalIngested} data dari ${data.succeeded ?? 0}/${data.total_urls ?? selectedSources.length} sumber`
       setIngestResult(batchMsg)
-      addToast(isSuccess ? "success" : "warning", batchMsg, "Batch Ingest")
+      addToast(isSuccess ? "success" : "warning", batchMsg, "Impor Massal")
       setIsBatchMode(false)
       setSelectedSourceIds([])
       await fetchSources()
       router.refresh()
     } catch (e: unknown) {
-      setError(getErrorMessage(e, "Batch ingest failed"))
+      setError(getErrorMessage(e, "Gagal mengimpor massal"))
     } finally { setRunningAll(false) }
   }
 
@@ -335,21 +335,21 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
         <div className="flex flex-col gap-3 border-b border-gray-100 px-6 py-4 sm:flex-row sm:items-center sm:justify-between dark:border-white/5">
           <div>
             <h3 className="text-base font-semibold text-gray-800 dark:text-white/90">
-              KPI Tracker Sources
+              Sumber KPI Tracker
             </h3>
             <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
               Daftar Google Sheets yang digunakan sebagai sumber data KPI Tracker.
             </p>
             {isBatchMode && !!selectableSources.length && (
               <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
-                Pilih sumber untuk batch ingest: {selectedSources.length}/{MAX_BATCH_SOURCES}
+                Pilih sumber untuk impor massal: {selectedSources.length}/{MAX_BATCH_SOURCES}
               </p>
             )}
           </div>
           <div className="flex items-center gap-2">
             {!!selectableSources.length && !isBatchMode && (
               <Button variant="outline" size="sm" onClick={handleEnableBatchMode} disabled={runningAll || !!ingestingId}>
-                Run Batch
+                Jalankan Massal
               </Button>
             )}
             {!!selectableSources.length && isBatchMode && (
@@ -360,7 +360,7 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
                   onClick={handleCancelBatchMode}
                   disabled={runningAll}
                 >
-                  Cancel
+                  Batal
                 </Button>
                 <Button
                   variant="outline"
@@ -368,11 +368,11 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
                   onClick={handleRunAll}
                   disabled={runningAll || !!ingestingId || selectedSources.length === 0}
                 >
-                  {runningAll ? "Running…" : `Run Selected (${selectedSources.length})`}
+                  {runningAll ? "Berjalan…" : `Jalankan Terpilih (${selectedSources.length})`}
                 </Button>
               </>
             )}
-            <Button size="sm" onClick={() => setAddOpen(true)}>+ Add Source</Button>
+            <Button size="sm" onClick={() => setAddOpen(true)}>+ Tambah Sumber</Button>
           </div>
         </div>
 
@@ -414,20 +414,20 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
           </div>
         ) : rows.length === 0 ? (
           <div className="px-6 py-10 text-center text-sm text-gray-400 dark:text-gray-500">
-            Belum ada sumber sesuai filter/search. Klik <span className="font-medium">+ Add Source</span> untuk menambahkan.
+            Belum ada sumber sesuai filter/pencarian. Klik <span className="font-medium">+ Tambah Sumber</span> untuk menambahkan.
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-base">
               <thead>
-                <tr className="border-b border-gray-100 text-left text-xs uppercase tracking-wider text-gray-400 dark:border-white/5">
-                  {isBatchMode && <th className="px-6 py-3 font-medium">Pilih</th>}
-                  <th className="px-6 py-3 font-medium">Nama File</th>
-                  <th className="px-6 py-3 font-medium">Sheet URL</th>
-                  <th className="px-6 py-3 font-medium">Tahun</th>
-                  <th className="px-6 py-3 font-medium">Active</th>
-                  <th className="px-6 py-3 font-medium">Ingest</th>
-                  <th className="px-6 py-3 font-medium">Aksi</th>
+                <tr className="border-b border-gray-100 text-left text-sm font-semibold uppercase tracking-wider text-gray-400 dark:border-white/5">
+                  {isBatchMode && <th className="px-6 py-3 font-semibold">Pilih</th>}
+                  <th className="px-6 py-3 font-semibold">Nama File</th>
+                  <th className="px-6 py-3 font-semibold">Sheet URL</th>
+                  <th className="px-6 py-3 font-semibold">Tahun</th>
+                  <th className="px-6 py-3 font-semibold">Aktif</th>
+                  <th className="px-6 py-3 font-semibold">Impor</th>
+                  <th className="px-6 py-3 font-semibold">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50 dark:divide-white/5">
@@ -446,14 +446,14 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
                             className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500 disabled:cursor-not-allowed disabled:opacity-40"
                             title={
                               source.is_active
-                                ? "Pilih sumber ini untuk batch ingest"
-                                : "Hanya sumber Active yang bisa dipilih"
+                                ? "Pilih sumber ini untuk impor massal"
+                                : "Hanya sumber Aktif yang bisa dipilih"
                             }
                           />
                         </td>
                       )}
                       <td className="px-6 py-3 font-medium">{source.nama_grup}</td>
-                      <td className="px-6 py-3 font-mono text-xs text-gray-400" title={source.sheet_url}>
+                      <td className="px-6 py-3 font-mono text-sm text-gray-400" title={source.sheet_url}>
                         {truncateUrl(source.sheet_url)}
                       </td>
                       <td className="px-6 py-3 text-gray-500">
@@ -466,31 +466,31 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
                         <button
                           onClick={() => handleIngestOne(source)}
                           disabled={ingestingId === source.id || runningAll}
-                          className="rounded-lg border border-brand-200 px-3 py-1 text-xs font-medium text-brand-600 transition hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-brand-500/30 dark:text-brand-400 dark:hover:bg-brand-500/10"
+                          className="rounded-lg border border-brand-200 px-3 py-1 text-sm font-medium text-brand-600 transition hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-brand-500/30 dark:text-brand-400 dark:hover:bg-brand-500/10"
                         >
-                          {ingestingId === source.id ? "Ingesting…" : "Ingest"}
+                          {ingestingId === source.id ? "Mengimpor…" : "Impor"}
                         </button>
                       </td>
                       <td className="px-6 py-3">
                         <div className="flex items-center gap-3">
                           <a
                             href={`/ingestion/${source.id}`}
-                            className="text-xs font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white/80"
+                            className="text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white/80"
                           >
                             Detail
                           </a>
                           <button
                             onClick={() => handleOpenEdit(source)}
-                            className="text-xs font-medium text-brand-500 hover:text-brand-600 dark:text-brand-400"
+                            className="text-sm font-medium text-brand-500 hover:text-brand-600 dark:text-brand-400"
                           >
                             Edit
                           </button>
                           <button
                             onClick={() => openDeleteConfirmation(source)}
                             disabled={deletingId === source.id}
-                            className="text-xs font-medium text-gray-400 hover:text-error-500 disabled:cursor-not-allowed disabled:opacity-40"
+                            className="text-sm font-medium text-gray-400 hover:text-error-500 disabled:cursor-not-allowed disabled:opacity-40"
                           >
-                            {deletingId === source.id ? "Deleting..." : "Delete"}
+                            {deletingId === source.id ? "Menghapus..." : "Hapus"}
                           </button>
                         </div>
                       </td>
@@ -532,7 +532,7 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
             <div className="flex justify-end gap-3 pt-1">
               <Button variant="outline" onClick={handleCloseAdd} disabled={saving}>Batal</Button>
               <Button onClick={handleAdd} disabled={saving || !newUrl.trim()}>
-                {saving ? "Menyimpan…" : "Add Source"}
+                {saving ? "Menyimpan…" : "Tambah Sumber"}
               </Button>
             </div>
           </div>
@@ -581,7 +581,7 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
               <Input id="edit-tahun" type="number" placeholder="2025"
                 value={editTahun} onChange={(e) => setEditTahun(e.target.value)} />
             </div>
-            <Switch key={`active-${editSource?.id}`} label="Active"
+            <Switch key={`active-${editSource?.id}`} label="Aktif"
               defaultChecked={editIsActive} onChange={setEditIsActive} />
             {error && <p className="text-sm text-error-500">{error}</p>}
             <div className="flex items-center justify-between pt-1">
@@ -590,7 +590,7 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
                 disabled={!editSource || deletingId === editSource?.id}
                 className="text-sm font-medium text-gray-400 hover:text-error-500 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                {deletingId === editSource?.id ? "Deleting..." : "Delete"}
+                {deletingId === editSource?.id ? "Menghapus..." : "Hapus"}
               </button>
               <div className="flex gap-3">
                 <Button variant="outline" onClick={handleCloseEdit} disabled={saving}>Batal</Button>
@@ -637,7 +637,7 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
         <div className="flex justify-end gap-3">
           <Button variant="outline" onClick={closeDeleteConfirmation} disabled={!!deletingId}>Batal</Button>
           <Button onClick={handleDelete} disabled={!!deletingId} className="bg-error-600 hover:bg-error-700">
-            {deletingId ? "Deleting..." : "Hapus"}
+            {deletingId ? "Menghapus..." : "Hapus"}
           </Button>
         </div>
       </Modal>

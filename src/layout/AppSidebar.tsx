@@ -37,7 +37,7 @@ const navItems: NavItem[] = [
   },
   {
     icon: <PlugInIcon />,
-    name: "KPI Management",
+    name: "Manajemen KPI",
     visibleRoles: ["kepala_divisi"],
     subItems: [
       { name: "KPI Master", path: "/ingestion/kpi-master", visibleRoles: ["kepala_divisi"] },

@@ -16,14 +16,14 @@ export default function SummaryCard({ title, value, icon, badge }: SummaryCardPr
       <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-brand-500 dark:bg-brand-500/10">
         {icon}
       </div>
-      <p className="mb-1 text-xs font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">
+      <p className="mb-1 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
         {title}
       </p>
       <div className="flex items-center gap-2">
         {badge ? (
-          <Badge size="sm" color={badge.color}>{badge.label}</Badge>
+          <Badge size="md" color={badge.color}>{badge.label}</Badge>
         ) : (
-          <span className="text-2xl font-semibold text-gray-800 dark:text-white/90">
+          <span className="text-3xl font-bold text-gray-800 dark:text-white/90">
             {value}
           </span>
         )}

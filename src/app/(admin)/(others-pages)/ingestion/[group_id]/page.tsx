@@ -119,21 +119,21 @@ function MasterRecordsTable({ records }: { records: MasterRecord[] }) {
   return (
     <div className="rounded-2xl border border-gray-200 bg-white dark:border-white/5 dark:bg-white/[0.03]">
       <div className="border-b border-gray-100 px-6 py-4 dark:border-white/5">
-        <h3 className="text-base font-semibold text-gray-800 dark:text-white/90">KPI Records</h3>
-        <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">{records.length} records</p>
+        <h3 className="text-base font-semibold text-gray-800 dark:text-white/90">Data KPI</h3>
+        <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">{records.length} data</p>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full text-base">
           <thead>
-            <tr className="border-b border-gray-100 text-left text-xs uppercase tracking-wider text-gray-400 dark:border-white/5 dark:text-gray-500">
-              <th className="px-6 py-3 font-medium">KPI Name</th>
-              <th className="px-6 py-3 font-medium">Category</th>
-              <th className="px-6 py-3 font-medium">Tahun</th>
-              <th className="px-6 py-3 font-medium">Target</th>
-              <th className="px-6 py-3 font-medium">Achieve</th>
-              <th className="px-6 py-3 font-medium">Partial</th>
-              <th className="px-6 py-3 font-medium">Fail</th>
-              <th className="px-6 py-3 font-medium">PIC</th>
+            <tr className="border-b border-gray-100 text-left text-sm font-semibold uppercase tracking-wider text-gray-400 dark:border-white/5 dark:text-gray-500">
+              <th className="px-6 py-3 font-semibold">Nama KPI</th>
+              <th className="px-6 py-3 font-semibold">Kategori</th>
+              <th className="px-6 py-3 font-semibold">Tahun</th>
+              <th className="px-6 py-3 font-semibold">Target</th>
+              <th className="px-6 py-3 font-semibold">Tercapai</th>
+              <th className="px-6 py-3 font-semibold">Parsial</th>
+              <th className="px-6 py-3 font-semibold">Gagal</th>
+              <th className="px-6 py-3 font-semibold">PIC</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50 dark:divide-white/5">
@@ -150,7 +150,7 @@ function MasterRecordsTable({ records }: { records: MasterRecord[] }) {
                 <td className="px-6 py-3 text-gray-500">{r.achieve ?? "—"}</td>
                 <td className="px-6 py-3 text-gray-500">{r.partial ?? "—"}</td>
                 <td className="px-6 py-3 text-gray-500">{r.fail ?? "—"}</td>
-                <td className="px-6 py-3 text-xs text-gray-400">{r.responsibility_persons.length ? r.responsibility_persons.map(u => u.full_name).join(", ") : "—"}</td>
+                 <td className="px-6 py-3 text-sm text-gray-400">{r.responsibility_persons.length ? r.responsibility_persons.map(u => u.full_name).join(", ") : "—"}</td>
               </tr>
             ))}
           </tbody>
@@ -176,19 +176,19 @@ function TrackerRecordsTable({ records }: { records: TrackerRecord[] }) {
   return (
     <div className="rounded-2xl border border-gray-200 bg-white dark:border-white/5 dark:bg-white/[0.03]">
       <div className="border-b border-gray-100 px-6 py-4 dark:border-white/5">
-        <h3 className="text-base font-semibold text-gray-800 dark:text-white/90">Tracker Records</h3>
-        <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">{records.length} records</p>
+        <h3 className="text-base font-semibold text-gray-800 dark:text-white/90">Data Tracker</h3>
+        <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">{records.length} data</p>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full text-base">
           <thead>
-            <tr className="border-b border-gray-100 text-left text-xs uppercase tracking-wider text-gray-400 dark:border-white/5 dark:text-gray-500">
-              <th className="px-6 py-3 font-medium">PIC</th>
-              <th className="px-6 py-3 font-medium">Tahun</th>
-              <th className="px-6 py-3 font-medium">Bulan</th>
-              <th className="px-6 py-3 font-medium">Realisasi</th>
-              <th className="px-6 py-3 font-medium">Keterangan</th>
-              <th className="px-6 py-3 font-medium">Updated At</th>
+            <tr className="border-b border-gray-100 text-left text-sm font-semibold uppercase tracking-wider text-gray-400 dark:border-white/5 dark:text-gray-500">
+              <th className="px-6 py-3 font-semibold">PIC</th>
+              <th className="px-6 py-3 font-semibold">Tahun</th>
+              <th className="px-6 py-3 font-semibold">Bulan</th>
+              <th className="px-6 py-3 font-semibold">Realisasi</th>
+              <th className="px-6 py-3 font-semibold">Keterangan</th>
+              <th className="px-6 py-3 font-semibold">Terakhir Diperbarui</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50 dark:divide-white/5">
@@ -198,10 +198,10 @@ function TrackerRecordsTable({ records }: { records: TrackerRecord[] }) {
                 <td className="px-6 py-3 text-gray-500">{r.tahun}</td>
                 <td className="px-6 py-3 text-gray-500">{getBulan(r.bulan_num)}</td>
                 <td className="px-6 py-3 text-gray-500">{r.realisasi ?? "—"}</td>
-                <td className="max-w-xs px-6 py-3 text-xs text-gray-400 truncate" title={r.keterangan ?? undefined}>
+                <td className="max-w-xs px-6 py-3 text-sm text-gray-400 truncate" title={r.keterangan ?? undefined}>
                   {r.keterangan ?? "—"}
                 </td>
-                <td className="px-6 py-3 text-xs text-gray-400">{formatDate(r.updated_at)}</td>
+                <td className="px-6 py-3 text-sm text-gray-400">{formatDate(r.updated_at)}</td>
               </tr>
             ))}
           </tbody>
@@ -248,13 +248,13 @@ export default async function IngestionDetailPage({
         {/* Summary Cards */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <SummaryCard
-            title="Type"
+            title="Tipe"
             value={typeLabel}
             icon={<LayersIcon />}
             badge={{ label: typeLabel, color: isMaster ? "primary" : "info" }}
           />
           <SummaryCard
-            title="Total Records"
+            title="Total Data"
             value={recordCount}
             icon={<TableCellsIcon />}
           />
@@ -265,10 +265,10 @@ export default async function IngestionDetailPage({
           />
           <SummaryCard
             title="Status"
-            value={group.is_active ? "Active" : "Inactive"}
+            value={group.is_active ? "Aktif" : "Nonaktif"}
             icon={<BoltIcon />}
             badge={{
-              label: group.is_active ? "Active" : "Inactive",
+              label: group.is_active ? "Aktif" : "Nonaktif",
               color: group.is_active ? "success" : "warning",
             }}
           />
@@ -277,7 +277,7 @@ export default async function IngestionDetailPage({
         {/* Group Info */}
         <div className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-white/5 dark:bg-white/[0.03]">
           <h3 className="mb-4 text-base font-semibold text-gray-800 dark:text-white/90">
-            Group Information
+            Informasi Grup
           </h3>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
@@ -304,7 +304,7 @@ export default async function IngestionDetailPage({
             </div>
             <div>
               <p className="text-xs font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">
-                Created At
+                Dibuat Pada
               </p>
               <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                 {formatDate(group.created_at)}
@@ -312,7 +312,7 @@ export default async function IngestionDetailPage({
             </div>
             <div>
               <p className="text-xs font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">
-                Last Updated
+                Terakhir Diperbarui
               </p>
               <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                 {formatDate(group.updated_at)}
@@ -337,7 +337,7 @@ export default async function IngestionDetailPage({
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
             </svg>
-            Back to {typeLabel}
+            Kembali ke {typeLabel}
           </Link>
         </div>
       </div>

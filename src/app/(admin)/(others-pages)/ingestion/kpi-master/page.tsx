@@ -81,17 +81,17 @@ export default async function KpiMasterIngestionPage() {
         {/* Summary Cards */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <SummaryCard
-            title="Total Sources"
+            title="Total Sumber"
             value={initialManagement.total || "—"}
             icon={<DatabaseIcon />}
           />
           <SummaryCard
-            title="Last Ingested"
+            title="Terakhir Diimpor"
             value={formatDate(latestLog?.created_at)}
             icon={<CalendarIcon />}
           />
           <SummaryCard
-            title="Records Ingested"
+            title="Data Diimpor"
             value={latestLog?.ingested ?? "—"}
             icon={<ArrowDownIcon />}
           />

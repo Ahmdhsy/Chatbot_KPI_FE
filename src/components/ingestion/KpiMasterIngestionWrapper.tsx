@@ -41,7 +41,7 @@ export default function KpiMasterIngestionWrapper({ initialData, onAnyChange }: 
 			<div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 				<div>
 					<h3 className="text-base font-semibold text-gray-800 dark:text-white/90">
-						KPI Master Management
+						Manajemen KPI Master
 					</h3>
 					<p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
 						Kelola sumber data KPI Master yang telah diingest.

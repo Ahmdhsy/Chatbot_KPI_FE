@@ -58,7 +58,7 @@ function DatePickerInput({
         ref={inputRef}
         placeholder={placeholder}
         readOnly
-        className="w-32 cursor-pointer rounded-lg border border-gray-200 bg-white py-1.5 pl-3 pr-8 text-xs text-gray-700 focus:border-brand-400 focus:outline-none dark:border-white/10 dark:bg-white/5 dark:text-gray-300"
+        className="w-44 cursor-pointer rounded-lg border border-gray-200 bg-white py-1.5 pl-3 pr-8 text-xs text-gray-700 focus:border-brand-400 focus:outline-none dark:border-white/10 dark:bg-white/5 dark:text-gray-300"
       />
       <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500">
         <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -79,7 +79,7 @@ interface Props {
 }
 
 const TYPE_TABS: { label: string; value: FilterType }[] = [
-  { label: "All", value: "all" },
+  { label: "Semua", value: "all" },
   { label: "KPI Tracker", value: "kpi_tracker" },
   { label: "KPI Master", value: "kpi_master" },
 ]
@@ -160,7 +160,7 @@ export default function IngestionLogsTable({
 
   const headers = hidePersonColumn
     ? ["Tanggal", "Tipe", "Nama Sheet", "Total", "Berhasil", "Gagal", "Status"]
-    : ["Tanggal", "Tipe", "Nama Sheet", "Person", "Total", "Berhasil", "Gagal", "Status"]
+    : ["Tanggal", "Tipe", "Nama Sheet", "Pengguna", "Total", "Berhasil", "Gagal", "Status"]
   const colSpan = hidePersonColumn ? 7 : 8
 
   return (
@@ -168,7 +168,7 @@ export default function IngestionLogsTable({
 
       {/* ── Header row: judul + type filter ── */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 px-6 py-4 dark:border-white/5">
-        <h3 className="text-base font-semibold text-gray-800 dark:text-white/90">Ingestion Logs</h3>
+        <h3 className="text-base font-semibold text-gray-800 dark:text-white/90">Log Ingestion</h3>
 
         {fixedFilter ? (
           <span className="rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-500 dark:bg-white/5 dark:text-gray-400">
@@ -253,7 +253,7 @@ export default function IngestionLogsTable({
                 <TableCell
                   key={h}
                   isHeader
-                  className="px-5 py-3 text-start text-theme-xs font-medium text-gray-500 dark:text-gray-400"
+                  className="px-5 py-3 text-start text-sm font-semibold text-gray-500 dark:text-gray-400"
                 >
                   {h}
                 </TableCell>
@@ -264,7 +264,7 @@ export default function IngestionLogsTable({
             {loading ? (
               <TableRow>
                 <TableCell className="px-5 py-4 text-center text-sm text-gray-400" colSpan={colSpan}>
-                  Loading…
+                  Memuat…
                 </TableCell>
               </TableRow>
             ) : logs.length === 0 ? (
@@ -276,34 +276,34 @@ export default function IngestionLogsTable({
             ) : (
               logs.map((log) => (
                 <TableRow key={log.id}>
-                  <TableCell className="px-5 py-3 text-theme-sm text-gray-600 dark:text-gray-400">
+                  <TableCell className="px-5 py-3 text-sm text-gray-600 dark:text-gray-400">
                     {new Date(log.created_at).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" })}
                   </TableCell>
                   <TableCell className="px-5 py-3">
-                    <Badge size="sm" color={typeColor(log.source_type)}>
+                    <Badge size="md" color={typeColor(log.source_type)}>
                       {log.source_type === "kpi_master" ? "KPI Master" : "KPI Tracker"}
                     </Badge>
                   </TableCell>
-                  <TableCell className="px-5 py-3 text-theme-sm text-gray-600 dark:text-gray-400">
+                  <TableCell className="px-5 py-3 text-sm text-gray-600 dark:text-gray-400">
                     {log.sheet_name ?? "—"}
                   </TableCell>
                   {!hidePersonColumn && (
-                    <TableCell className="px-5 py-3 text-theme-sm text-gray-600 dark:text-gray-400">
+                    <TableCell className="px-5 py-3 text-sm text-gray-600 dark:text-gray-400">
                       {log.nama_orang ?? "—"}
                     </TableCell>
                   )}
-                  <TableCell className="px-5 py-3 text-theme-sm text-gray-600 dark:text-gray-400">
+                  <TableCell className="px-5 py-3 text-sm text-gray-600 dark:text-gray-400">
                     {log.total_rows}
                   </TableCell>
-                  <TableCell className="px-5 py-3 text-theme-sm text-gray-600 dark:text-gray-400">
+                  <TableCell className="px-5 py-3 text-sm text-gray-600 dark:text-gray-400">
                     {log.ingested}
                   </TableCell>
-                  <TableCell className="px-5 py-3 text-theme-sm text-gray-600 dark:text-gray-400">
+                  <TableCell className="px-5 py-3 text-sm text-gray-600 dark:text-gray-400">
                     {log.failed}
                   </TableCell>
                   <TableCell className="px-5 py-3">
-                    <Badge size="sm" color={statusColor(log.status)}>
-                      {log.status}
+                    <Badge size="md" color={statusColor(log.status)}>
+                      {log.status === "success" ? "Sukses" : log.status === "failed" ? "Gagal" : log.status === "partial" ? "Sebagian" : log.status}
                     </Badge>
                   </TableCell>
                 </TableRow>

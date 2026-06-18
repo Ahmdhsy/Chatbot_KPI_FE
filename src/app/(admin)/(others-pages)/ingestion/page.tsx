@@ -43,7 +43,7 @@ export default async function IngestionPage() {
                     KPI Master
                   </h3>
                   <p className="text-xs text-gray-400 dark:text-gray-500">
-                    Upload & upsert KPI master records
+                    Unggah & perbarui data KPI Master
                   </p>
                 </div>
               </div>

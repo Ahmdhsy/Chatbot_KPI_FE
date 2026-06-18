@@ -79,27 +79,27 @@ export default async function KpiTrackerIngestionPage() {
       <div className="flex flex-col gap-6">
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <SummaryCard
-            title="Total Sources"
+            title="Total Sumber"
             value={initialSources.length}
             icon={<UsersIcon />}
           />
           <SummaryCard
-            title="Scheduler Status"
-            value={schedulerEnabled == null ? "—" : schedulerEnabled ? "Enabled" : "Disabled"}
+            title="Status Penjadwal"
+            value={schedulerEnabled == null ? "—" : schedulerEnabled ? "Aktif" : "Nonaktif"}
             icon={<BoltIcon />}
             badge={
               schedulerEnabled != null
                 ? {
-                    label: schedulerEnabled ? "Enabled" : "Disabled",
+                    label: schedulerEnabled ? "Aktif" : "Nonaktif",
                     color: schedulerEnabled ? "success" : "warning",
                   }
                 : undefined
             }
           />
           <SummaryCard
-            title="Next Run"
+            title="Eksekusi Berikutnya"
             value={formatDateTime(config?.next_run_at)}
             icon={<CalendarIcon />}
           />

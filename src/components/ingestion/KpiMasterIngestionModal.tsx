@@ -17,9 +17,9 @@ async function getIngestionErrorMessage(res: Response): Promise<string> {
 
   try {
     const body = await res.json()
-    return body?.detail ?? body?.message ?? "Ingestion failed"
+    return body?.detail ?? body?.message ?? "Ingestion gagal"
   } catch {
-    return "Ingestion failed"
+    return "Ingestion gagal"
   }
 }
 
@@ -71,14 +71,14 @@ export default function KpiMasterIngestionModal({ onSuccess }: Props) {
         `/api/v1/ingest/kpi-master?sheet_url=${encodeURIComponent(url)}&tahun=${tahunNum}`,
       )
       setResult({ status: data.status, ingested: data.ingested, failed: data.failed, errors: data.errors })
-      addToast("success", `KPI Master berhasil diingest: ${data.ingested} records.`, "Success")
+      addToast("success", `KPI Master berhasil diimpor: ${data.ingested} data.`, "Sukses")
       handleClose()
       await onSuccess?.()
     } catch (e: unknown) {
       const axiosDetail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
       const msg = axiosDetail ?? (e instanceof Error ? e.message : "Unknown error")
       setError(msg)
-      addToast("error", msg, "Error")
+      addToast("error", msg, "Gagal")
     } finally {
       setLoading(false)
     }
@@ -88,11 +88,11 @@ export default function KpiMasterIngestionModal({ onSuccess }: Props) {
 
   return (
     <>
-      <Button size="sm" onClick={() => setOpen(true)}>+ New Ingestion</Button>
+      <Button size="sm" onClick={() => setOpen(true)}>+ Ingestion Baru</Button>
 
       <Modal isOpen={open} onClose={handleClose} className="max-w-2xl p-6">
         <h4 className="mb-1 text-lg font-semibold text-gray-800 dark:text-white/90">
-          New KPI Master Ingestion
+          Ingestion KPI Master Baru
         </h4>
         <p className="mb-5 text-sm text-gray-500 dark:text-gray-400">
           Upserts KPI Master records untuk tahun yang dipilih — tahun lain tidak terpengaruh.
@@ -101,7 +101,7 @@ export default function KpiMasterIngestionModal({ onSuccess }: Props) {
           {/* ── Form ── */}
           <div className="flex flex-col gap-4">
             <div>
-              <Label htmlFor="modal-master-url">Google Sheet URL</Label>
+              <Label htmlFor="modal-master-url">URL Google Sheet</Label>
               <Input
                 id="modal-master-url"
                 value={url}
@@ -122,16 +122,16 @@ export default function KpiMasterIngestionModal({ onSuccess }: Props) {
             {error && <p className="text-sm text-error-500">{error}</p>}
             {result && (
               <div className="flex items-center gap-3">
-                <Badge size="sm" color={statusColor as "success" | "warning" | "error"}>{result.status}</Badge>
+                <Badge size="sm" color={statusColor as "success" | "warning" | "error"}>{result.status === "success" ? "Sukses" : "Gagal"}</Badge>
                 <span className="text-sm text-gray-600 dark:text-gray-400">
-                  {result.ingested} records ingested
+                  {result.ingested} data berhasil diimpor
                 </span>
               </div>
             )}
             <div className="flex justify-end gap-3 pt-1">
               <Button variant="outline" onClick={handleClose} disabled={loading}>Batal</Button>
               <Button onClick={handleSubmit} disabled={!canSubmit}>
-                {loading ? "Ingesting…" : "Ingest Master"}
+                {loading ? "Memproses…" : "Impor Master"}
               </Button>
             </div>
           </div>

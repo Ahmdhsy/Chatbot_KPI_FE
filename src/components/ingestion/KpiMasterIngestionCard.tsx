@@ -17,9 +17,9 @@ async function getIngestionErrorMessage(res: Response): Promise<string> {
 
   try {
     const body = await res.json()
-    return body?.detail ?? body?.message ?? "Ingestion failed"
+    return body?.detail ?? body?.message ?? "Ingestion gagal"
   } catch {
-    return "Ingestion failed"
+    return "Ingestion gagal"
   }
 }
 
@@ -76,14 +76,14 @@ export default function KpiMasterIngestionCard() {
   return (
     <div className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-white/[0.05] dark:bg-white/[0.03]">
       <h3 className="mb-1 text-base font-semibold text-gray-800 dark:text-white/90">
-        KPI Master — Manual Ingestion
+        KPI Master — Ingestion Manual
       </h3>
       <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
-        Upserts KPI Master records for the given year. Data tahun lain tidak terpengaruh.
+        Melakukan upsert data KPI Master untuk tahun yang ditentukan. Data tahun lain tidak terpengaruh.
       </p>
 
       <div className="mb-4">
-        <Label htmlFor="master-url">Google Sheet URL</Label>
+        <Label htmlFor="master-url">URL Google Sheet</Label>
         <Input
           id="master-url"
           value={url}
@@ -104,16 +104,16 @@ export default function KpiMasterIngestionCard() {
       </div>
 
       <Button onClick={handleSubmit} disabled={!canSubmit}>
-        {loading ? "Ingesting…" : "Ingest Master"}
+        {loading ? "Memproses…" : "Impor Master"}
       </Button>
 
       {error && <p className="mt-3 text-sm text-error-500">{error}</p>}
 
       {result && (
         <div className="mt-4 flex items-center gap-3">
-          <Badge size="sm" color={statusColor}>{result.status}</Badge>
+          <Badge size="sm" color={statusColor}>{result.status === "success" ? "Sukses" : "Gagal"}</Badge>
           <span className="text-sm text-gray-600 dark:text-gray-400">
-            {result.ingested} records ingested
+            {result.ingested} data berhasil diimpor
           </span>
         </div>
       )}

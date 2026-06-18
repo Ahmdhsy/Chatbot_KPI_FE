@@ -403,14 +403,14 @@ export function ChatBubble({ msg, onEditSave, onRetry, isStreaming = false }: Ch
                   <button
                     className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 text-[#111827] font-semibold"
                     onClick={showPrev}
-                    aria-label="Previous image"
+                    aria-label="Gambar sebelumnya"
                   >
                     ‹
                   </button>
                   <button
                     className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 text-[#111827] font-semibold"
                     onClick={showNext}
-                    aria-label="Next image"
+                    aria-label="Gambar berikutnya"
                   >
                     ›
                   </button>
@@ -420,7 +420,7 @@ export function ChatBubble({ msg, onEditSave, onRetry, isStreaming = false }: Ch
               <button
                 className="absolute right-2 -top-11 w-9 h-9 rounded-full bg-white/90 text-[#111827] font-semibold"
                 onClick={closeLightbox}
-                aria-label="Close"
+                aria-label="Tutup"
               >
                 ✕
               </button>

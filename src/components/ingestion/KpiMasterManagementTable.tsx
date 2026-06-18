@@ -175,10 +175,10 @@ const KpiMasterManagementTable = forwardRef<KpiMasterManagementTableHandle, Prop
 			closeEdit()
 			await fetchPage(page)
 			onDataChange?.()
-			addToast("success", "KPI Master group berhasil di-update dan di-ingest ulang.", "Success")
+			addToast("success", "KPI Master group berhasil di-update dan di-ingest ulang.", "Sukses")
 			router.refresh()
 		} catch (e: unknown) {
-			setError(getErrorMessage(e, "Gagal update dan re-ingest KPI Master."))
+			setError(getErrorMessage(e, "Gagal memperbarui dan mengimpor ulang KPI Master."))
 		} finally {
 			setSaving(false)
 		}
@@ -212,10 +212,10 @@ const KpiMasterManagementTable = forwardRef<KpiMasterManagementTableHandle, Prop
 			const nextPage = rows.length === 1 && page > 1 ? page - 1 : page
 			await fetchPage(nextPage)
 			onDataChange?.()
-			addToast("success", `KPI Master group "${deletedName}" berhasil dihapus.`, "Success")
+			addToast("success", `KPI Master group "${deletedName}" berhasil dihapus.`, "Sukses")
 			router.refresh()
 		} catch (e: unknown) {
-			setError(getErrorMessage(e, "Gagal menghapus KPI Master group."))
+			setError(getErrorMessage(e, "Gagal menghapus grup KPI Master."))
 		} finally {
 			setDeletingId(null)
 		}
@@ -226,9 +226,9 @@ const KpiMasterManagementTable = forwardRef<KpiMasterManagementTableHandle, Prop
 			<div className="rounded-2xl border border-gray-200 bg-white dark:border-white/5 dark:bg-white/3">
 				<div className="flex flex-col gap-3 border-b border-gray-100 px-6 py-4 sm:flex-row sm:items-center sm:justify-between dark:border-white/5">
 					<div>
-						<h3 className="text-base font-semibold text-gray-800 dark:text-white/90">KPI Master Management</h3>
+						<h3 className="text-base font-semibold text-gray-800 dark:text-white/90">Manajemen KPI Master</h3>
 						<p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
-							Edit Sheet URL dan Tahun per group, lalu sistem otomatis re-ingest.
+							Edit URL Sheet dan Tahun per grup, lalu sistem otomatis mengimpor ulang.
 						</p>
 					</div>
 				</div>
@@ -264,45 +264,45 @@ const KpiMasterManagementTable = forwardRef<KpiMasterManagementTableHandle, Prop
 					</div>
 				) : (
 					<div className="overflow-x-auto">
-						<table className="w-full text-sm">
+						<table className="w-full text-base">
 							<thead>
-								<tr className="border-b border-gray-100 text-left text-xs uppercase tracking-wider text-gray-400 dark:border-white/5">
-									<th className="px-6 py-3 font-medium">Nama Grup</th>
-									<th className="px-6 py-3 font-medium">Sheet URL</th>
-									<th className="px-6 py-3 font-medium">Tahun</th>
-									<th className="px-6 py-3 font-medium">Last Update</th>
-									<th className="px-6 py-3 font-medium">Aksi</th>
+								<tr className="border-b border-gray-100 text-left text-sm font-semibold uppercase tracking-wider text-gray-400 dark:border-white/5">
+									<th className="px-6 py-3 font-semibold">Nama Grup</th>
+									<th className="px-6 py-3 font-semibold">Sheet URL</th>
+									<th className="px-6 py-3 font-semibold">Tahun</th>
+									<th className="px-6 py-3 font-semibold">Pembaruan Terakhir</th>
+									<th className="px-6 py-3 font-semibold">Aksi</th>
 								</tr>
 							</thead>
 							<tbody className="divide-y divide-gray-50 dark:divide-white/5">
 								{rows.map((row) => (
 									<tr key={row.id} className="text-gray-700 dark:text-white/80">
 										<td className="px-6 py-3 font-medium">{row.nama_grup}</td>
-										<td className="px-6 py-3 font-mono text-xs text-gray-400" title={row.sheet_url}>
+										<td className="px-6 py-3 font-mono text-sm text-gray-400" title={row.sheet_url}>
 											{truncateUrl(row.sheet_url)}
 										</td>
 										<td className="px-6 py-3 text-gray-500">{row.tahun ?? "-"}</td>
-										<td className="px-6 py-3 text-xs text-gray-400">{formatDate(row.updated_at)}</td>
+										<td className="px-6 py-3 text-sm text-gray-400">{formatDate(row.updated_at)}</td>
 										<td className="px-6 py-3">
 											<div className="flex items-center gap-3">
 												<a
 													href={`/ingestion/${row.id}`}
-													className="text-xs font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white/80"
+													className="text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white/80"
 												>
 													Detail
 												</a>
 												<button
 													onClick={() => openEdit(row)}
-													className="text-xs font-medium text-brand-500 hover:text-brand-600 dark:text-brand-400"
+													className="text-sm font-medium text-brand-500 hover:text-brand-600 dark:text-brand-400"
 												>
 													Edit
 												</button>
 												<button
 													onClick={() => openDeleteConfirmation(row)}
 													disabled={deletingId === row.id}
-													className="text-xs font-medium text-gray-400 hover:text-error-500 disabled:cursor-not-allowed disabled:opacity-40"
+													className="text-sm font-medium text-gray-400 hover:text-error-500 disabled:cursor-not-allowed disabled:opacity-40"
 												>
-													{deletingId === row.id ? "Deleting..." : "Delete"}
+													{deletingId === row.id ? "Menghapus..." : "Hapus"}
 												</button>
 											</div>
 										</td>
@@ -314,15 +314,15 @@ const KpiMasterManagementTable = forwardRef<KpiMasterManagementTableHandle, Prop
 				)}
 
 				<div className="flex items-center justify-between border-t border-gray-100 px-6 py-4 dark:border-white/5">
-					<p className="text-xs text-gray-400 dark:text-gray-500">Total {total} groups</p>
+					<p className="text-sm text-gray-400 dark:text-gray-500">Total {total} grup</p>
 					<Pagination currentPage={page} totalPages={totalPages} onPageChange={fetchPage} />
 				</div>
 			</div>
 
 			<Modal isOpen={!!editing} onClose={closeEdit} className="max-w-md p-6">
-				<h4 className="mb-1 text-lg font-semibold text-gray-800 dark:text-white/90">Edit KPI Master Group</h4>
+				<h4 className="mb-1 text-lg font-semibold text-gray-800 dark:text-white/90">Edit Grup KPI Master</h4>
 				<p className="mb-5 text-sm text-gray-500 dark:text-gray-400">
-					Ubah Sheet URL dan/atau Tahun. Simpan akan memicu re-ingest otomatis.
+					Ubah URL Sheet dan/atau Tahun. Menyimpan akan memicu impor ulang otomatis.
 				</p>
 				<div className="mb-5 rounded-xl border border-amber-100 bg-amber-50 p-3.5 text-xs text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">
 					<p className="font-semibold">Panduan Edit KPI Master</p>
@@ -330,14 +330,14 @@ const KpiMasterManagementTable = forwardRef<KpiMasterManagementTableHandle, Prop
 						<li>
 							Jika mengganti <strong>Sheet URL</strong>, sertakan <strong>Tahun</strong> yang sesuai.
 						</li>
-						<li>Pastikan Sheet URL bisa diakses service account ingestion.</li>
-						<li>Simpan akan menjalankan re-ingest dan memperbarui data KPI Master pada group ini.</li>
+						<li>Pastikan URL Sheet bisa diakses oleh service account pengimpor data.</li>
+						<li>Menyimpan akan menjalankan impor ulang dan memperbarui data KPI Master pada grup ini.</li>
 					</ul>
 				</div>
 
 				<div className="flex flex-col gap-4">
 					<div>
-						<Label htmlFor="edit-master-url">Sheet URL</Label>
+						<Label htmlFor="edit-master-url">URL Sheet</Label>
 						<Input
 							id="edit-master-url"
 							placeholder="https://docs.google.com/spreadsheets/d/..."
@@ -363,14 +363,14 @@ const KpiMasterManagementTable = forwardRef<KpiMasterManagementTableHandle, Prop
 							disabled={!editing || deletingId === editing?.id}
 							className="text-sm font-medium text-gray-400 hover:text-error-500 disabled:cursor-not-allowed disabled:opacity-40"
 						>
-							{deletingId === editing?.id ? "Deleting..." : "Delete"}
+							{deletingId === editing?.id ? "Menghapus..." : "Hapus"}
 						</button>
 						<div className="flex gap-3">
 							<Button variant="outline" onClick={closeEdit} disabled={saving || deletingId === editing?.id}>
 								Batal
 							</Button>
 							<Button onClick={handleSave} disabled={saving || !editing}>
-								{saving ? "Menyimpan..." : "Simpan & Re-ingest"}
+								{saving ? "Menyimpan..." : "Simpan & Impor Ulang"}
 							</Button>
 						</div>
 					</div>
@@ -392,7 +392,7 @@ const KpiMasterManagementTable = forwardRef<KpiMasterManagementTableHandle, Prop
 						Batal
 					</Button>
 					<Button onClick={handleDelete} disabled={!!deletingId} className="bg-error-600 hover:bg-error-700">
-						{deletingId ? "Deleting..." : "Hapus"}
+						{deletingId ? "Menghapus..." : "Hapus"}
 					</Button>
 				</div>
 			</Modal>
