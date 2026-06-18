@@ -159,9 +159,9 @@ export default function IngestionLogsTable({
   const typeColor = (t: string) => t === "kpi_master" ? "info" : "primary"
 
   const headers = hidePersonColumn
-    ? ["Tanggal", "Tipe", "Nama Sheet", "Total", "Berhasil", "Gagal", "Status"]
-    : ["Tanggal", "Tipe", "Nama Sheet", "Pengguna", "Total", "Berhasil", "Gagal", "Status"]
-  const colSpan = hidePersonColumn ? 7 : 8
+    ? ["Tanggal", "Jam", "Tipe", "Nama Sheet", "Total", "Berhasil", "Gagal", "Status"]
+    : ["Tanggal", "Jam", "Tipe", "Nama Sheet", "Pengguna", "Total", "Berhasil", "Gagal", "Status"]
+  const colSpan = hidePersonColumn ? 8 : 9
 
   return (
     <div className="rounded-2xl border border-gray-200 bg-white dark:border-white/5 dark:bg-white/3">
@@ -276,8 +276,11 @@ export default function IngestionLogsTable({
             ) : (
               logs.map((log) => (
                 <TableRow key={log.id}>
-                  <TableCell className="px-5 py-3 text-sm text-gray-600 dark:text-gray-400">
-                    {new Date(log.created_at).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" })}
+                  <TableCell className="px-5 py-3 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                    {new Date(log.created_at).toLocaleDateString("id-ID", { dateStyle: "medium" })}
+                  </TableCell>
+                  <TableCell className="px-5 py-3 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                    {new Date(log.created_at).toLocaleTimeString("id-ID", { timeStyle: "short" })}
                   </TableCell>
                   <TableCell className="px-5 py-3">
                     <Badge size="md" color={typeColor(log.source_type)}>

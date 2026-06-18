@@ -24,6 +24,12 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   {
+    icon: <GridIcon />,
+    name: "Beranda",
+    path: "/ingestion",
+    visibleRoles: ["kepala_divisi"],
+  },
+  {
     icon: <UserCircleIcon />,
     name: "User Management",
     path: "/users",
