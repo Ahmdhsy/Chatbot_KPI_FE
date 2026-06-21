@@ -31,13 +31,13 @@ const navItems: NavItem[] = [
   },
   {
     icon: <UserCircleIcon />,
-    name: "User Management",
+    name: "Manajemen User",
     path: "/users",
     visibleRoles: ["admin"],
   },
   {
     icon: <ChatIcon />,
-    name: "Chatbot Management",
+    name: "Manajemen Chatbot",
     path: "/chatbots",
     visibleRoles: ["admin"],
   },

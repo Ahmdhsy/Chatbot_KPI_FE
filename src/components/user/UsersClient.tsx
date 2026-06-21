@@ -109,17 +109,17 @@ export default function UsersClient({ initialData }: Props) {
   return (
     <>
       <ComponentCard
-        title="Users"
-        subtitle="Manage all system users"
+        title="User"
+        subtitle="Kelola semua user sistem"
         actionButton={{
-          label: "Add New User",
+          label: "Tambah User Baru",
           onClick: () => setIsCreateModalOpen(true),
           variant: "primary",
         }}
       >
         <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <Input
-            placeholder="Search username, email, full name, status, role..."
+            placeholder="Cari username, email, nama lengkap, status, role..."
             value={search}
             onChange={(event) => setSearch(event.target.value)}
           />
@@ -140,19 +140,19 @@ export default function UsersClient({ initialData }: Props) {
             className="h-11 rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-700 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:text-gray-300"
           >
             <option value="">Semua Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
+            <option value="active">Aktif</option>
+            <option value="inactive">Tidak Aktif</option>
           </select>
         </div>
 
         {loading ? (
           <div className="flex justify-center items-center py-12">
-            <p className="text-gray-500 dark:text-gray-400">Loading users...</p>
+            <p className="text-gray-500 dark:text-gray-400">Memuat data user...</p>
           </div>
         ) : users.length === 0 ? (
           <div className="flex justify-center items-center py-12">
             <p className="text-gray-500 dark:text-gray-400">
-              No users found. Adjust filter/search or create one.
+              User tidak ditemukan. Sesuaikan filter/pencarian atau tambah user baru.
             </p>
           </div>
         ) : (
@@ -184,7 +184,7 @@ export default function UsersClient({ initialData }: Props) {
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-gray-500 dark:text-gray-400">
-            Total {total} user(s)
+            Total {total} user
           </p>
           <Pagination
             currentPage={Math.min(currentPage, totalPages)}

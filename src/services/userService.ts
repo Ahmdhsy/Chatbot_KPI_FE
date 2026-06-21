@@ -107,7 +107,7 @@ export const getUsers = async (
 
     return response.data;
   } catch (error) {
-    throw new Error(extractErrorMessage(error, "Failed to fetch users"));
+    throw new Error(extractErrorMessage(error, "Gagal memuat daftar user"));
   }
 };
 
@@ -116,7 +116,7 @@ export const getUserById = async (userId: string): Promise<User> => {
     const response = await apiClientWithAuth.get<User>(`/api/v1/users/${userId}`);
     return response.data;
   } catch (error) {
-    throw new Error(extractErrorMessage(error, "Failed to fetch user"));
+    throw new Error(extractErrorMessage(error, "Gagal memuat data user"));
   }
 };
 
@@ -128,12 +128,12 @@ export const getCurrentUser = async (): Promise<User> => {
     });
 
     if (!res.ok) {
-      throw new Error(`Failed to fetch current user: ${res.status}`);
+      throw new Error(`Gagal memuat user saat ini: ${res.status}`);
     }
 
     return (await res.json()) as User;
   } catch (error) {
-    throw new Error(extractErrorMessage(error, "Failed to fetch current user"));
+    throw new Error(extractErrorMessage(error, "Gagal memuat user saat ini"));
   }
 };
 
@@ -147,7 +147,7 @@ export const createUser = async (
     );
     return response.data;
   } catch (error) {
-    throw new Error(extractErrorMessage(error, "Failed to create user"));
+    throw new Error(extractErrorMessage(error, "Gagal membuat user"));
   }
 };
 
@@ -162,7 +162,7 @@ export const updateUser = async (
     );
     return response.data;
   } catch (error) {
-    throw new Error(extractErrorMessage(error, "Failed to update user"));
+    throw new Error(extractErrorMessage(error, "Gagal memperbarui user"));
   }
 };
 
@@ -178,7 +178,7 @@ function isUuid(value: string): boolean {
 
 export const deleteUser = async (userId: string): Promise<DeleteUserResult> => {
   if (!isUuid(userId)) {
-    throw new Error("Invalid user_id format. Expected UUID.");
+    throw new Error("Format user_id tidak valid. Diharapkan format UUID.");
   }
 
   try {
@@ -187,6 +187,6 @@ export const deleteUser = async (userId: string): Promise<DeleteUserResult> => {
     );
     return { message: response.data.message };
   } catch (error) {
-    throw new Error(extractErrorMessage(error, "Failed to delete user"));
+    throw new Error(extractErrorMessage(error, "Gagal menghapus user"));
   }
 };

@@ -27,8 +27,8 @@ export default function DeleteChatbotModal({
       const name = chatbot.nama_chatbot || "Chatbot";
       addToast(
         "success",
-        response.message || `Chatbot \"${name}\" berhasil dinonaktifkan`,
-        "Success",
+        response.message || `Chatbot "${name}" berhasil dinonaktifkan`,
+        "Sukses",
       );
       onClose();
       onSuccess?.();
@@ -54,7 +54,7 @@ export default function DeleteChatbotModal({
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-md w-full pointer-events-auto">
           <div className="bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-900 px-6 py-4">
             <h2 className="text-lg font-semibold text-red-800 dark:text-red-300">
-              Delete Chatbot
+              Hapus Chatbot
             </h2>
           </div>
 
@@ -68,7 +68,7 @@ export default function DeleteChatbotModal({
                   {chatbot.nama_chatbot}
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Authority: {chatbot.otoritas}
+                  Otoritas: {chatbot.otoritas === "kepala_divisi" ? "Kepala Divisi" : "Karyawan"}
                 </p>
               </div>
             </div>
@@ -80,7 +80,7 @@ export default function DeleteChatbotModal({
                 disabled={loading}
                 className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
               >
-                Cancel
+                Batal
               </button>
               <button
                 type="button"
@@ -88,7 +88,7 @@ export default function DeleteChatbotModal({
                 disabled={loading}
                 className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
               >
-                {loading ? "Deleting..." : "Delete Chatbot"}
+                {loading ? "Menghapus..." : "Hapus Chatbot"}
               </button>
             </div>
           </div>

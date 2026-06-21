@@ -79,7 +79,7 @@ export default function CreateChatbotModal({
         addon_prompt: formData.addon_prompt?.trim() || "",
       });
 
-      addToast("success", "Chatbot berhasil dibuat", "Success");
+      addToast("success", "Chatbot berhasil dibuat", "Sukses");
       onClose();
       onSuccess?.();
       setFormData({
@@ -105,7 +105,7 @@ export default function CreateChatbotModal({
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-xl w-full max-h-[90vh] overflow-y-auto pointer-events-auto">
           <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Create New Chatbot
+              Tambah Chatbot Baru
             </h2>
             <button
               onClick={onClose}
@@ -208,14 +208,14 @@ export default function CreateChatbotModal({
                 disabled={loading}
                 className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
               >
-                Cancel
+                Batal
               </button>
               <button
                 type="submit"
                 disabled={loading}
                 className="flex-1 px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors disabled:opacity-50"
               >
-                {loading ? "Creating..." : "Create Chatbot"}
+                {loading ? "Menyimpan..." : "Tambah Chatbot"}
               </button>
             </div>
           </form>

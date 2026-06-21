@@ -38,7 +38,7 @@ export default async function ChatbotsPage() {
 
   return (
     <>
-      <PageBreadCrumb pageTitle="Chatbot Management" />
+      <PageBreadCrumb pageTitle="Manajemen Chatbot" />
       <ChatbotsClient initialData={initialData} />
     </>
   );

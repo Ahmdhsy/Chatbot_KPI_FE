@@ -36,7 +36,7 @@ export default async function UsersPage() {
 
   return (
     <>
-      <PageBreadCrumb pageTitle="User Management" />
+      <PageBreadCrumb pageTitle="Manajemen User" />
       <UsersClient initialData={initialData} />
     </>
   )

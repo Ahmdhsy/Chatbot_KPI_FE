@@ -66,10 +66,10 @@ export default function ChatbotTable({
               Status
             </th>
             <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">
-              Updated
+              Diperbarui
             </th>
             <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">
-              Actions
+              Aksi
             </th>
           </tr>
         </thead>
@@ -117,7 +117,7 @@ export default function ChatbotTable({
                     chatbot.is_active
                   )}`}
                 >
-                  {chatbot.is_active ? "Active" : "Inactive"}
+                  {chatbot.is_active ? "Aktif" : "Tidak Aktif"}
                 </span>
               </td>
               <td className="px-6 py-4">
@@ -129,7 +129,7 @@ export default function ChatbotTable({
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => onViewDetail(chatbot)}
-                    title="View detail"
+                    title="Lihat detail"
                     className="px-3 py-1 bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 rounded text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                   >
                     Detail
@@ -144,7 +144,7 @@ export default function ChatbotTable({
                     onClick={() => onDelete(chatbot)}
                     className="px-3 py-1 bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300 rounded text-sm font-medium hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
                   >
-                    Delete
+                    Hapus
                   </button>
                 </div>
               </td>

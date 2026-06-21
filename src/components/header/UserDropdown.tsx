@@ -116,7 +116,7 @@ function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
               fill=""
             />
           </svg>
-          Sign out
+          Keluar
         </button>
       </Dropdown>
     </div>

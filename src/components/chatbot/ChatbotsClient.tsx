@@ -81,10 +81,10 @@ export default function ChatbotsClient({ initialData }: ChatbotsClientProps) {
   return (
     <>
       <ComponentCard
-        title="Chatbots"
-        subtitle="Manage chatbot prompt dan otoritas"
+        title="Chatbot"
+        subtitle="Manajemen chatbot prompt dan otoritas"
         actionButton={{
-          label: "Add New Chatbot",
+          label: "Tambah Chatbot Baru",
           onClick: () => setIsCreateOpen(true),
           variant: "primary",
         }}
@@ -105,12 +105,12 @@ export default function ChatbotsClient({ initialData }: ChatbotsClientProps) {
 
         {loading ? (
           <div className="flex justify-center items-center py-12">
-            <p className="text-gray-500 dark:text-gray-400">Loading chatbots...</p>
+            <p className="text-gray-500 dark:text-gray-400">Memuat chatbot...</p>
           </div>
         ) : chatbots.length === 0 ? (
           <div className="flex justify-center items-center py-12">
             <p className="text-gray-500 dark:text-gray-400">
-              No chatbot found. Adjust filter/search or create one.
+              Chatbot tidak ditemukan. Sesuaikan filter atau tambah chatbot baru.
             </p>
           </div>
         ) : (
@@ -133,7 +133,7 @@ export default function ChatbotsClient({ initialData }: ChatbotsClientProps) {
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <p className="text-xs text-gray-500 dark:text-gray-400">
-            Total {total} chatbot(s)
+            Total {total} chatbot
           </p>
           <Pagination
             currentPage={Math.min(currentPage, totalPages)}

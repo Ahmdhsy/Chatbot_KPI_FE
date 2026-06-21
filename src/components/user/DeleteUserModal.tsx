@@ -34,12 +34,12 @@ export default function DeleteUserModal({
       }
 
       const result = await removeUser(user.id);
-      addToast("success", `User "${user.full_name}" berhasil dihapus.`, "Success");
+      addToast("success", `User "${user.full_name}" berhasil dihapus.`, "Sukses");
       onClose();
       onSuccess?.();
     } catch (error) {
       const errorMessage =
-        error instanceof Error ? error.message : "Failed to delete user";
+        error instanceof Error ? error.message : "Gagal menghapus user";
       addToast("error", errorMessage, "Error");
     }
   };
@@ -58,14 +58,14 @@ export default function DeleteUserModal({
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-md w-full pointer-events-auto">
           <div className="bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-900 px-6 py-4">
             <h2 className="text-lg font-semibold text-red-800 dark:text-red-300">
-              Delete User
+              Hapus User
             </h2>
           </div>
 
           <div className="p-6">
           <div className="mb-4">
             <p className="text-gray-600 dark:text-gray-400 mb-3">
-              Are you sure you want to delete this user?
+              Apakah Anda yakin ingin menghapus user ini?
             </p>
             <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 border border-gray-200 dark:border-gray-600">
               <p className="text-sm font-medium text-gray-900 dark:text-white">
@@ -79,7 +79,7 @@ export default function DeleteUserModal({
 
           <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-900 rounded-lg p-3 mb-6">
             <p className="text-sm text-yellow-800 dark:text-yellow-300">
-              ⚠️ This action cannot be undone.
+              ⚠️ Tindakan ini tidak dapat dibatalkan.
             </p>
             {isAdminUser && (
               <p className="mt-2 text-sm text-yellow-800 dark:text-yellow-300">
@@ -95,7 +95,7 @@ export default function DeleteUserModal({
               disabled={loading}
               className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
             >
-              Cancel
+              Batal
             </button>
             <button
               type="button"
@@ -120,7 +120,7 @@ export default function DeleteUserModal({
                   </svg>
                 </span>
               )}
-              {loading ? "Deleting..." : "Delete User"}
+              {loading ? "Menghapus..." : "Hapus User"}
             </button>
           </div>
           </div>

@@ -137,7 +137,7 @@ const KpiMasterManagementTable = forwardRef<KpiMasterManagementTableHandle, Prop
 			setTotal(data.total || 0)
 			setTotalPages(Math.max(1, data.total_pages || 1))
 		} catch (e: unknown) {
-			setError(getErrorMessage(e, "Gagal memuat data KPI Master management."))
+			setError(getErrorMessage(e, "Gagal memuat data manajemen KPI Master."))
 		} finally {
 			setLoading(false)
 		}

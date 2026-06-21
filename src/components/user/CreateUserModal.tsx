@@ -61,36 +61,36 @@ export default function CreateUserModal({
     const newErrors: Record<string, string> = {};
 
     if (!formData.username.trim()) {
-      newErrors.username = "Username is required";
+      newErrors.username = "Username wajib diisi";
     }
     if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
+      newErrors.email = "Email wajib diisi";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Invalid email format";
+      newErrors.email = "Format email tidak valid";
     }
     if (!formData.full_name.trim()) {
-      newErrors.full_name = "Full name is required";
+      newErrors.full_name = "Nama lengkap wajib diisi";
     }
 
     setErrors(newErrors);
 
     // Check password separately and show inline alert instead of global toast
     if (!formData.password) {
-      const msg = "Password is required";
+      const msg = "Password wajib diisi";
       setPasswordAlert(msg);
       setPasswordShake(true);
       setTimeout(() => setPasswordShake(false), 500);
       setTimeout(() => setPasswordAlert(null), 4000);
       return false;
     } else if (formData.password.length < 8) {
-      const msg = "Password must be at least 8 characters";
+      const msg = "Password harus minimal 8 karakter";
       setPasswordAlert(msg);
       setPasswordShake(true);
       setTimeout(() => setPasswordShake(false), 500);
       setTimeout(() => setPasswordAlert(null), 4000);
       return false;
     } else if (!/[A-Z]/.test(formData.password)) {
-      const msg = "Password must include at least one uppercase letter";
+      const msg = "Password harus menyertakan minimal satu huruf besar";
       setPasswordAlert(msg);
       setPasswordShake(true);
       setTimeout(() => setPasswordShake(false), 500);
@@ -110,7 +110,7 @@ export default function CreateUserModal({
 
     try {
       await addUser(formData);
-      addToast("success", "User created successfully", "Success");
+      addToast("success", "User berhasil dibuat", "Sukses");
       onClose();
       onSuccess?.();
       setFormData({
@@ -122,7 +122,7 @@ export default function CreateUserModal({
       });
     } catch (error) {
       const axiosError = error as { response?: { status?: number; data?: { detail?: unknown } } }
-      let errorMessage = "Failed to create user";
+      let errorMessage = "Gagal membuat user";
       let passwordError: string | null = null;
 
       // Handle 422 validation errors from FastAPI
@@ -133,7 +133,7 @@ export default function CreateUserModal({
           // FastAPI returns array of validation errors
           for (const err of details) {
             const fieldPath = Array.isArray(err.loc) ? err.loc.join('.') : String(err.loc);
-            const errorMsg = err.msg || "Validation error";
+            const errorMsg = err.msg || "Galat validasi";
 
             // Check if it's a password-related error
             if (fieldPath.toLowerCase().includes('password')) {
@@ -148,7 +148,7 @@ export default function CreateUserModal({
         }
       } else {
         // Other error types
-        errorMessage = error instanceof Error ? error.message : String(axiosError?.response?.data?.detail || "Failed to create user");
+        errorMessage = error instanceof Error ? error.message : String(axiosError?.response?.data?.detail || "Gagal membuat user");
       }
 
       // If we found a password error, show it inline with shake
@@ -178,7 +178,7 @@ export default function CreateUserModal({
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-md w-full max-h-[90vh] overflow-y-auto pointer-events-auto">
           <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Create New User
+              Tambah User Baru
             </h2>
             <button
               onClick={onClose}
@@ -206,7 +206,7 @@ export default function CreateUserModal({
                     ? "border-red-500"
                     : "border-gray-300 dark:border-gray-600"
                 }`}
-                placeholder="Enter username"
+                placeholder="Masukkan username"
               />
               {errors.username && (
                 <p className="text-red-500 text-sm mt-1">{errors.username}</p>
@@ -227,7 +227,7 @@ export default function CreateUserModal({
               className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 dark:bg-gray-700 dark:text-white dark:border-gray-600 ${
                 errors.email ? "border-red-500" : "border-gray-300 dark:border-gray-600"
               }`}
-              placeholder="Enter email"
+              placeholder="Masukkan email"
             />
             {errors.email && (
               <p className="text-red-500 text-sm mt-1">{errors.email}</p>
@@ -237,7 +237,7 @@ export default function CreateUserModal({
           {/* Full Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Full Name *
+              Nama Lengkap *
             </label>
             <input
               type="text"
@@ -250,7 +250,7 @@ export default function CreateUserModal({
                   ? "border-red-500"
                   : "border-gray-300 dark:border-gray-600"
               }`}
-              placeholder="Enter full name"
+              placeholder="Masukkan nama lengkap"
             />
             {errors.full_name && (
               <p className="text-red-500 text-sm mt-1">{errors.full_name}</p>
@@ -260,7 +260,7 @@ export default function CreateUserModal({
           {/* Password */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Password * <span className="text-xs text-gray-500 dark:text-gray-400 font-normal">(min 8 chars, must include uppercase)</span>
+              Password * <span className="text-xs text-gray-500 dark:text-gray-400 font-normal">(min 8 karakter, wajib menyertakan huruf besar)</span>
             </label>
             <div className="relative">
               <input
@@ -272,7 +272,7 @@ export default function CreateUserModal({
                 className={`w-full px-4 py-2 pr-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 dark:bg-gray-700 dark:text-white dark:border-gray-600 ${
                   passwordShake ? "animate-shake border-red-500" : "border-gray-300 dark:border-gray-600"
                 }`}
-                placeholder="Enter password"
+                placeholder="Masukkan password"
               />
               <button
                 type="button"
@@ -331,7 +331,7 @@ export default function CreateUserModal({
               disabled={loading}
               className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
             >
-              Cancel
+              Batal
             </button>
             <button
               type="submit"
@@ -355,7 +355,7 @@ export default function CreateUserModal({
                   </svg>
                 </span>
               )}
-              {loading ? "Creating..." : "Create User"}
+              {loading ? "Menyimpan..." : "Tambah User"}
             </button>
           </div>
         </form>

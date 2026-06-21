@@ -102,7 +102,7 @@ export async function getChatbots(
 
     return response.data;
   } catch (error) {
-    throw new Error(extractErrorMessage(error, "Failed to fetch chatbots"));
+    throw new Error(extractErrorMessage(error, "Gagal memuat daftar chatbot"));
   }
 }
 
@@ -113,7 +113,7 @@ export async function getChatbotById(chatbotId: string): Promise<Chatbot> {
     );
     return response.data;
   } catch (error) {
-    throw new Error(extractErrorMessage(error, "Failed to fetch chatbot"));
+    throw new Error(extractErrorMessage(error, "Gagal memuat data chatbot"));
   }
 }
 
@@ -127,7 +127,7 @@ export async function createChatbot(
     );
     return response.data;
   } catch (error) {
-    throw new Error(extractErrorMessage(error, "Failed to create chatbot"));
+    throw new Error(extractErrorMessage(error, "Gagal membuat chatbot"));
   }
 }
 
@@ -142,7 +142,7 @@ export async function updateChatbot(
     );
     return response.data;
   } catch (error) {
-    throw new Error(extractErrorMessage(error, "Failed to update chatbot"));
+    throw new Error(extractErrorMessage(error, "Gagal memperbarui chatbot"));
   }
 }
 
@@ -159,6 +159,6 @@ export async function deleteChatbot(
     );
     return response.data;
   } catch (error) {
-    throw new Error(extractErrorMessage(error, "Failed to delete chatbot"));
+    throw new Error(extractErrorMessage(error, "Gagal menghapus chatbot"));
   }
 }

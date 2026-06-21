@@ -175,7 +175,7 @@ export default function UserDetailDrawer({
                 id="user-drawer-title"
                 className="text-lg font-semibold text-gray-900 dark:text-white"
               >
-                User Detail
+                Detail User
               </h2>
               {data && (
                 <p className="text-base text-gray-400 dark:text-gray-500">
@@ -257,7 +257,7 @@ export default function UserDetailDrawer({
                     <span
                       className={`h-2 w-2 rounded-full ${getStatusDotColor(data.is_active)}`}
                     />
-                    {data.is_active ? "Active" : "Inactive"}
+                    {data.is_active ? "Aktif" : "Tidak Aktif"}
                   </span>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">

@@ -67,12 +67,12 @@ export default function EditUserModal({
     const newErrors: Record<string, string> = {};
 
     if (!formData.full_name?.trim()) {
-      newErrors.full_name = "Full name is required";
+      newErrors.full_name = "Nama lengkap wajib diisi";
     }
     if (!formData.email?.trim()) {
-      newErrors.email = "Email is required";
+      newErrors.email = "Email wajib diisi";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Invalid email format";
+      newErrors.email = "Format email tidak valid";
     }
 
     setErrors(newErrors);
@@ -88,12 +88,12 @@ export default function EditUserModal({
 
     try {
       await editUser(user.id, formData);
-      addToast("success", "User updated successfully", "Success");
+      addToast("success", "User berhasil diperbarui", "Sukses");
       onClose();
       onSuccess?.();
     } catch (error) {
       const errorMessage =
-        error instanceof Error ? error.message : "Failed to update user";
+        error instanceof Error ? error.message : "Gagal memperbarui user";
       addToast("error", errorMessage, "Error");
     }
   };
@@ -151,7 +151,7 @@ export default function EditUserModal({
               className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 dark:bg-gray-700 dark:text-white dark:border-gray-600 ${
                 errors.email ? "border-red-500" : "border-gray-300 dark:border-gray-600"
               }`}
-              placeholder="Enter email"
+              placeholder="Masukkan email"
             />
             {errors.email && (
               <p className="text-red-500 text-sm mt-1">{errors.email}</p>
@@ -161,7 +161,7 @@ export default function EditUserModal({
           {/* Full Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Full Name *
+              Nama Lengkap *
             </label>
             <input
               type="text"
@@ -174,7 +174,7 @@ export default function EditUserModal({
                   ? "border-red-500"
                   : "border-gray-300 dark:border-gray-600"
               }`}
-              placeholder="Enter full name"
+              placeholder="Masukkan nama lengkap"
             />
             {errors.full_name && (
               <p className="text-red-500 text-sm mt-1">{errors.full_name}</p>
@@ -221,7 +221,7 @@ export default function EditUserModal({
               htmlFor="is_active"
               className="text-sm font-medium text-gray-700 dark:text-gray-300"
             >
-              Active
+              Aktif
             </label>
           </div>
 
@@ -233,7 +233,7 @@ export default function EditUserModal({
               disabled={loading}
               className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
             >
-              Cancel
+              Batal
             </button>
             <button
               type="submit"
@@ -257,7 +257,7 @@ export default function EditUserModal({
                   </svg>
                 </span>
               )}
-              {loading ? "Saving..." : "Save Changes"}
+              {loading ? "Menyimpan..." : "Simpan Perubahan"}
             </button>
           </div>
         </form>

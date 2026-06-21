@@ -142,7 +142,7 @@ export default function ChatbotDetailDrawer({
                 id="chatbot-drawer-title"
                 className="text-lg font-semibold text-gray-900 dark:text-white"
               >
-                Chatbot Detail
+                Detail Chatbot
               </h2>
             </div>
           </div>
@@ -185,7 +185,7 @@ export default function ChatbotDetailDrawer({
                   </div>
                   <span className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-base font-medium ${getStatusBadgeColor(data.is_active)}`}>
                     <span className={`h-2 w-2 rounded-full ${data.is_active ? "bg-green-500" : "bg-gray-400"}`} />
-                    {data.is_active ? "Active" : "Inactive"}
+                    {data.is_active ? "Aktif" : "Tidak Aktif"}
                   </span>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -211,13 +211,13 @@ export default function ChatbotDetailDrawer({
               <div className="grid gap-3 rounded-2xl border border-gray-100 bg-gray-50 px-5 py-4 text-lg text-gray-700 dark:border-gray-800 dark:bg-gray-800/40 dark:text-gray-200">
                 <div className="flex items-center justify-between">
                   <span className="text-base uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                    Created At
+                    Dibuat
                   </span>
                   <span className="font-medium">{formatDateTime(data.created_at)}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-base uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                    Updated At
+                    Diperbarui
                   </span>
                   <span className="font-medium">{formatDateTime(data.updated_at)}</span>
                 </div>
