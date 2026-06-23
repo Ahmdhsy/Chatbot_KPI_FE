@@ -20,17 +20,19 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  const isSecure = req.headers.get("x-forwarded-proto") === "https" || req.nextUrl.protocol === "https:";
+
   const res = NextResponse.json({ message: "Logged out" })
   res.cookies.set("access_token", "", {
     httpOnly: false,
-    secure: process.env.NODE_ENV === "production",
+    secure: process.env.NODE_ENV === "production" && isSecure,
     sameSite: "lax",
     path: "/",
     maxAge: 0,
   })
   res.cookies.set("refresh_token", "", {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: process.env.NODE_ENV === "production" && isSecure,
     sameSite: "lax",
     path: "/",
     maxAge: 0,

@@ -142,7 +142,7 @@ export default function SignInForm() {
 
       const redirectTo = normalizedRole === "karyawan" ? "/chat" : "/";
       setTimeout(() => {
-        router.replace(redirectTo);
+        window.location.replace(redirectTo);
       }, 1000);
     } catch (error: unknown) {
       const errorMessage =

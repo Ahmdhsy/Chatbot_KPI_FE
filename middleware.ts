@@ -77,10 +77,11 @@ function isPathAllowedForRole(pathname: string, role: UserRole): boolean {
 }
 
 function redirectToSigninAndClearCookie(req: NextRequest) {
+  const isSecure = req.headers.get("x-forwarded-proto") === "https" || req.nextUrl.protocol === "https:";
   const res = NextResponse.redirect(new URL("/signin", req.url))
   res.cookies.set("access_token", "", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    httpOnly: false,
+    secure: process.env.NODE_ENV === "production" && isSecure,
     sameSite: "lax",
     path: "/",
     maxAge: 0,
@@ -98,6 +99,8 @@ export function middleware(req: NextRequest) {
   const tokenState = getTokenState(token)
   const role = getRoleFromToken(token)
 
+  const isSecure = req.headers.get("x-forwarded-proto") === "https" || req.nextUrl.protocol === "https:";
+
   const isProtected = PROTECTED_PATHS.some(
     (p) => pathname === p || pathname.startsWith(p + "/"),
   )
@@ -111,8 +114,8 @@ export function middleware(req: NextRequest) {
     if (isAuthPath) {
       const res = NextResponse.next()
       res.cookies.set("access_token", "", {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        httpOnly: false,
+        secure: process.env.NODE_ENV === "production" && isSecure,
         sameSite: "lax",
         path: "/",
         maxAge: 0,
@@ -137,8 +140,8 @@ export function middleware(req: NextRequest) {
   if (isAuthPath && tokenState === "invalid") {
     const res = NextResponse.next()
     res.cookies.set("access_token", "", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      httpOnly: false,
+      secure: process.env.NODE_ENV === "production" && isSecure,
       sameSite: "lax",
       path: "/",
       maxAge: 0,
