@@ -11,16 +11,10 @@ import { TrackerSource } from "@/hooks/useTrackerSources"
 import apiClientWithAuth from "@/services/apiClientWithAuth"
 import { useToast } from "@/context/ToastContext"
 import useDebounce from "@/hooks/useDebounce"
+import { extractFriendlyErrorMessage } from "@/utils/errorHelper"
 
 function getErrorMessage(error: unknown, fallback: string): string {
-  if (axios.isAxiosError(error)) {
-    const detail = (error.response?.data as { detail?: unknown } | undefined)?.detail
-    if (typeof detail === "string") return detail
-    if (Array.isArray(detail) && detail[0]?.msg) return detail[0].msg
-    if (error.response?.status === 401) return "Sesi telah berakhir. Silakan masuk kembali."
-    return error.message || fallback
-  }
-  return error instanceof Error ? error.message : fallback
+  return extractFriendlyErrorMessage(error, fallback)
 }
 
 function truncateUrl(url: string, max = 55): string {

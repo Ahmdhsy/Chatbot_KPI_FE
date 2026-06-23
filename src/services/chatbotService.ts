@@ -1,4 +1,5 @@
 import apiClientWithAuth from "./apiClientWithAuth";
+import { extractFriendlyErrorMessage } from "@/utils/errorHelper";
 
 export type ChatbotAuthority = "kepala_divisi" | "karyawan";
 
@@ -45,45 +46,6 @@ export interface DeleteChatbotResponse {
   success: boolean;
 }
 
-type FastApiErrorItem = {
-  loc?: Array<string | number>;
-  msg?: string;
-  type?: string;
-};
-
-function extractErrorMessage(error: unknown, fallback: string): string {
-  const maybeError = error as {
-    message?: string;
-    response?: { data?: { detail?: string | FastApiErrorItem[] } };
-  };
-
-  const detail = maybeError?.response?.data?.detail;
-  if (typeof detail === "string" && detail.trim()) {
-    return detail;
-  }
-
-  if (Array.isArray(detail) && detail.length > 0) {
-    const mapped = detail
-      .map((item) => {
-        if (!item) return "";
-        const loc = Array.isArray(item.loc) ? item.loc.join(".") : "field";
-        return item.msg ? `${loc}: ${item.msg}` : "";
-      })
-      .filter(Boolean)
-      .join("; ");
-
-    if (mapped) {
-      return mapped;
-    }
-  }
-
-  if (typeof maybeError?.message === "string" && maybeError.message.trim()) {
-    return maybeError.message;
-  }
-
-  return fallback;
-}
-
 export async function getChatbots(
   params: GetChatbotsParams = {}
 ): Promise<GetChatbotsResponse> {
@@ -102,7 +64,7 @@ export async function getChatbots(
 
     return response.data;
   } catch (error) {
-    throw new Error(extractErrorMessage(error, "Gagal memuat daftar chatbot"));
+    throw new Error(extractFriendlyErrorMessage(error, "Gagal memuat daftar chatbot"));
   }
 }
 
@@ -113,7 +75,7 @@ export async function getChatbotById(chatbotId: string): Promise<Chatbot> {
     );
     return response.data;
   } catch (error) {
-    throw new Error(extractErrorMessage(error, "Gagal memuat data chatbot"));
+    throw new Error(extractFriendlyErrorMessage(error, "Gagal memuat data chatbot"));
   }
 }
 
@@ -127,7 +89,7 @@ export async function createChatbot(
     );
     return response.data;
   } catch (error) {
-    throw new Error(extractErrorMessage(error, "Gagal membuat chatbot"));
+    throw new Error(extractFriendlyErrorMessage(error, "Gagal membuat chatbot"));
   }
 }
 
@@ -142,7 +104,7 @@ export async function updateChatbot(
     );
     return response.data;
   } catch (error) {
-    throw new Error(extractErrorMessage(error, "Gagal memperbarui chatbot"));
+    throw new Error(extractFriendlyErrorMessage(error, "Gagal memperbarui chatbot"));
   }
 }
 
@@ -159,6 +121,6 @@ export async function deleteChatbot(
     );
     return response.data;
   } catch (error) {
-    throw new Error(extractErrorMessage(error, "Gagal menghapus chatbot"));
+    throw new Error(extractFriendlyErrorMessage(error, "Gagal menghapus chatbot"));
   }
 }

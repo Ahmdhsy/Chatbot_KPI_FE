@@ -7,6 +7,7 @@ import Label from "@/components/form/Label"
 import { Modal } from "@/components/ui/modal"
 import { useToast } from "@/context/ToastContext"
 import { apiClientWithAuth } from "@/services/apiClientWithAuth"
+import { extractFriendlyErrorMessage } from "@/utils/errorHelper"
 const INVITE_HELP_MESSAGE =
   "Pastikan email Google Sheets sudah di-invite ke spreadsheet ini, lalu coba lagi."
 
@@ -75,8 +76,7 @@ export default function KpiMasterIngestionModal({ onSuccess }: Props) {
       handleClose()
       await onSuccess?.()
     } catch (e: unknown) {
-      const axiosDetail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      const msg = axiosDetail ?? (e instanceof Error ? e.message : "Unknown error")
+      const msg = extractFriendlyErrorMessage(e, "Gagal memproses KPI Master")
       setError(msg)
       addToast("error", msg, "Gagal")
     } finally {

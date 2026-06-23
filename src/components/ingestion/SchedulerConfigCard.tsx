@@ -9,6 +9,7 @@ import Switch from "@/components/form/switch/Switch"
 import { SchedulerConfig } from "@/hooks/useScheduler"
 import { useToast } from "@/context/ToastContext"
 import { apiClientWithAuth } from "@/services/apiClientWithAuth"
+import { extractFriendlyErrorMessage } from "@/utils/errorHelper"
 
 const WIB_OFFSET_HOURS = 7
 const WIB_OFFSET_MS = WIB_OFFSET_HOURS * 60 * 60 * 1000
@@ -76,8 +77,7 @@ export default function SchedulerConfigCard({ initialConfig }: Props) {
       addToast("success", "Konfigurasi scheduler berhasil disimpan.", "Sukses")
       router.refresh()
     } catch (e: unknown) {
-      const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      setError(detail ?? (e instanceof Error ? e.message : "Unknown error"))
+      setError(extractFriendlyErrorMessage(e, "Gagal memperbarui konfigurasi scheduler"))
     } finally {
       setLoading(false)
     }
@@ -94,8 +94,7 @@ export default function SchedulerConfigCard({ initialConfig }: Props) {
       addToast("success", msg, "Penjadwal")
       router.refresh()
     } catch (e: unknown) {
-      const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      setError(detail ?? (e instanceof Error ? e.message : "Unknown error"))
+      setError(extractFriendlyErrorMessage(e, "Gagal menjalankan penjadwal otomatis"))
     } finally {
       setLoading(false)
     }

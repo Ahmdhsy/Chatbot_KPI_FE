@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
+import { extractFriendlyErrorMessage } from "@/utils/errorHelper";
 
 export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -105,22 +106,26 @@ export default function SignInForm() {
       const response = await res.json();
 
       if (!res.ok) {
-        const msg = response?.detail?.[0]?.msg ?? response?.detail ?? "Login gagal";
-        const lowered = String(msg).toLowerCase();
+        const friendlyMsg = extractFriendlyErrorMessage({
+          response: {
+            status: res.status,
+            data: response
+          }
+        }, "Login gagal. Silakan coba lagi.");
 
         if (res.status === 401) {
           setIdentifierError("Email atau password salah.");
           setPasswordError("Email atau password salah.");
-        } else if (res.status === 403 || lowered.includes("tidak aktif") || lowered.includes("inactive")) {
-          setIdentifierError("Akun tidak aktif.");
-          setPasswordError("Akun tidak aktif.");
+        } else if (res.status === 403) {
+          setIdentifierError("Akun tidak aktif. Silakan hubungi admin.");
+          setPasswordError("Akun tidak aktif. Silakan hubungi admin.");
         } else if (res.status === 422) {
-          setIdentifierError("Harap isi email yang valid.");
+          setIdentifierError("Format email tidak valid.");
         } else {
           setIdentifierError("Login gagal. Silakan coba lagi.");
         }
 
-        addToast("error", String(msg), "Login Gagal");
+        addToast("error", friendlyMsg, "Login Gagal");
         return;
       }
 
@@ -145,8 +150,7 @@ export default function SignInForm() {
         window.location.replace(redirectTo);
       }, 1000);
     } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Login gagal. Silakan coba lagi.";
+      const errorMessage = extractFriendlyErrorMessage(error, "Login gagal. Silakan coba lagi.");
       addToast("error", errorMessage, "Login Gagal");
     } finally {
       setIsLoading(false);

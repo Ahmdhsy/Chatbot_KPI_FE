@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { chatService, ApiError } from '@/services/chatService'
 import { useToast } from '@/context/ToastContext'
 import type { Session, Message, ClarificationAnswer } from '@/types/chat'
+import { extractFriendlyErrorMessage } from '@/utils/errorHelper'
 
 interface ErrorModal {
   title: string
@@ -24,10 +25,10 @@ function httpStatusTitle(status: number): string {
 }
 
 function parseError(err: unknown): ErrorModal {
+  const msg = extractFriendlyErrorMessage(err, 'Terjadi kesalahan, silakan coba lagi.')
   if (err instanceof ApiError) {
-    return { title: httpStatusTitle(err.status), message: err.message, status: err.status }
+    return { title: httpStatusTitle(err.status), message: msg, status: err.status }
   }
-  const msg = err instanceof Error ? err.message : 'Silakan coba lagi.'
   return { title: 'Terjadi Kesalahan', message: msg }
 }
 

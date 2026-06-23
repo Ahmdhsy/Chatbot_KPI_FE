@@ -1,4 +1,5 @@
 import apiClientWithAuth from "./apiClientWithAuth";
+import { extractFriendlyErrorMessage } from "@/utils/errorHelper";
 
 export interface User {
   id: string;
@@ -52,45 +53,6 @@ export interface CreateUserResponse {
   updated_at: string;
 }
 
-type FastApiErrorItem = {
-  loc?: Array<string | number>;
-  msg?: string;
-  type?: string;
-};
-
-function extractErrorMessage(error: unknown, fallback: string): string {
-  const maybeError = error as {
-    message?: string;
-    response?: { data?: { detail?: string | FastApiErrorItem[] } };
-  };
-
-  const detail = maybeError?.response?.data?.detail;
-  if (typeof detail === "string" && detail.trim()) {
-    return detail;
-  }
-
-  if (Array.isArray(detail) && detail.length > 0) {
-    const mapped = detail
-      .map((item) => {
-        if (!item) return "";
-        const loc = Array.isArray(item.loc) ? item.loc.join(".") : "field";
-        return item.msg ? `${loc}: ${item.msg}` : "";
-      })
-      .filter(Boolean)
-      .join("; ");
-
-    if (mapped) {
-      return mapped;
-    }
-  }
-
-  if (typeof maybeError?.message === "string" && maybeError.message.trim()) {
-    return maybeError.message;
-  }
-
-  return fallback;
-}
-
 export const getUsers = async (
   params: GetUsersParams = {}
 ): Promise<GetUsersResponse> => {
@@ -107,7 +69,7 @@ export const getUsers = async (
 
     return response.data;
   } catch (error) {
-    throw new Error(extractErrorMessage(error, "Gagal memuat daftar user"));
+    throw new Error(extractFriendlyErrorMessage(error, "Gagal memuat daftar user"));
   }
 };
 
@@ -116,7 +78,7 @@ export const getUserById = async (userId: string): Promise<User> => {
     const response = await apiClientWithAuth.get<User>(`/api/v1/users/${userId}`);
     return response.data;
   } catch (error) {
-    throw new Error(extractErrorMessage(error, "Gagal memuat data user"));
+    throw new Error(extractFriendlyErrorMessage(error, "Gagal memuat data user"));
   }
 };
 
@@ -133,7 +95,7 @@ export const getCurrentUser = async (): Promise<User> => {
 
     return (await res.json()) as User;
   } catch (error) {
-    throw new Error(extractErrorMessage(error, "Gagal memuat user saat ini"));
+    throw new Error(extractFriendlyErrorMessage(error, "Gagal memuat user saat ini"));
   }
 };
 
@@ -147,7 +109,7 @@ export const createUser = async (
     );
     return response.data;
   } catch (error) {
-    throw new Error(extractErrorMessage(error, "Gagal membuat user"));
+    throw new Error(extractFriendlyErrorMessage(error, "Gagal membuat user"));
   }
 };
 
@@ -162,7 +124,7 @@ export const updateUser = async (
     );
     return response.data;
   } catch (error) {
-    throw new Error(extractErrorMessage(error, "Gagal memperbarui user"));
+    throw new Error(extractFriendlyErrorMessage(error, "Gagal memperbarui user"));
   }
 };
 
@@ -187,6 +149,6 @@ export const deleteUser = async (userId: string): Promise<DeleteUserResult> => {
     );
     return { message: response.data.message };
   } catch (error) {
-    throw new Error(extractErrorMessage(error, "Gagal menghapus user"));
+    throw new Error(extractFriendlyErrorMessage(error, "Gagal menghapus user"));
   }
 };

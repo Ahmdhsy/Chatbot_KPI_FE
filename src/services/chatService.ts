@@ -10,10 +10,12 @@ export class ApiError extends Error {
 
 async function throwIfNotOk(response: Response): Promise<void> {
   if (response.ok) return
-  let detail = `HTTP ${response.status}`
+  let detail: any = `HTTP ${response.status}`
   try {
     const body = await response.clone().json()
-    if (body?.detail) detail = String(body.detail)
+    if (body?.detail) {
+      detail = typeof body.detail === 'string' ? body.detail : JSON.stringify(body.detail)
+    }
   } catch {}
   throw new ApiError(response.status, detail)
 }
