@@ -368,7 +368,7 @@ export function ChatBubble({ msg, onEditSave, onRetry, isStreaming = false }: Ch
                       )}
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={`${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'}${g.image_url}`}
+                        src={g.image_url}
                         alt={g.kpi_name ? `Grafik ${g.kpi_name}` : 'Chart visualization'}
                         className="rounded-lg w-full max-w-[480px] block cursor-zoom-in"
                         onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
@@ -393,7 +393,7 @@ export function ChatBubble({ msg, onEditSave, onRetry, isStreaming = false }: Ch
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={`${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'}${graphics[lightboxIndex].image_url}`}
+                src={graphics[lightboxIndex].image_url}
                 alt={graphics[lightboxIndex].kpi_name ? `Grafik ${graphics[lightboxIndex].kpi_name}` : 'Chart visualization'}
                 className="max-w-[90vw] max-h-[85vh] rounded-lg shadow-2xl block"
               />
