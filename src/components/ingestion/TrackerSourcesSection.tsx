@@ -294,6 +294,7 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
       const res = await apiClientWithAuth.post("/api/v1/ingest/google-sheets/batch", {
         sources: selectedSources.map((s) => ({ sheet_url: s.sheet_url, tahun: s.tahun })),
         skip_on_error: true,
+        delay_between_sources: 2.0,
       })
       const data = res.data
       const totalIngested =
