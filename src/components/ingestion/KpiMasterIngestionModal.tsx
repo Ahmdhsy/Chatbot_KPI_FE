@@ -71,8 +71,9 @@ export default function KpiMasterIngestionModal({ onSuccess }: Props) {
       const { data } = await apiClientWithAuth.post(
         `/api/v1/ingest/kpi-master?sheet_url=${encodeURIComponent(url)}&tahun=${tahunNum}`,
       )
-      setResult({ status: data.status, ingested: data.ingested, failed: data.failed, errors: data.errors })
-      addToast("success", `KPI Master berhasil diimpor: ${data.ingested} data.`, "Sukses")
+      const ingestedCount = data.count ?? data.record?.length ?? 0
+      setResult({ status: data.status, ingested: ingestedCount, failed: 0, errors: [] })
+      addToast("success", `KPI Master berhasil diingest: ${ingestedCount} data.`, "Sukses")
       handleClose()
       await onSuccess?.()
     } catch (e: unknown) {
@@ -124,14 +125,14 @@ export default function KpiMasterIngestionModal({ onSuccess }: Props) {
               <div className="flex items-center gap-3">
                 <Badge size="sm" color={statusColor as "success" | "warning" | "error"}>{result.status === "success" ? "Sukses" : "Gagal"}</Badge>
                 <span className="text-sm text-gray-600 dark:text-gray-400">
-                  {result.ingested} data berhasil diimpor
+                  {result.ingested} data berhasil diingest
                 </span>
               </div>
             )}
             <div className="flex justify-end gap-3 pt-1">
               <Button variant="outline" onClick={handleClose} disabled={loading}>Batal</Button>
               <Button onClick={handleSubmit} disabled={!canSubmit}>
-                {loading ? "Memproses…" : "Impor Master"}
+                {loading ? "Memproses…" : "Ingest Master"}
               </Button>
             </div>
           </div>

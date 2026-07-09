@@ -205,7 +205,7 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
         return
       }
 
-      addToast("success", `Sumber berhasil ditambahkan: ${nIngested} data berhasil diimpor.`, "Sukses")
+      addToast("success", `Sumber berhasil ditambahkan: ${nIngested} data berhasil diingest.`, "Sukses")
       handleCloseAdd()
       await fetchSources()
       router.refresh()
@@ -268,13 +268,13 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
       const data = res.data
       const isSuccess = data.overall_status === "success"
       const marker = isSuccess ? "✓" : "✕"
-      const resultMsg = `${marker} ${source.nama_grup}: ${data.grand_ingested ?? 0} data berhasil diimpor (${data.overall_status})`
+      const resultMsg = `${marker} ${source.nama_grup}: ${data.grand_ingested ?? 0} data berhasil diingest (${data.overall_status})`
       setIngestResult(resultMsg)
-      addToast(isSuccess ? "success" : "warning", resultMsg, "Impor")
+      addToast(isSuccess ? "success" : "warning", resultMsg, "Ingest")
       await fetchSources()
       router.refresh()
     } catch (e: unknown) {
-      setError(getErrorMessage(e, "Gagal mengimpor"))
+      setError(getErrorMessage(e, "Gagal mengingest"))
     } finally { setIngestingId(null) }
   }
 
@@ -312,13 +312,13 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
       const marker = isSuccess ? "✓" : "✕"
       const batchMsg = `${marker} Jalankan Terpilih: ${totalIngested} data dari ${data.succeeded ?? 0}/${data.total_urls ?? selectedSources.length} sumber`
       setIngestResult(batchMsg)
-      addToast(isSuccess ? "success" : "warning", batchMsg, "Impor Massal")
+      addToast(isSuccess ? "success" : "warning", batchMsg, "Ingest Massal")
       setIsBatchMode(false)
       setSelectedSourceIds([])
       await fetchSources()
       router.refresh()
     } catch (e: unknown) {
-      setError(getErrorMessage(e, "Gagal mengimpor massal"))
+      setError(getErrorMessage(e, "Gagal mengingest massal"))
     } finally { setRunningAll(false) }
   }
 
@@ -337,7 +337,7 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
             </p>
             {isBatchMode && !!selectableSources.length && (
               <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
-                Pilih sumber untuk impor massal: {selectedSources.length}/{MAX_BATCH_SOURCES}
+                Pilih sumber untuk ingest massal: {selectedSources.length}/{MAX_BATCH_SOURCES}
               </p>
             )}
           </div>
@@ -421,7 +421,7 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
                   <th className="px-6 py-3 font-semibold">Sheet URL</th>
                   <th className="px-6 py-3 font-semibold">Tahun</th>
                   <th className="px-6 py-3 font-semibold">Aktif</th>
-                  <th className="px-6 py-3 font-semibold">Impor</th>
+                  <th className="px-6 py-3 font-semibold">Ingest</th>
                   <th className="px-6 py-3 font-semibold">Aksi</th>
                 </tr>
               </thead>
@@ -441,7 +441,7 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
                             className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500 disabled:cursor-not-allowed disabled:opacity-40"
                             title={
                               source.is_active
-                                ? "Pilih sumber ini untuk impor massal"
+                                ? "Pilih sumber ini untuk ingest massal"
                                 : "Hanya sumber Aktif yang bisa dipilih"
                             }
                           />
@@ -463,7 +463,7 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
                           disabled={ingestingId === source.id || runningAll}
                           className="rounded-lg border border-brand-200 px-3 py-1 text-sm font-medium text-brand-600 transition hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-brand-500/30 dark:text-brand-400 dark:hover:bg-brand-500/10"
                         >
-                          {ingestingId === source.id ? "Mengimpor…" : "Impor"}
+                          {ingestingId === source.id ? "Mengingest…" : "Ingest"}
                         </button>
                       </td>
                       <td className="px-6 py-3">

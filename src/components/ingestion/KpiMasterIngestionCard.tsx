@@ -60,7 +60,8 @@ export default function KpiMasterIngestionCard() {
       )
       if (!res.ok) throw new Error(await getIngestionErrorMessage(res))
       const data = await res.json()
-      setResult({ status: data.status, ingested: data.ingested, failed: data.failed, errors: data.errors })
+      const ingestedCount = data.count ?? data.record?.length ?? 0
+      setResult({ status: data.status, ingested: ingestedCount, failed: 0, errors: [] })
       setUrl("")
       setTahun("")
       router.refresh()
@@ -79,7 +80,7 @@ export default function KpiMasterIngestionCard() {
         KPI Master — Ingestion Manual
       </h3>
       <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
-        Melakukan upsert data KPI Master untuk tahun yang ditentukan. Data tahun lain tidak terpengaruh.
+        Melakukan ingest data KPI Master untuk tahun yang ditentukan. Data tahun lain tidak terpengaruh.
       </p>
 
       <div className="mb-4">
@@ -104,7 +105,7 @@ export default function KpiMasterIngestionCard() {
       </div>
 
       <Button onClick={handleSubmit} disabled={!canSubmit}>
-        {loading ? "Memproses…" : "Impor Master"}
+        {loading ? "Memproses…" : "Ingest Master"}
       </Button>
 
       {error && <p className="mt-3 text-sm text-error-500">{error}</p>}
@@ -113,7 +114,7 @@ export default function KpiMasterIngestionCard() {
         <div className="mt-4 flex items-center gap-3">
           <Badge size="sm" color={statusColor}>{result.status === "success" ? "Sukses" : "Gagal"}</Badge>
           <span className="text-sm text-gray-600 dark:text-gray-400">
-            {result.ingested} data berhasil diimpor
+            {result.ingested} data berhasil diingest
           </span>
         </div>
       )}

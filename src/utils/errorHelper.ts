@@ -100,6 +100,20 @@ export function extractFriendlyErrorMessage(error: unknown, fallback: string = "
     return "Terjadi kesalahan internal pada server (500). Silakan hubungi administrator jika masalah berlanjut.";
   }
   if (status === 403) {
+    const detail = responseData?.detail;
+    if (typeof detail === "string") {
+      const lowered = detail.toLowerCase();
+      if (
+        lowered.includes("spreadsheet") ||
+        lowered.includes("google sheets") ||
+        lowered.includes("service account") ||
+        lowered.includes("share") ||
+        lowered.includes("izin") ||
+        lowered.includes("akses")
+      ) {
+        return detail;
+      }
+    }
     return "Akses ditolak (403). Anda tidak memiliki izin untuk melakukan aksi ini.";
   }
   if (status === 404) {
