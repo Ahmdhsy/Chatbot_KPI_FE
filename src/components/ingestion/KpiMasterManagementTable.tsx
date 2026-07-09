@@ -94,6 +94,7 @@ const KpiMasterManagementTable = forwardRef<KpiMasterManagementTableHandle, Prop
 	const [deletingId, setDeletingId] = useState<string | null>(null)
 	const [deleteCandidate, setDeleteCandidate] = useState<KpiMasterGroup | null>(null)
 	const [error, setError] = useState<string | null>(null)
+	const [editError, setEditError] = useState<string | null>(null)
 
 	const [editing, setEditing] = useState<KpiMasterGroup | null>(null)
 	const [editUrl, setEditUrl] = useState("")
@@ -103,14 +104,14 @@ const KpiMasterManagementTable = forwardRef<KpiMasterManagementTableHandle, Prop
 		setEditing(row)
 		setEditUrl(row.sheet_url)
 		setEditTahun(row.tahun != null ? String(row.tahun) : "")
-		setError(null)
+		setEditError(null)
 	}
 
 	const closeEdit = () => {
 		setEditing(null)
 		setEditUrl("")
 		setEditTahun("")
-		setError(null)
+		setEditError(null)
 	}
 
 	const fetchPage = async (targetPage: number) => {
@@ -162,23 +163,18 @@ const KpiMasterManagementTable = forwardRef<KpiMasterManagementTableHandle, Prop
 			payload.tahun = parsedTahun
 		}
 
-		if (!payload.sheet_url && payload.tahun === undefined) {
-			setError("Tidak ada perubahan. Ubah Sheet URL atau Tahun terlebih dahulu.")
-			return
-		}
-
 		setSaving(true)
-		setError(null)
+		setEditError(null)
 
 		try {
 			await apiClientWithAuth.patch<IngestionResponse>(`/api/v1/kpi/${editing.id}`, payload)
-			closeEdit()
 			await fetchPage(page)
 			onDataChange?.()
 			addToast("success", "KPI Master group berhasil di-update dan di-ingest ulang.", "Sukses")
+			closeEdit()
 			router.refresh()
 		} catch (e: unknown) {
-			setError(getErrorMessage(e, "Gagal memperbarui dan mengimpor ulang KPI Master."))
+			setEditError(getErrorMessage(e, "Gagal memperbarui dan mengingest ulang KPI Master."))
 		} finally {
 			setSaving(false)
 		}
@@ -228,7 +224,7 @@ const KpiMasterManagementTable = forwardRef<KpiMasterManagementTableHandle, Prop
 					<div>
 						<h3 className="text-base font-semibold text-gray-800 dark:text-white/90">Manajemen KPI Master</h3>
 						<p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
-							Edit URL Sheet dan Tahun per grup, lalu sistem otomatis mengimpor ulang.
+							Edit URL Sheet dan Tahun per grup, lalu sistem otomatis mengingest ulang.
 						</p>
 					</div>
 				</div>
@@ -322,8 +318,13 @@ const KpiMasterManagementTable = forwardRef<KpiMasterManagementTableHandle, Prop
 			<Modal isOpen={!!editing} onClose={closeEdit} className="max-w-md p-6">
 				<h4 className="mb-1 text-lg font-semibold text-gray-800 dark:text-white/90">Edit Grup KPI Master</h4>
 				<p className="mb-5 text-sm text-gray-500 dark:text-gray-400">
-					Ubah URL Sheet dan/atau Tahun. Menyimpan akan memicu impor ulang otomatis.
+					Ubah URL Sheet dan/atau Tahun. Menyimpan akan memicu ingest ulang otomatis.
 				</p>
+				{editError && (
+					<div className="mb-5 rounded-lg border border-error-100 bg-error-50 px-3 py-2 text-sm text-error-700 dark:border-error-500/20 dark:bg-error-500/10 dark:text-error-400">
+						{editError}
+					</div>
+				)}
 				<div className="mb-5 rounded-xl border border-amber-100 bg-amber-50 p-3.5 text-xs text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">
 					<p className="font-semibold">Panduan Edit KPI Master</p>
 					<ul className="mt-2 list-disc space-y-1 pl-4">
@@ -331,7 +332,7 @@ const KpiMasterManagementTable = forwardRef<KpiMasterManagementTableHandle, Prop
 							Jika mengganti <strong>Sheet URL</strong>, sertakan <strong>Tahun</strong> yang sesuai.
 						</li>
 						<li>Pastikan URL Sheet bisa diakses oleh service account pengimpor data.</li>
-						<li>Menyimpan akan menjalankan impor ulang dan memperbarui data KPI Master pada grup ini.</li>
+						<li>Menyimpan akan menjalankan ingest ulang dan memperbarui data KPI Master pada grup ini.</li>
 					</ul>
 				</div>
 
@@ -370,7 +371,7 @@ const KpiMasterManagementTable = forwardRef<KpiMasterManagementTableHandle, Prop
 								Batal
 							</Button>
 							<Button onClick={handleSave} disabled={saving || !editing}>
-								{saving ? "Menyimpan..." : "Simpan & Impor Ulang"}
+								{saving ? "Menyimpan..." : "Simpan & Ingest Ulang"}
 							</Button>
 						</div>
 					</div>
