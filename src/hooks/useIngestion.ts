@@ -21,6 +21,7 @@ export interface LogEntry {
   ingested: number;
   failed: number;
   status: string;
+  errors: string | null;
   source_type: string;
   created_at: string;
 }

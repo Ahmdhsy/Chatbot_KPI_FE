@@ -10,6 +10,7 @@ import Pagination from "@/components/tables/Pagination"
 import { LogEntry } from "@/hooks/useIngestion"
 import { INGEST_LOG_PAGE_SIZE } from "@/lib/ingestionConstants"
 import { apiClientWithAuth } from "@/services/apiClientWithAuth"
+import { Modal } from "@/components/ui/modal"
 
 type FilterType = "all" | "kpi_tracker" | "kpi_master"
 type StatusFilter = "all" | "success" | "failed"
@@ -105,6 +106,7 @@ export default function IngestionLogsTable({
   const [total, setTotal] = useState(initialTotal ?? 0)
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(false)
+  const [selectedLog, setSelectedLog] = useState<LogEntry | null>(null)
   const isFirstRender = useRef(true)
 
   const buildParams = (offset: number) => {
@@ -275,7 +277,12 @@ export default function IngestionLogsTable({
               </TableRow>
             ) : (
               logs.map((log) => (
-                <TableRow key={log.id}>
+                <TableRow
+                  key={log.id}
+                  className="text-gray-700 hover:bg-gray-50/80 dark:text-white/80 dark:hover:bg-white/[0.02] cursor-pointer transition-colors"
+                  onClick={() => setSelectedLog(log)}
+                  title="Klik untuk detail log"
+                >
                   <TableCell className="px-5 py-3 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
                     {new Date(log.created_at).toLocaleDateString("id-ID", { dateStyle: "medium" })}
                   </TableCell>
@@ -319,6 +326,66 @@ export default function IngestionLogsTable({
       <div className="flex justify-end border-t border-gray-100 px-6 py-3 dark:border-white/5">
         <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
       </div>
+
+      {/* ── Detail Modal ── */}
+      <Modal isOpen={!!selectedLog} onClose={() => setSelectedLog(null)} className="max-w-2xl p-6">
+        <div className="flex flex-col gap-4">
+          <div className="border-b border-gray-100 pb-3 dark:border-white/5 pr-8">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
+              Detail Log Ingestion
+            </h3>
+            <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
+              Sumber Sheet: <span className="font-semibold text-gray-700 dark:text-gray-300">{selectedLog?.sheet_name}</span>
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4 text-sm bg-gray-50 dark:bg-white/[0.02] p-4 rounded-xl border border-gray-100 dark:border-white/5">
+            <div>
+              <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider font-semibold">Tipe</p>
+              <p className="mt-0.5 font-medium text-gray-800 dark:text-white/90">
+                {selectedLog?.source_type === "kpi_master" ? "KPI Master" : "KPI Tracker"}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider font-semibold">Waktu</p>
+              <p className="mt-0.5 font-medium text-gray-800 dark:text-white/90">
+                {selectedLog && new Date(selectedLog.created_at).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" })}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider font-semibold">Jumlah Baris</p>
+              <p className="mt-0.5 font-medium text-gray-800 dark:text-white/90">{selectedLog?.total_rows} baris</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider font-semibold">Statistik Ingestion</p>
+              <p className="mt-0.5 font-medium text-gray-800 dark:text-white/90">
+                {selectedLog?.ingested} berhasil, {selectedLog?.failed} gagal
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Pesan Log / Detail Kesalahan:</h4>
+            <div className="max-h-60 overflow-y-auto rounded-xl border border-gray-200 bg-gray-900 p-4 font-mono text-xs text-red-400 dark:border-white/10">
+              {selectedLog?.errors ? (
+                <pre className="whitespace-pre-wrap break-all">{selectedLog.errors}</pre>
+              ) : (
+                <span className="text-gray-400 italic">Tidak ada detail kesalahan (proses berjalan lancar).</span>
+              )}
+            </div>
+          </div>
+
+          <div className="flex justify-end pt-2">
+            <button
+              onClick={() => setSelectedLog(null)}
+              className="rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 transition"
+            >
+              Tutup
+            </button>
+          </div>
+        </div>
+      </Modal>
+
     </div>
   )
 }
