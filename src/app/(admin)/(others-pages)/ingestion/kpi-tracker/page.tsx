@@ -39,9 +39,17 @@ interface LogsResponse {
   logs: LogEntry[]
 }
 
+interface KpiTrackerGroupListResponse {
+  total: number
+  page: number
+  page_size: number
+  total_pages: number
+  data: TrackerSource[]
+}
+
 export default async function KpiTrackerIngestionPage() {
   let config: SchedulerConfig | null = null
-  let initialSources: TrackerSource[] = []
+  let initialSourcesData: KpiTrackerGroupListResponse = { total: 0, page: 1, page_size: 10, total_pages: 1, data: [] }
   let initialLogs: LogEntry[] = []
   let initialTotal = 0
 
@@ -52,12 +60,12 @@ export default async function KpiTrackerIngestionPage() {
   }
 
   try {
-    const groupsData = await serverFetch<{ data: TrackerSource[] }>(
-      "/api/v1/kpi/?group_type=tracker&page=1&page_size=100"
+    const groupsData = await serverFetch<KpiTrackerGroupListResponse>(
+      "/api/v1/kpi/?group_type=tracker&page=1&page_size=10"
     )
-    initialSources = groupsData.data ?? []
+    initialSourcesData = groupsData
   } catch {
-    initialSources = []
+    initialSourcesData = { total: 0, page: 1, page_size: 10, total_pages: 1, data: [] }
   }
 
   try {
@@ -82,7 +90,7 @@ export default async function KpiTrackerIngestionPage() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <SummaryCard
             title="Total Sumber"
-            value={initialSources.length}
+            value={initialSourcesData.total}
             icon={<UsersIcon />}
           />
           <SummaryCard
@@ -106,7 +114,7 @@ export default async function KpiTrackerIngestionPage() {
         </div>
 
         <SchedulerConfigCard initialConfig={config} />
-        <TrackerSourcesSection initialSources={initialSources} />
+        <TrackerSourcesSection initialData={initialSourcesData} />
         <IngestionLogsTable
           initialLogs={initialLogs}
           initialTotal={initialTotal}

@@ -12,6 +12,7 @@ import apiClientWithAuth from "@/services/apiClientWithAuth"
 import { useToast } from "@/context/ToastContext"
 import useDebounce from "@/hooks/useDebounce"
 import { extractFriendlyErrorMessage } from "@/utils/errorHelper"
+import Pagination from "@/components/tables/Pagination"
 
 function getErrorMessage(error: unknown, fallback: string): string {
   return extractFriendlyErrorMessage(error, fallback)
@@ -21,20 +22,28 @@ function truncateUrl(url: string, max = 55): string {
   return url.length > max ? url.slice(0, max) + "…" : url
 }
 
-interface Props {
-  initialSources: TrackerSource[]
+interface KpiTrackerGroupListResponse {
+  total: number
+  page: number
+  page_size: number
+  total_pages: number
+  data: TrackerSource[]
 }
 
-interface KpiTrackerGroupListResponse {
-  data: TrackerSource[]
+interface Props {
+  initialData: KpiTrackerGroupListResponse
 }
 
 const MAX_BATCH_SOURCES = 6
 
-export default function TrackerSourcesSection({ initialSources }: Props) {
+export default function TrackerSourcesSection({ initialData }: Props) {
   const router = useRouter()
   const { addToast } = useToast()
-  const [rows, setRows] = useState<TrackerSource[]>(initialSources)
+  const [rows, setRows] = useState<TrackerSource[]>(initialData.data ?? [])
+  const [page, setPage] = useState(initialData.page || 1)
+  const [totalPages, setTotalPages] = useState(Math.max(1, initialData.total_pages || 1))
+  const [total, setTotal] = useState(initialData.total || 0)
+  const [pageSize] = useState(initialData.page_size || 10)
   const [search, setSearch] = useState("")
   const [yearFilter, setYearFilter] = useState("")
   const [loadingRows, setLoadingRows] = useState(false)
@@ -66,25 +75,35 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
 
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  useEffect(() => {
-    setRows(initialSources)
-  }, [initialSources])
 
-  const fetchSources = async () => {
+  useEffect(() => {
+    if (initialData) {
+      setRows(initialData.data ?? [])
+      setPage(initialData.page || 1)
+      setTotalPages(Math.max(1, initialData.total_pages || 1))
+      setTotal(initialData.total || 0)
+    }
+  }, [initialData])
+
+  const fetchSources = async (targetPage: number) => {
     setLoadingRows(true)
+    setError(null)
     try {
       const parsedYear = debouncedYearFilter.trim() ? Number.parseInt(debouncedYearFilter, 10) : null
       const validYear = parsedYear !== null && !Number.isNaN(parsedYear) ? parsedYear : null
       const { data } = await apiClientWithAuth.get<KpiTrackerGroupListResponse>("/api/v1/kpi/", {
         params: {
           group_type: "tracker",
-          page: 1,
-          page_size: 100,
+          page: targetPage,
+          page_size: pageSize,
           ...(debouncedSearch ? { search: debouncedSearch } : {}),
           ...(validYear !== null ? { tahun: validYear } : {}),
         },
       })
       setRows(data.data ?? [])
+      setPage(data.page || targetPage)
+      setTotal(data.total || 0)
+      setTotalPages(Math.max(1, data.total_pages || 1))
     } catch (e: unknown) {
       setError(getErrorMessage(e, "Gagal memuat sumber tracker"))
       setRows([])
@@ -94,7 +113,7 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
   }
 
   useEffect(() => {
-    void fetchSources()
+    void fetchSources(1)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearch, debouncedYearFilter])
 
@@ -207,7 +226,7 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
 
       addToast("success", `Sumber berhasil ditambahkan: ${nIngested} data berhasil diingest.`, "Sukses")
       handleCloseAdd()
-      await fetchSources()
+      await fetchSources(1)
       router.refresh()
     } catch (ingestErr: unknown) {
       // HTTP error (misal 404 = belum di-invite ke service account)
@@ -230,7 +249,7 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
       })
       addToast("success", "Sumber KPI Tracker berhasil diperbarui.", "Sukses")
       handleCloseEdit()
-      await fetchSources()
+      await fetchSources(page)
       router.refresh()
     } catch (e: unknown) {
       setError(getErrorMessage(e, "Gagal memperbarui"))
@@ -251,7 +270,7 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
       }
       setDeleteCandidate(null)
       addToast("success", `Sumber "${deletedName}" berhasil dihapus.`, "Sukses")
-      await fetchSources()
+      await fetchSources(page)
       router.refresh()
     } catch (e: unknown) {
       setError(getErrorMessage(e, "Gagal menghapus"))
@@ -271,7 +290,7 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
       const resultMsg = `${marker} ${source.nama_grup}: ${data.grand_ingested ?? 0} data berhasil diingest (${data.overall_status})`
       setIngestResult(resultMsg)
       addToast(isSuccess ? "success" : "warning", resultMsg, "Ingest")
-      await fetchSources()
+      await fetchSources(page)
       router.refresh()
     } catch (e: unknown) {
       setError(getErrorMessage(e, "Gagal mengingest"))
@@ -315,7 +334,7 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
       addToast(isSuccess ? "success" : "warning", batchMsg, "Ingest Massal")
       setIsBatchMode(false)
       setSelectedSourceIds([])
-      await fetchSources()
+      await fetchSources(page)
       router.refresh()
     } catch (e: unknown) {
       setError(getErrorMessage(e, "Gagal mengingest massal"))
@@ -495,6 +514,16 @@ export default function TrackerSourcesSection({ initialSources }: Props) {
             </table>
           </div>
         )}
+
+        {/* Pagination footer */}
+        <div className="flex flex-col gap-4 border-t border-gray-100 px-6 py-4 sm:flex-row sm:items-center sm:justify-between dark:border-white/5">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Menampilkan {rows.length} dari {total} data
+          </p>
+          {totalPages > 1 && (
+            <Pagination currentPage={page} totalPages={totalPages} onPageChange={fetchSources} />
+          )}
+        </div>
       </div>
 
       <Modal isOpen={addOpen} onClose={handleCloseAdd} className="max-w-4xl p-6">
