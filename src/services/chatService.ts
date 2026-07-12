@@ -51,6 +51,12 @@ async function consumeSSE(
       if (event.type === 'metadata') {
         try {
           metadata = JSON.parse(event.data)
+          if (metadata.graphics) {
+            metadata.graphics = metadata.graphics.map((g: any) => ({
+              ...g,
+              image_url: g.image_url.startsWith('http') ? g.image_url : `${API_BASE}${g.image_url}`,
+            }))
+          }
           callbacks.onMetadata?.(metadata)
         } catch {}
       } else if (event.type === 'message') {
@@ -170,7 +176,12 @@ export const chatService = {
               free_text_answer: q.free_text_answer,
             }))
           : undefined,
-        graphics: m.graphics?.length ? m.graphics : undefined,
+        graphics: m.graphics?.length
+          ? m.graphics.map((g) => ({
+              ...g,
+              image_url: g.image_url.startsWith('http') ? g.image_url : `${API_BASE}${g.image_url}`,
+            }))
+          : undefined,
       } satisfies Message
     })
 
