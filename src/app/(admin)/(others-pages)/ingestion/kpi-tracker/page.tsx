@@ -42,14 +42,14 @@ interface LogsResponse {
 interface KpiTrackerGroupListResponse {
   total: number
   page: number
-  page_size: number
+  limit: number
   total_pages: number
   data: TrackerSource[]
 }
 
 export default async function KpiTrackerIngestionPage() {
   let config: SchedulerConfig | null = null
-  let initialSourcesData: KpiTrackerGroupListResponse = { total: 0, page: 1, page_size: 10, total_pages: 1, data: [] }
+  let initialSourcesData: KpiTrackerGroupListResponse = { total: 0, page: 1, limit: 10, total_pages: 1, data: [] }
   let initialLogs: LogEntry[] = []
   let initialTotal = 0
 
@@ -61,11 +61,11 @@ export default async function KpiTrackerIngestionPage() {
 
   try {
     const groupsData = await serverFetch<KpiTrackerGroupListResponse>(
-      "/api/v1/kpi/?group_type=tracker&page=1&page_size=10"
+      "/api/v1/kpi/?group_type=tracker&page=1&limit=10"
     )
     initialSourcesData = groupsData
   } catch {
-    initialSourcesData = { total: 0, page: 1, page_size: 10, total_pages: 1, data: [] }
+    initialSourcesData = { total: 0, page: 1, limit: 10, total_pages: 1, data: [] }
   }
 
   try {

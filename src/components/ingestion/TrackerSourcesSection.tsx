@@ -25,7 +25,7 @@ function truncateUrl(url: string, max = 55): string {
 interface KpiTrackerGroupListResponse {
   total: number
   page: number
-  page_size: number
+  limit: number
   total_pages: number
   data: TrackerSource[]
 }
@@ -43,7 +43,7 @@ export default function TrackerSourcesSection({ initialData }: Props) {
   const [page, setPage] = useState(initialData.page || 1)
   const [totalPages, setTotalPages] = useState(Math.max(1, initialData.total_pages || 1))
   const [total, setTotal] = useState(initialData.total || 0)
-  const [pageSize] = useState(initialData.page_size || 10)
+  const [pageSize] = useState(initialData.limit || 10)
   const [search, setSearch] = useState("")
   const [yearFilter, setYearFilter] = useState("")
   const [loadingRows, setLoadingRows] = useState(false)
@@ -95,7 +95,7 @@ export default function TrackerSourcesSection({ initialData }: Props) {
         params: {
           group_type: "tracker",
           page: targetPage,
-          page_size: pageSize,
+          limit: pageSize,
           ...(debouncedSearch ? { search: debouncedSearch } : {}),
           ...(validYear !== null ? { tahun: validYear } : {}),
         },

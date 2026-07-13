@@ -47,7 +47,7 @@ export default async function KpiMasterIngestionPage() {
   let initialManagement = {
     total: 0,
     page: 1,
-    page_size: 10,
+    limit: 10,
     total_pages: 1,
     data: [],
   }
@@ -65,10 +65,10 @@ export default async function KpiMasterIngestionPage() {
 
   try {
     initialManagement = await serverFetch<typeof initialManagement>(
-      "/api/v1/kpi/?group_type=master&page=1&page_size=10"
+      "/api/v1/kpi/?group_type=master&page=1&limit=10"
     )
   } catch {
-    initialManagement = { total: 0, page: 1, page_size: 10, total_pages: 1, data: [] }
+    initialManagement = { total: 0, page: 1, limit: 10, total_pages: 1, data: [] }
   }
 
   const latestLog = initialLogs[0]

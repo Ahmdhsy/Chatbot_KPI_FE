@@ -9,7 +9,7 @@ import KpiMasterManagementTable, {
 interface KpiMasterManagementResponse {
 	total: number
 	page: number
-	page_size: number
+	limit: number
 	total_pages: number
 	data: KpiMasterGroup[]
 }

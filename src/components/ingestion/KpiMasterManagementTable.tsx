@@ -29,7 +29,7 @@ export interface KpiMasterGroup {
 interface KpiMasterManagementResponse {
 	total: number
 	page: number
-	page_size: number
+	limit: number
 	total_pages: number
 	data: KpiMasterGroup[]
 }
@@ -82,7 +82,7 @@ const KpiMasterManagementTable = forwardRef<KpiMasterManagementTableHandle, Prop
 	const [page, setPage] = useState(initialData.page || 1)
 	const [totalPages, setTotalPages] = useState(Math.max(1, initialData.total_pages || 1))
 	const [total, setTotal] = useState(initialData.total || 0)
-	const [pageSize] = useState(initialData.page_size || 10)
+	const [pageSize] = useState(initialData.limit || 10)
 	const [search, setSearch] = useState("")
 	const [yearFilter, setYearFilter] = useState("")
 	const normalizedQuery = search.trim()
@@ -125,7 +125,7 @@ const KpiMasterManagementTable = forwardRef<KpiMasterManagementTableHandle, Prop
 				{
 					params: {
 						page: targetPage,
-						page_size: pageSize,
+						limit: pageSize,
 						group_type: "master",
 						...(debouncedSearch ? { search: debouncedSearch } : {}),
 						...(validYear !== null ? { tahun: validYear } : {}),
